@@ -1,0 +1,97 @@
+﻿<Window x:Class="Expedicao.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"  
+        Title="SISTEMA INTEGRADO DE GERENCIAMENTO - EXPEDIÇÃO"
+        WindowStartupLocation="CenterScreen" WindowState="Maximized"
+        Height="350" Width="525">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <syncfusion:MenuAdv Grid.Row="0">
+            <syncfusion:MenuItemAdv Header="Expedição Material">
+                <syncfusion:MenuItemAdv Click="expedProduto_Click" Name="expedProduto" Header="Produto"/>
+                <syncfusion:MenuItemAdv Click="expedImprimirEtiqueta_Click" Name="expedImprimirEtiqueta" Header="Imprimir"/>
+                <syncfusion:MenuItemAdv Click="liberarImpressao_Click" Name="liberarImpressao" Header="Liberar Impressão"/>
+            </syncfusion:MenuItemAdv>
+            <syncfusion:MenuItemAdv Header="Controle de Carga">
+                <syncfusion:MenuItemAdv Header="Romaneio ">
+                    <syncfusion:MenuItemAdv Click="expedNovoRomaneio_Click" Name="expedNovoRomaneio" Header="Novo"/>
+                    <syncfusion:MenuItemAdv Click="expedTodosRomaneios_Click" Name="expedTodosRomaneios" Header="Todos"/>
+                </syncfusion:MenuItemAdv>
+                <syncfusion:MenuItemAdv Click="expedColetarDados_Click" Name="expedColetarDados" Header="Coletar dados"/>
+                <syncfusion:MenuItemAdv Click="expedNotaCaminhao" Name="expedNotaCaminao" Header="Nota por Caminão"/>
+                
+                <syncfusion:MenuItemAdv Click="ItensFaltantes_Click" Name="ItensFaltantes" Header="Itens Faltantes"/>
+                <syncfusion:MenuItemAdv Click="ItensCarregados_Click" Name="ItensCarregados" Header="Itens Carregados"/>
+            </syncfusion:MenuItemAdv>
+            <syncfusion:MenuItemAdv Header="Pré-conferencia">
+                <syncfusion:MenuItemAdv Header="Itens Faltantes" Click="OnPreItensFaltantesClick"/>
+                <syncfusion:MenuItemAdv Header="Itens Conferidos" Click="OnPreItensCarregadosClick"/>
+            </syncfusion:MenuItemAdv>
+            <syncfusion:MenuItemAdv Header="Consultas">
+                <syncfusion:MenuItemAdv Header="T Exped" Click="OnExpedClick"/>
+                <syncfusion:MenuItemAdv Header="Caixas endereçadas" Click="OnCaixasEnderecadasClick"/>
+                <syncfusion:MenuItemSeparator/>
+                <!--<syncfusion:MenuItemAdv Header="Saldo Geral Expedido"/>-->
+                <syncfusion:MenuItemAdv Header="Saldo Geral Expedido por Shopping" Click="OnSaldoGeralShoppingClick"/>
+                <syncfusion:MenuItemAdv Header="Produtos Expedido por Data" Click="OnProdutosExpedidoDataClick"/>
+                <syncfusion:MenuItemSeparator/>
+                <syncfusion:MenuItemAdv Header="Cubagem ">
+                    <syncfusion:MenuItemAdv Header="Expedida por Dia" Click="OnCubagemDiaClick"/>
+                    <syncfusion:MenuItemAdv Header="Semana Ano Anterior x Ano Atual" Click="OnCubagemSemanaAnosClick"/>
+                    <syncfusion:MenuItemAdv Header="Prevista por Cliente" Click="OnCubagemPrevistaClienteClick"/>
+                    <syncfusion:MenuItemAdv Header="Prevista Cliente Zerada" Click="OnCubagemZeradaClienteClick"/>
+                    <syncfusion:MenuItemAdv Header="Cliente Fracionada por Caminhão" Click="OnCubagemFracionadaCaminao"/>
+                    <syncfusion:MenuItemAdv Header="Cliente Efetiva" Click="OnCubagemEfetivaClick"/>
+                    <syncfusion:MenuItemAdv Header="Pendências Expedição" Click="OnPendenciaExpedicaoClick"/>
+                </syncfusion:MenuItemAdv>
+                <syncfusion:MenuItemAdv Header="Expedição Virtual" Click="OnExpedicaoVirtualClick"/>
+            </syncfusion:MenuItemAdv>
+        </syncfusion:MenuAdv>
+        
+        <syncfusion:DocumentContainer 
+            x:Name="_dc" 
+            Grid.Row="1" 
+            HorizontalContentAlignment="Center" 
+            VerticalContentAlignment="Center"/>
+
+        <StatusBar Grid.Row="2">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <StatusBarItem>
+                <Image Source="/icon/icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" Width="16" Height="16"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1">
+                <TextBlock x:Name="txtUsername"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="2">
+                <!--<syncfusion:SfLinearProgressBar x:Name="PbLoading" Height="20" Progress="80" Width="100" IsIndeterminate="True" Visibility="Hidden"/>-->
+                <syncfusion:SfLinearProgressBar Name="PbLoading" Height="20" Progress="80" Width="100" IsIndeterminate="True" Visibility="Hidden"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="3">
+                <Image Source="/icon/configuracao-de-dados-windows-metro-16.png" Width="16" Height="16"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="4">
+                <TextBlock x:Name="txtDataBase"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+
+
+</Window>

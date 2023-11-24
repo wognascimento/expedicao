@@ -1,0 +1,388 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoRomaneio"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao.Views"
+             mc:Ignorable="d"
+             Initialized="UserControl_Initialized">
+
+    <Grid Margin="10,10,10,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        
+        <syncfusion:SfTextInputLayout
+            Hint="Operação" 
+            Grid.ColumnSpan="2"
+            Grid.Row="0" 
+            ContainerType="Outlined" 
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:ComboBoxAdv x:Name="operacao" ItemsSource="{Binding OperacoesList}"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Número Romaneio" 
+            Grid.Column="3" 
+            Grid.Row="0" 
+            ContainerType="Outlined"
+            IsEnabled="False"
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:IntegerTextBox x:Name="cod_romaneiro" UseNullOption="True" Culture="pt-BR" Cursor="IBeam" Value="0"
+                                 TextAlignment="Center"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Data Carregamento" 
+            Grid.Column="0" 
+            Grid.Row="1" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DateTimeEdit x:Name="data_carregamento" EnableBackspaceKey="True" EnableDeleteKey="True"
+                               ShowMaskOnNullValue="True" CanEdit="True" IsEmptyDateEnabled="True" CultureInfo="pt-BR"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Hora Carregamento" 
+            Grid.Column="1" 
+            Grid.Row="1" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfMaskedEdit x:Name="hora_chegada" Mask="\d{2}:\d{2}" MaskType="RegEx" Culture="pt-BR"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Shopping" 
+            Grid.Column="0" 
+            Grid.Row="2" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:ComboBoxAdv 
+                x:Name="shopping_destino" 
+                ItemsSource="{Binding Aprovados}"
+                DisplayMemberPath="SiglaServ" 
+                SelectedValuePath="SiglaServ"
+                IsTextSearchEnabled="True" 
+                AutoCompleteMode="Suggest" 
+                AllowMultiSelect="True" EnableOKCancel="True"
+                DefaultText="Seleciona sigla(s)..."/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Nº Caminhão" 
+            Grid.Column="1" 
+            Grid.Row="2" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:IntegerTextBox x:Name="numero_caminhao" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Local Carregamento" 
+            Grid.Column="2" 
+            Grid.Row="2" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="local_carregamento" TextBox.Text="JACAREÍ"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Transportadora" 
+            Grid.ColumnSpan="2"
+            Grid.Row="3" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:ComboBoxAdv 
+                x:Name="codtransportadora" 
+                ItemsSource="{Binding Tranportadoras}"
+                DisplayMemberPath="NomeTransportadora"
+                SelectedValuePath="CodTransportadora" 
+                IsTextSearchEnabled="True" 
+                AutoCompleteMode="Suggest"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Motorista" 
+            Grid.ColumnSpan="1" 
+            Grid.Row="4" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt SelectedItemChanged="nome_motorista_SelectedItemChanged" x:Name="nome_motorista"
+                    AutoCompleteMode="Suggest" IgnoreCase="True" SearchItemPath="Motorista"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Nº CNH" 
+            Grid.Column="1" 
+            Grid.Row="4" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="numero_cnh"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            x:Name="SF_telefone_motorista" 
+            Hint="Telefone" 
+            Grid.Column="2" 
+            Grid.Row="4"
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="telefone_motorista"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Condição do Caminhão" 
+            Grid.Column="0" 
+            Grid.Row="5" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:ComboBoxAdv x:Name="condicao_caminhao" ItemsSource="{Binding CondicaoCaminhaoList}"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Placa Caminhão/Cavalo" 
+            Grid.Column="0" 
+            Grid.Row="6" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt SelectedItemChanged="placa_caminhao_SelectedItemChanged" x:Name="placa_caminhao"
+                    AutoCompleteMode="Suggest" IgnoreCase="True" SearchItemPath="placa_caminhao"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Cidade" 
+            Grid.Column="1" 
+            Grid.Row="6" 
+            ContainerType="Outlined"
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="placa_cidade"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Estado" 
+            Grid.Column="2" 
+            Grid.Row="6" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="placa_estado"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Placa Carroceria" 
+            Grid.Column="0" 
+            Grid.Row="7" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt SelectedItemChanged="placa_carroceria_SelectedItemChanged" x:Name="placa_carroceria"
+                    AutoCompleteMode="Suggest" IgnoreCase="True" SearchItemPath="placa_caminhao"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Cidade" 
+            Grid.Column="1" 
+            Grid.Row="7" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="placa_carroceria_cidade"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Estado" 
+            Grid.Column="2" 
+            Grid.Row="7" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="placa_carroceria_estado"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Altura" 
+            Grid.Column="0"
+            Grid.Row="8" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="bau_altura" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Largura" 
+            Grid.Column="1" 
+            Grid.Row="8" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="bau_largura" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Profundidade"
+            Grid.Column="2" 
+            Grid.Row="8" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="bau_profundidade" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="M³ Carregado" 
+            Grid.Column="0" 
+            Grid.Row="9" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="m3_carregado" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Sobra" 
+            Grid.Column="1" 
+            Grid.Row="9" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="bau_soba" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="M³ Portaria" 
+            Grid.Column="2" 
+            Grid.Row="9" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:DoubleTextBox x:Name="m3_portaria" UseNullOption="True"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Conferente" 
+            Grid.Column="0" 
+            Grid.Row="10" 
+            ContainerType="Outlined"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="nome_conferente"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="Num. Lacres" 
+            Grid.Column="1" 
+            Grid.Row="10" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="num_lacres"/>
+        </syncfusion:SfTextInputLayout>
+        
+        <syncfusion:SfTextInputLayout 
+            Hint="M³ Num. Container" 
+            Grid.Column="2" 
+            Grid.Row="10" 
+            ContainerType="Outlined" 
+            Margin="10,0,0,0"
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed">
+            <syncfusion:SfTextBoxExt x:Name="numero_container"/>
+        </syncfusion:SfTextInputLayout>
+
+        <syncfusion:SfTextInputLayout 
+            Hint="Data e hora saída" 
+            Grid.Column="0" 
+            Grid.Row="11" 
+            ContainerType="Outlined" 
+            InputViewPadding="4"
+            CharCountVisibility="Collapsed" 
+            HelperTextVisibility="Collapsed" Margin="0,0,0,10">
+
+            <syncfusion:DateTimeEdit
+                Pattern="FullDateTime"
+                Name="dateSaida">
+
+            </syncfusion:DateTimeEdit>
+
+        </syncfusion:SfTextInputLayout>
+
+        <syncfusion:ButtonAdv Click="btnNovo_Click" x:Name="btnNovo" Label="NOVO" Grid.Column="0" Grid.Row="12" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
+        <syncfusion:ButtonAdv Click="btnGravar_Click" x:Name="btnGravar" Label="GRAVAR" Grid.Column="1" Grid.Row="12" Margin="10,0,0,0" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
+    </Grid>
+
+</UserControl>

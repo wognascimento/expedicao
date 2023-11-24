@@ -1,0 +1,68 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoRomaneios"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="850"
+             Loaded="UserControl_Loaded">
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        
+        <syncfusion:SfDataGrid 
+            x:Name="itens" 
+            ItemsSource = "{Binding Romaneios}"
+            ColumnSizer="Star" 
+            AllowFiltering="True" 
+            AutoGenerateColumns="False">
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:GridNumericColumn MappingName="CodRomaneiro" NumberDecimalDigits="0" HeaderText="Cod"/>
+                <syncfusion:GridTextColumn MappingName="ShoppingDestino" HeaderText="Shopping"/>
+                <syncfusion:GridNumericColumn MappingName="NumeroCaminhao" NumberDecimalDigits="0" HeaderText="Caminhao"/>
+                <syncfusion:GridTextColumn MappingName="PlacaCarroceria" HeaderText="Placa"/>
+                <syncfusion:GridTemplateColumn x:Name="acao" MappingName="CodRomaneiro" HeaderText="" syncfusion:FocusManagerHelper.WantsKeyInput="True"
+                                       ColumnSizer="SizeToCells" AllowFiltering="False">
+                    <syncfusion:GridColumnBase.CellTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnAcao" Content="Selecionar" syncfusion:FocusManagerHelper.FocusedElement="True"
+                      Command="{Binding Path=DataContext.RowDataCommand, ElementName=sfGrid}"
+                      CommandParameter="{Binding}" Click="btnAcao_Click"/>
+                        </DataTemplate>
+                    </syncfusion:GridColumnBase.CellTemplate>
+                </syncfusion:GridTemplateColumn>
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+        
+        <Border x:Name="loadingDetalhes" Grid.Row="1" Height="50" VerticalAlignment="Bottom" Background="Black"
+            BorderBrush="Black" BorderThickness="1" Opacity="50">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
+                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
+                         AnimationType="Gear" Control.Background="Black"/>
+            </StackPanel>
+        </Border>
+        
+        <Border x:Name="BSelecionados" Grid.Row="1" Height="50" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
+            Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <Button Click="Button_Click_1" Margin="5" Content="ENVIAR PARA EXCEL" VerticalAlignment="Center" Height="50"/>
+            </StackPanel>
+        </Border>
+
+        <Border x:Name="BSelecionadosRomaneio" Grid.Row="1" Height="50" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
+            Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <Button Click="Button_Click_2" Margin="5" Content="SELECIONAR" VerticalAlignment="Center" Height="50"/>
+            </StackPanel>
+        </Border>
+
+    </Grid>
+
+</UserControl>

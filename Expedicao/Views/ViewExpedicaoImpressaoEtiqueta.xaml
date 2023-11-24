@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoImpressaoEtiqueta"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao.Views"
+             Initialized="UserControl_Initialized">
+    <Grid>
+        <syncfusion:SfDataGrid x:Name="itens" ColumnSizer="AutoWithLastColumnFill" AllowFiltering="True" AutoGenerateColumns="False" AllowResizingColumns="True">
+            <syncfusion:SfGridBase.HeaderContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="IMPRIMIR TODAS" Command="{Binding Source={x:Static local:ContextMenuCommands.PrintAll}}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </syncfusion:SfGridBase.HeaderContextMenu>
+            <syncfusion:SfGridBase.RecordContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="IMPRIMIR" Command="{Binding Source={x:Static local:ContextMenuCommands.Print}}" CommandParameter="{Binding}"/>
+                </ContextMenu>
+            </syncfusion:SfGridBase.RecordContextMenu>
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:GridTextColumn MappingName="Sigla" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridTextColumn MappingName="Volume" ColumnSizer="SizeToCells"/>
+                <!--<syncfusion:GridTextColumn MappingName="Setor"/>-->
+                <syncfusion:GridTextColumn MappingName="Planilha"/>
+                <syncfusion:GridTextColumn MappingName="Descricao"/>
+                <syncfusion:GridNumericColumn MappingName="CodDetalhesCompl" NumberDecimalDigits="0" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridNumericColumn MappingName="QtdExpedida" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridTextColumn MappingName="LocalShoppings"/>
+                <syncfusion:GridTextColumn MappingName="BaiaCaminhao" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridCheckBoxColumn MappingName="Anexo" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridCheckBoxColumn MappingName="Controlado" ColumnSizer="SizeToCells"/>
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+        <Border x:Name="loadingDetalhes" Height="60" VerticalAlignment="Bottom" Background="Black"
+            BorderBrush="Black" BorderThickness="1" Opacity="50">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
+                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
+                         AnimationType="Gear" Control.Background="Black"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

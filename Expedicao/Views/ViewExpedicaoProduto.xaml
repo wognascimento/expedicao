@@ -1,0 +1,145 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoProduto"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:interactivity="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" 
+             Initialized="UserControl_Initialized" 
+             PreviewKeyDown="UserControl_PreviewKeyDown">
+
+    <UserControl.Resources>
+        <local:ConverterNumber x:Key="ConverterNumber"/>
+        <local:ConverterBoolen x:Key="ConverterBoolen"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        
+        <syncfusion:SfMultiColumnDropDownControl SelectionChanged="Aprovados_SelectionChanged" x:Name="aprovados" Grid.Row="0"
+                                             ValueMember="IdAprovado" DisplayMember="SiglaServ" AllowAutoComplete="True"
+                                             AutoGenerateColumns="False" GridColumnSizer="AutoWithLastColumnFill" Width="270" PopupWidth="600"
+                                             HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="10,10,0,10"
+                                             Text="Seleciona o cliente" ItemsSource="{Binding Aprovados}">
+
+            <syncfusion:SfMultiColumnDropDownControl.Columns>
+                <syncfusion:GridTextColumn MappingName="IdAprovado"/>
+                <syncfusion:GridTextColumn MappingName="SiglaServ"/>
+                <syncfusion:GridTextColumn MappingName="Nome"/>
+            </syncfusion:SfMultiColumnDropDownControl.Columns>
+        </syncfusion:SfMultiColumnDropDownControl>
+        
+        <syncfusion:SfDataGrid 
+            x:Name="dataGrid"
+            Grid.Row="1"      
+            SelectionChanged="DataGrid_SelectionChanged"  
+            AutoGenerateColumns="False" 
+            ColumnSizer="AutoWithLastColumnFill" 
+            AllowFiltering="True"
+            ShowRowHeader="True" 
+            ItemsSource="{Binding ChkDetails}"
+            SelectedItem="{Binding ChkDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:GridTextColumn HeaderText="Item" MappingName="ItemMemorial" ColumnSizer="SizeToCells"/>
+                <syncfusion:GridTextColumn HeaderText="Local" MappingName="LocalShoppings"/>
+                <syncfusion:GridTextColumn MappingName="Planilha"/>
+                <syncfusion:GridTextColumn HeaderText="Descrição" MappingName="DescricaoProduto"/>
+                <syncfusion:GridNumericColumn  
+                    HeaderText="Quantidade" 
+                    MappingName="Qtd" 
+                    ColumnSizer="SizeToCells"
+                    DisplayBinding="{Binding Path=Qtd, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"/>
+                <syncfusion:GridNumericColumn HeaderText="Complemento adicional" MappingName="CodComplAdicional" NumberDecimalDigits="0"
+                                      ColumnSizer="SizeToHeader"/>
+                <syncfusion:GridNumericColumn HeaderText="Detalhes Complemento" MappingName="CodDetalhesCompl" NumberDecimalDigits="0"
+                                      ColumnSizer="SizeToHeader"/>
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+        <Border x:Name="loadingDetalhes" Height="60" Grid.Row="1" VerticalAlignment="Bottom" Background="Black"
+            BorderBrush="Black" BorderThickness="1" Opacity="50" Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
+                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
+                         AnimationType="Gear" Control.Background="Black"/>
+            </StackPanel>
+        </Border>
+        <syncfusion:SfDataGrid 
+            x:Name="Exped" 
+            Grid.Row="3" 
+            ItemsSource="{Binding Expeds}"
+            SelectedItem="{Binding Exped, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            ShowRowHeader="True"
+            RowValidated="Exped_RowValidated" 
+            AddNewRowInitiating="Exped_AddNewRowInitiating"
+            RowValidating="Exped_RowValidating" 
+            RecordDeleted="Exped_RecordDeleted"
+            RecordDeleting="Exped_RecordDeleting"
+            AutoGenerateColumns="False" 
+            ColumnSizer="SizeToHeader" 
+            AddNewRowPosition="Bottom"
+            AllowEditing="True"
+            AllowDeleting="True" 
+            CurrentCellValueChanged="Exped_CurrentCellValueChanged"
+            SelectionUnit="Row"
+            SelectionMode="Extended"
+            GridCopyOption="CopyData,IncludeHeaders,IncludeFormat">
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:GridNumericColumn MappingName="QtdExpedida"     DisplayBinding="{Binding Path=QtdExpedida, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
+                <syncfusion:GridNumericColumn MappingName="VolExp"          DisplayBinding="{Binding Path=VolExp, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
+                <syncfusion:GridNumericColumn MappingName="VolTotExp"       DisplayBinding="{Binding Path=VolTotExp, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
+                <syncfusion:GridNumericColumn MappingName="Pl"              DisplayBinding="{Binding Path=Pl, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
+                <syncfusion:GridNumericColumn MappingName="Pb"              DisplayBinding="{Binding Path=Pb, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
+                <syncfusion:GridNumericColumn MappingName="Largura"         DisplayBinding="{Binding Path=Largura, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
+                <syncfusion:GridNumericColumn MappingName="Altura"          DisplayBinding="{Binding Path=Altura, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
+                <syncfusion:GridNumericColumn MappingName="Profundidade"    DisplayBinding="{Binding Path=Profundidade, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
+                <syncfusion:GridComboBoxColumn 
+                    x:Name="Caixas" 
+                    ItemsSource="{Binding Medidas}"
+                    IsEditable="True" 
+                    MappingName="ModeloCaixa" 
+                    SelectedValuePath="NomeCaixa" 
+                    DisplayMemberPath="NomeCaixa"/>
+                <syncfusion:GridNumericColumn MappingName="Volume" NumberDecimalDigits="0" ParsingMode="Int"/>
+                
+                <syncfusion:GridCheckBoxColumn
+                        AllowEditing="True"
+                        HeaderText="Virtual" 
+                        MappingName="BaiaVirtual"
+                        DisplayBinding="{Binding BaiaVirtual, Converter={StaticResource ConverterBoolen}}"
+                        ValueBinding="{Binding BaiaVirtual, Converter={StaticResource ConverterBoolen}}"/>
+
+                
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+        <Border x:Name="loadingExped" Height="60" Grid.Row="3" VerticalAlignment="Bottom" Background="Black"
+            BorderBrush="Black" BorderThickness="1" Opacity="50" Visibility="Hidden">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
+                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
+                         AnimationType="Gear" Control.Background="Black"/>
+            </StackPanel>
+        </Border>
+        <syncfusion:SfGridSplitter FrameworkElement.HorizontalAlignment="Stretch" FrameworkElement.Width="auto" Grid.Row="2"/>
+<!--
+        <local:SearchControl
+            x:Name="searchControl" 
+            Visibility="Hidden"
+            VerticalAlignment="Top" 
+            DataGrid="{Binding ElementName=dataGrid}"
+            HorizontalAlignment="Right"/>
+ -->     
+    </Grid>
+<!--
+    <interactivity:Interaction.Behaviors>
+        <local:Behaviour/>
+    </interactivity:Interaction.Behaviors>
+ -->   
+</UserControl>

@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoLiberarImpressao"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Initialized="UserControl_Initialized">
+
+    <Grid>
+        <syncfusion:SfDataGrid CurrentCellValueChanged="itens_CurrentCellValueChanged" x:Name="itens" AllowEditing="True"
+                           AllowFiltering="True" AllowResizingColumns="True" AllowResizingHiddenColumns="True"
+                           AllowRowHoverHighlighting="True" ColumnSizer="Auto" AutoGenerateColumns="False"
+                           ItemsSource="{Binding CaixaCollection}">
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:GridTextColumn MappingName="Sigla" AllowEditing="False"/>
+                <syncfusion:GridTextColumn MappingName="Planilha" AllowEditing="False"/>
+                <syncfusion:GridTextColumn MappingName="NomeCaixa" AllowEditing="False"/>
+                <syncfusion:GridCheckBoxColumn MappingName="Impresso" AllowEditing="True"/>
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+        <Border x:Name="loadingDetalhes" Height="60" VerticalAlignment="Bottom" Background="Black"
+            BorderBrush="Black" BorderThickness="1" Opacity="50">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
+                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
+                         AnimationType="Gear" Control.Background="Black"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</UserControl>

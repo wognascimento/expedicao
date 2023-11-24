@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="Expedicao.Views.ViewExpedicaoExcel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:local="clr-namespace:Expedicao.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" 
+             Loaded="UserControl_Loaded">
+
+    <Grid>
+        <Grid x:Name="load">
+            <syncfusion:SfBusyIndicator Name="sfBusyIndicator" IsBusy="True" AnimationType="Gear"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       AnimationSpeed="50" Control.Background="White"/>
+        </Grid>
+        <Grid x:Name="principal" Visibility="Hidden">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <syncfusion:SfMultiColumnDropDownControl x:Name="sfmcAprovados" Grid.Column="0" Margin="0,0,10,0" AutoGenerateColumns="true"
+                                               AllowIncrementalFiltering="True" AllowImmediatePopup="True"
+                                               AllowDiacriticSensitiveFiltering="False" DisplayMember="SiglaServ"
+                                               GridColumnSizer="AutoWithLastColumnFill" ItemsSource="{Binding AprovadosDetails}"/>
+            <Button Click="btnExcel_Click" Name="btnExcel" Grid.Column="1" Margin="0,0,10,0">
+                <Image Source="/icon/icons8-microsoft-excel-40.png"/>
+            </Button>
+            <syncfusion:SfBusyIndicator Name="sfBusyIndicatorExcel" Grid.Column="1" IsBusy="False" AnimationType="Gear"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       AnimationSpeed="50" Control.Background="White" Margin="0,0,10,0"/>
+        </Grid>
+    </Grid>
+
+</UserControl>
