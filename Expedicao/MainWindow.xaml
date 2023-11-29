@@ -53,12 +53,14 @@
                 <syncfusion:MenuItemAdv Header="Expedição Virtual" Click="OnExpedicaoVirtualClick"/>
             </syncfusion:MenuItemAdv>
         </syncfusion:MenuAdv>
-        
-        <syncfusion:DocumentContainer 
-            x:Name="_dc" 
+
+        <syncfusion:DocumentContainer
+            Name="_mdi" 
             Grid.Row="1" 
-            HorizontalContentAlignment="Center" 
-            VerticalContentAlignment="Center"/>
+            EnableAutoScroll="True"
+            Mode="TDI"
+            CloseButtonClick="OnMdiCloseButtonClick"
+            CloseAllTabs="OnMdiCloseAllTabs"/>
 
         <StatusBar Grid.Row="2">
             <ItemsControl.ItemsPanel>
@@ -75,7 +77,7 @@
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <StatusBarItem>
-                <Image Source="/icon/icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" Width="16" Height="16"/>
+                <Image Source="/icon/icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" Width="16" Height="16" MouseDown="OnAlterarUsuario"/>
             </StatusBarItem>
             <StatusBarItem Grid.Column="1">
                 <TextBlock x:Name="txtUsername"/>
@@ -85,7 +87,7 @@
                 <syncfusion:SfLinearProgressBar Name="PbLoading" Height="20" Progress="80" Width="100" IsIndeterminate="True" Visibility="Hidden"/>
             </StatusBarItem>
             <StatusBarItem Grid.Column="3">
-                <Image Source="/icon/configuracao-de-dados-windows-metro-16.png" Width="16" Height="16"/>
+                <Image Source="/icon/configuracao-de-dados-windows-metro-16.png" Width="16" Height="16" MouseDown="Image_MouseDown"/>
             </StatusBarItem>
             <StatusBarItem Grid.Column="4">
                 <TextBlock x:Name="txtDataBase"/>

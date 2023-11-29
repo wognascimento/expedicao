@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
-using Expedicao.Views;
+﻿using Expedicao.Views;
 using Microsoft.EntityFrameworkCore;
-using Syncfusion.Data.Extensions;
 using Syncfusion.SfSkinManager;
-using Syncfusion.UI.Xaml.Spreadsheet;
 using Syncfusion.Windows.Tools.Controls;
 using Syncfusion.XlsIO;
-using Syncfusion.XlsIO.Implementation.Collections;
 using Syncfusion.XlsIO.Implementation.PivotTables;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Configuration;
+using System.Diagnostics;
+using System.Drawing;
+using System.Windows;
+using System.Windows.Input;
+using Telerik.Windows.Controls;
 using SizeMode = Syncfusion.SfSkinManager.SizeMode;
 
 namespace Expedicao
@@ -73,11 +71,12 @@ namespace Expedicao
         {
             InitializeComponent();
 			this.Loaded += OnLoaded;
+            StyleManager.ApplicationTheme = new Windows11Theme();
 
-            dB.Database = DateTime.Now.Year.ToString();
-            dB.Host = "192.168.0.23";
-            dB.Username = Environment.UserName;
-            dB.Password = "123mudar";
+            var appSettings = ConfigurationManager.GetSection("appSettings") as NameValueCollection;
+            if (appSettings[0].Length > 0)
+                dB.Username = appSettings[0];
+
             txtUsername.Text = dB.Username;
             txtDataBase.Text = dB.Database;
         }
@@ -123,93 +122,147 @@ namespace Expedicao
             }
         }
 
+        public void adicionarFilho(object filho, string title, string name)
+        {
+            var doc = ExistDocumentInDocumentContainer(name);
+            if (doc == null)
+            {
+                doc = (FrameworkElement?)filho;
+                DocumentContainer.SetHeader(doc, title);
+                doc.Name = name.ToLower();
+                _mdi.Items.Add(doc);
+            }
+            else
+            {
+                //_mdi.RestoreDocument(doc as UIElement);
+                _mdi.ActiveDocument = doc;
+            }
+        }
+
+        private FrameworkElement ExistDocumentInDocumentContainer(string name_)
+        {
+            foreach (FrameworkElement element in _mdi.Items)
+            {
+                if (name_.ToLower() == element.Name)
+                {
+                    return element;
+                }
+            }
+            return null;
+        }
+
+
         private void expedProduto_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoProduto expedicaoProduto = new();
             DocumentContainer.SetHeader((DependencyObject)expedicaoProduto, (object)"EXPEDIÇÃO PRODUTO SHOPPING");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)expedicaoProduto, true);
-            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoProduto, new Rect((this._dc.ActualWidth - 1000.0) / 2.0, (this._dc.ActualHeight - 700.0) / 2.0, 1000.0, 700.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoProduto, new Rect((this._mdi.ActualWidth - 1000.0) / 2.0, (this._mdi.ActualHeight - 700.0) / 2.0, 1000.0, 700.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)expedicaoProduto, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = true;
-            this._dc.Items.Add((object)expedicaoProduto);
+            this._mdi.CanMDIMaximize = true;
+            this._mdi.Items.Add((object)expedicaoProduto);
+            */
+            adicionarFilho(new ViewExpedicaoProduto(), "EXPEDIÇÃO PRODUTO SHOPPING", "EXPEDICAO_PRODUTO_SHOPPING");
         }
 
         private void expedImprimirEtiqueta_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoImpressaoEtiqueta impressaoEtiqueta = new();
             DocumentContainer.SetHeader((DependencyObject)impressaoEtiqueta, (object)"EXPEDIÇÃO IMPRESSÃO DE ETIQUETA");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)impressaoEtiqueta, true);
-            DocumentContainer.SetMDIBounds((DependencyObject)impressaoEtiqueta, new Rect((this._dc.ActualWidth - 900.0) / 2.0, (this._dc.ActualHeight - 600.0) / 2.0, 900.0, 600.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)impressaoEtiqueta, new Rect((this._mdi.ActualWidth - 900.0) / 2.0, (this._mdi.ActualHeight - 600.0) / 2.0, 900.0, 600.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)impressaoEtiqueta, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = true;
-            this._dc.Items.Add((object)impressaoEtiqueta);
+            this._mdi.CanMDIMaximize = true;
+            this._mdi.Items.Add((object)impressaoEtiqueta);
+            */
+            adicionarFilho(new ViewExpedicaoImpressaoEtiqueta(), "EXPEDIÇÃO IMPRESSÃO DE ETIQUETA", "EXPEDICAO_IMPRESSAO_ETIQUETA");
         }
 
         private void liberarImpressao_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoLiberarImpressao liberarImpressao = new ViewExpedicaoLiberarImpressao();
             DocumentContainer.SetHeader((DependencyObject)liberarImpressao, (object)"EXPEDIÇÃO LIBERAR IMPRESSÃO DE ETIQUETA");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)liberarImpressao, true);
-            DocumentContainer.SetMDIBounds((DependencyObject)liberarImpressao, new Rect((this._dc.ActualWidth - 900.0) / 2.0, (this._dc.ActualHeight - 600.0) / 2.0, 900.0, 600.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)liberarImpressao, new Rect((this._mdi.ActualWidth - 900.0) / 2.0, (this._mdi.ActualHeight - 600.0) / 2.0, 900.0, 600.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)liberarImpressao, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = true;
-            this._dc.Items.Add((object)liberarImpressao);
+            this._mdi.CanMDIMaximize = true;
+            this._mdi.Items.Add((object)liberarImpressao);
+            */
+            adicionarFilho(new ViewExpedicaoLiberarImpressao(), "EXPEDIÇÃO LIBERAR IMPRESSÃO DE ETIQUETA", "EXPEDICAO_LIBERAR_IMPRESSAO_ETIQUETA");
         }
 
         private void expedNovoRomaneio_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoRomaneio expedicaoRomaneio = new ViewExpedicaoRomaneio();
             DocumentContainer.SetHeader((DependencyObject)expedicaoRomaneio, (object)"EXPEDIÇÃO ROMANEIO");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)expedicaoRomaneio, true);
             DocumentContainer.SetMDIWindowState((DependencyObject)expedicaoRomaneio, MDIWindowState.Normal);
-            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoRomaneio, new Rect((this._dc.ActualWidth - 900.0) / 2.0, (this._dc.ActualHeight - 530.0) / 2.0, 900.0, 530.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoRomaneio, new Rect((this._mdi.ActualWidth - 900.0) / 2.0, (this._mdi.ActualHeight - 530.0) / 2.0, 900.0, 530.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)expedicaoRomaneio, MDIWindowState.Normal);
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)expedicaoRomaneio);
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)expedicaoRomaneio);
+            */
+            adicionarFilho(new ViewExpedicaoRomaneio(), "EXPEDIÇÃO ROMANEIO", "EXPEDICAO_ROMANEIO");
         }
 
         private void expedTodosRomaneios_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoRomaneios expedicaoRomaneios = new ViewExpedicaoRomaneios("PRINCIPAL");
             DocumentContainer.SetHeader((DependencyObject)expedicaoRomaneios, (object)"EXPEDIÇÃO ROMANEIOS");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)expedicaoRomaneios, true);
-            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoRomaneios, new Rect((this._dc.ActualWidth - 800.0) / 2.0, (this._dc.ActualHeight - 600.0) / 2.0, 800.0, 600.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoRomaneios, new Rect((this._mdi.ActualWidth - 800.0) / 2.0, (this._mdi.ActualHeight - 600.0) / 2.0, 800.0, 600.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)expedicaoRomaneios, MDIWindowState.Normal);
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)expedicaoRomaneios);
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)expedicaoRomaneios);
+            */
+            adicionarFilho(new ViewExpedicaoRomaneios("PRINCIPAL"), "EXPEDIÇÃO ROMANEIOS", "EXPEDICAO_ROMANEIOS");
         }
 
         private void expedColetarDados_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoColetaDados expedicaoColetaDados = new ViewExpedicaoColetaDados();
             DocumentContainer.SetHeader((DependencyObject)expedicaoColetaDados, (object)"EXPEDIÇÃO COLETA DE DADOS");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)expedicaoColetaDados, true);
-            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoColetaDados, new Rect((this._dc.ActualWidth - 800.0) / 2.0, (this._dc.ActualHeight - 600.0) / 2.0, 800.0, 600.0));
+            DocumentContainer.SetMDIBounds((DependencyObject)expedicaoColetaDados, new Rect((this._mdi.ActualWidth - 800.0) / 2.0, (this._mdi.ActualHeight - 600.0) / 2.0, 800.0, 600.0));
             DocumentContainer.SetMDIWindowState((DependencyObject)expedicaoColetaDados, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = true;
-            this._dc.Items.Add((object)expedicaoColetaDados);
+            this._mdi.CanMDIMaximize = true;
+            this._mdi.Items.Add((object)expedicaoColetaDados);
+            */
+            adicionarFilho(new ViewExpedicaoColetaDados(), "EXPEDIÇÃO COLETA DE DADOS", "EXPEDICAO_COLETA_DADOS");
         }
 
         private void ItensFaltantes_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoExcel viewExpedicaoExcel = new ViewExpedicaoExcel("ITENS_FALTANTES");
             DocumentContainer.SetHeader((DependencyObject)viewExpedicaoExcel, (object)"EXPEDIÇÃO ITENS FALTANTES");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)viewExpedicaoExcel, true);
             DocumentContainer.SetMDIWindowState((DependencyObject)viewExpedicaoExcel, MDIWindowState.Normal);
-            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._dc.ActualWidth - 600.0) / 2.0, (this._dc.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)viewExpedicaoExcel);
+            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._mdi.ActualWidth - 600.0) / 2.0, (this._mdi.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)viewExpedicaoExcel);
+            */
+            adicionarFilho(new ViewExpedicaoExcel("ITENS_FALTANTES"), "EXPEDIÇÃO ITENS FALTANTES", "EXPEDICAO_ITENS_FALTANTES");
         }
 
         private void ItensCarregados_Click(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoExcel viewExpedicaoExcel = new ViewExpedicaoExcel("ITENS_CARREGADOS");
             DocumentContainer.SetHeader((DependencyObject)viewExpedicaoExcel, (object)"EXPEDIÇÃO ITENS CARREGADOS");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)viewExpedicaoExcel, true);
             DocumentContainer.SetMDIWindowState((DependencyObject)viewExpedicaoExcel, MDIWindowState.Normal);
-            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._dc.ActualWidth - 600.0) / 2.0, (this._dc.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)viewExpedicaoExcel);
+            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._mdi.ActualWidth - 600.0) / 2.0, (this._mdi.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)viewExpedicaoExcel);
+            */
+            adicionarFilho(new ViewExpedicaoExcel("ITENS_CARREGADOS"), "EXPEDIÇÃO ITENS CARREGADOS", "EXPEDICAO_ITENS_CARREGADOS");
         }
 
         private async void OnExpedClick(object sender, RoutedEventArgs e)
@@ -796,46 +849,104 @@ namespace Expedicao
 
         private void OnCubagemZeradaClienteClick(object sender, RoutedEventArgs e)
         {
+            /*
             ViewCubagemClienteZerada expedicaoRomaneio = new();
             DocumentContainer.SetHeader(expedicaoRomaneio, "CUBAGEM ZERADA CLIENTE");
             DocumentContainer.SetSizetoContentInMDI(expedicaoRomaneio, true);
-            DocumentContainer.SetMDIBounds(expedicaoRomaneio, new Rect((this._dc.ActualWidth - 1024.0) / 2.0, (this._dc.ActualHeight - 780.0) / 2.0, 1024.0, 780.0));
+            DocumentContainer.SetMDIBounds(expedicaoRomaneio, new Rect((this._mdi.ActualWidth - 1024.0) / 2.0, (this._mdi.ActualHeight - 780.0) / 2.0, 1024.0, 780.0));
             DocumentContainer.SetMDIWindowState(expedicaoRomaneio, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = true;
-            this._dc.Items.Add(expedicaoRomaneio);
+            this._mdi.CanMDIMaximize = true;
+            this._mdi.Items.Add(expedicaoRomaneio);
+            */
+            adicionarFilho(new ViewCubagemClienteZerada(), "CUBAGEM ZERADA CLIENTE", "CUBAGEM_ZERADA_CLIENTE");
         }
 
         private void OnPreItensFaltantesClick(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoExcel viewExpedicaoExcel = new ViewExpedicaoExcel("PRE_ITENS_FALTANTES");
             DocumentContainer.SetHeader((DependencyObject)viewExpedicaoExcel, (object)"EXPEDIÇÃO PRÉ-CONFERENCIA ITENS FALTANTES");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)viewExpedicaoExcel, true);
             DocumentContainer.SetMDIWindowState((DependencyObject)viewExpedicaoExcel, MDIWindowState.Normal);
-            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._dc.ActualWidth - 600.0) / 2.0, (this._dc.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)viewExpedicaoExcel);
+            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._mdi.ActualWidth - 600.0) / 2.0, (this._mdi.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)viewExpedicaoExcel);
+            */
+            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_FALTANTES"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS FALTANTES", "EXPEDICAO_PRE-CONFERENCIA_ITENS_FALTANTES");
         }
 
         private void OnPreItensCarregadosClick(object sender, RoutedEventArgs e)
         {
+            /*
             ViewExpedicaoExcel viewExpedicaoExcel = new ViewExpedicaoExcel("PRE_ITENS_CONFERIDOS");
             DocumentContainer.SetHeader((DependencyObject)viewExpedicaoExcel, (object)"EXPEDIÇÃO PRÉ-CONFERENCIA ITENS CONFERIDOS");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)viewExpedicaoExcel, true);
             DocumentContainer.SetMDIWindowState((DependencyObject)viewExpedicaoExcel, MDIWindowState.Normal);
-            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._dc.ActualWidth - 600.0) / 2.0, (this._dc.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add((object)viewExpedicaoExcel);
+            DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._mdi.ActualWidth - 600.0) / 2.0, (this._mdi.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add((object)viewExpedicaoExcel);
+            */
+            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_CONFERIDOS"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS CONFERIDOS", "EXPEDICAO_PRE-CONFERENCIA_ITENS_CONFERIDOS");
         }
 
         private void expedNotaCaminhao(object sender, RoutedEventArgs e)
         {
+            /*
             ViewSolicitarNotaCaminhao expedicaoRomaneio = new();
             DocumentContainer.SetHeader(expedicaoRomaneio, "SOLICITA NOTA FISCAL POR CAMINHÃO");
             DocumentContainer.SetSizetoContentInMDI(expedicaoRomaneio, true);
-            DocumentContainer.SetMDIBounds(expedicaoRomaneio, new Rect((this._dc.ActualWidth - 1024.0) / 2.0, (this._dc.ActualHeight - 780.0) / 2.0, 1024.0, 780.0));
+            DocumentContainer.SetMDIBounds(expedicaoRomaneio, new Rect((this._mdi.ActualWidth - 1024.0) / 2.0, (this._mdi.ActualHeight - 780.0) / 2.0, 1024.0, 780.0));
             DocumentContainer.SetMDIWindowState(expedicaoRomaneio, MDIWindowState.Maximized);
-            this._dc.CanMDIMaximize = false;
-            this._dc.Items.Add(expedicaoRomaneio);
+            this._mdi.CanMDIMaximize = false;
+            this._mdi.Items.Add(expedicaoRomaneio);
+            */
+            adicionarFilho(new ViewSolicitarNotaCaminhao(), "SOLICITA NOTA FISCAL POR CAMINHÃO", "SOLICITA_NOTA_FISCAL_CAMINHAO");
+        }
+
+        private void OnMdiCloseAllTabs(object sender, CloseTabEventArgs e)
+        {
+            _mdi.Items.Clear();
+        }
+
+        private void OnMdiCloseButtonClick(object sender, CloseButtonEventArgs e)
+        {
+            var tab = (DocumentContainer)sender;
+            _mdi.Items.Remove(tab.ActiveDocument);
+        }
+
+        private void OnAlterarUsuario(object sender, MouseButtonEventArgs e)
+        {
+            Login window = new();
+            window.ShowDialog();
+
+            try
+            {
+                var appSettings = ConfigurationManager.GetSection("appSettings") as NameValueCollection;
+                dB.Username = appSettings[0];
+                txtUsername.Text = dB.Username;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void Image_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            RadWindow.Prompt(new DialogParameters()
+            {
+                Header = "Ano Sistema",
+                Content = "Alterar o Ano do Sistema",
+                Closed = (object sender, WindowClosedEventArgs e) =>
+                {
+                    if (e.PromptResult != null)
+                    {
+                        dB.Database = e.PromptResult;
+                        txtDataBase.Text = dB.Database;
+                        _mdi.Items.Clear();
+                    }
+                }
+            });
         }
     }
 }

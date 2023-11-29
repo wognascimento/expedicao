@@ -1,76 +1,103 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>icon\logo-roxo.ico</ApplicationIcon>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>icon\logo-roxo.ico</ApplicationIcon>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="App.ico" />
-    <None Remove="Database.db" />
-    <None Remove="favicon.ico" />
-    <None Remove="icon\checklist.png" />
-    <None Remove="icon\configuracao-de-dados-windows-metro-16.png" />
-    <None Remove="icon\icons8-alimentacao-de-papel-32.png" />
-    <None Remove="icon\icons8-caminhao-interestadual-32.png" />
-    <None Remove="icon\icons8-enviar-documento-32.png" />
-    <None Remove="icon\icons8-enviar-documento-por-e-mail-32.png" />
-    <None Remove="icon\icons8-impressao-24.png" />
-    <None Remove="icon\icons8-microsoft-excel-40.png" />
-    <None Remove="icon\icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" />
-    <None Remove="sound\error.wav" />
-    <None Remove="sound\success.wav" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="App.ico" />
+		<None Remove="Database.db" />
+		<None Remove="favicon.ico" />
+		<None Remove="icon\checklist.png" />
+		<None Remove="icon\configuracao-de-dados-windows-metro-16.png" />
+		<None Remove="icon\icons8-alimentacao-de-papel-32.png" />
+		<None Remove="icon\icons8-caminhao-interestadual-32.png" />
+		<None Remove="icon\icons8-enviar-documento-32.png" />
+		<None Remove="icon\icons8-enviar-documento-por-e-mail-32.png" />
+		<None Remove="icon\icons8-impressao-24.png" />
+		<None Remove="icon\icons8-microsoft-excel-40.png" />
+		<None Remove="icon\icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" />
+		<None Remove="sound\error.wav" />
+		<None Remove="sound\success.wav" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="icon\logo-roxo.ico" />
-    <Content Include="Database.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="sound\error.wav" />
-  </ItemGroup>
-  
-  
-  <ItemGroup>
-    <None Include="Project_Readme.html" />
-  </ItemGroup>
-  
-  
-  <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.4" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
-    <PackageReference Include="syncfusion.ui.wpf.net" Version="20.3.0.56" />
-    <PackageReference Include="System.IO.Ports" Version="7.0.0" />
-    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="7.22.2" />
-  </ItemGroup>
-  
-  
-  <ItemGroup>
-    <Resource Include="App.ico" />
-    <Resource Include="favicon.ico" />
-    <Resource Include="icon\checklist.png" />
-    <Resource Include="icon\configuracao-de-dados-windows-metro-16.png" />
-    <Resource Include="icon\icons8-alimentacao-de-papel-32.png" />
-    <Resource Include="icon\icons8-caminhao-interestadual-32.png" />
-    <Resource Include="icon\icons8-enviar-documento-32.png" />
-    <Resource Include="icon\icons8-enviar-documento-por-e-mail-32.png" />
-    <Resource Include="icon\icons8-impressao-24.png" />
-    <Resource Include="icon\icons8-microsoft-excel-40.png" />
-    <Resource Include="icon\icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" />
-    <Resource Include="sound\success.wav" />
-  </ItemGroup>
-  
-  
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Syncfusion.Shared.Wpf.resx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="icon\logo-roxo.ico" />
+		<Content Include="Database.db">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Resource Include="sound\error.wav" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<None Include="Project_Readme.html" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="CsvHelper" Version="30.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.4" />
+		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
+		<PackageReference Include="NuGet.CommandLine" Version="6.8.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="squirrel.windows" Version="1.9.0" />
+		<PackageReference Include="syncfusion.ui.wpf.net" Version="20.3.0.56" />
+		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
+		<PackageReference Include="Telerik.UI.for.Wpf.70.Xaml" Version="2023.1.117" />
+		<PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="7.22.2" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<Resource Include="App.ico" />
+		<Resource Include="favicon.ico" />
+		<Resource Include="icon\checklist.png" />
+		<Resource Include="icon\configuracao-de-dados-windows-metro-16.png" />
+		<Resource Include="icon\icons8-alimentacao-de-papel-32.png" />
+		<Resource Include="icon\icons8-caminhao-interestadual-32.png" />
+		<Resource Include="icon\icons8-enviar-documento-32.png" />
+		<Resource Include="icon\icons8-enviar-documento-por-e-mail-32.png" />
+		<Resource Include="icon\icons8-impressao-24.png" />
+		<Resource Include="icon\icons8-microsoft-excel-40.png" />
+		<Resource Include="icon\icons8-usu_0025c3_0025a1rio-de-g_0025c3_0025aanero-neutro-windows-metro-16.png" />
+		<Resource Include="sound\success.wav" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\Syncfusion.Shared.Wpf.resx">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
+
+
+	<PropertyGroup>
+		<NugetTools>$(PkgNuGet_CommandLine)\tools</NugetTools>
+		<SquirrelTools>$(Pkgsquirrel_windows)\tools</SquirrelTools>
+
+		<Version>1.0.0</Version>
+
+		<NuspecFile>$(SolutionDir)Expedicao\Expedicao.nuspec</NuspecFile>
+	</PropertyGroup>
+
+	<Target Name="GenerateRelease" AfterTargets="AfterBuild" Condition="$(Configuration) == Release">
+		<XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
+			<Output TaskParameter="Result" ItemName="ID" />
+		</XmlPeek>
+
+		<Exec Command="$(NugetTools)\NuGet.exe pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)Deployment\GeneratedNugets" />
+
+		<Exec Command="$(SquirrelTools)\Squirrel.exe --releasify $(SolutionDir)Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)Deployment\Releases -g .\loading.gif" />
+	</Target>
+
 </Project>
