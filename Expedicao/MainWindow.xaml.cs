@@ -1,5 +1,6 @@
 ﻿using Expedicao.Views;
 using Microsoft.EntityFrameworkCore;
+using Squirrel;
 using Syncfusion.SfSkinManager;
 using Syncfusion.Windows.Tools.Controls;
 using Syncfusion.XlsIO;
@@ -24,6 +25,7 @@ namespace Expedicao
     {
 
         private DataBase dB = DataBase.Instance;
+        private UpdateManager manager;
 
         #region Fields
         private string currentVisualStyle;
@@ -85,10 +87,38 @@ namespace Expedicao
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void OnLoaded(object sender, RoutedEventArgs e)
+        private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             CurrentVisualStyle = "Metro"; //"FluentLight";
 	        CurrentSizeMode = "Default";
+            /*
+            try
+            {
+                manager = await UpdateManager.GitHubUpdateManager(@"https://github.com/wognascimento/expedicao");
+                var updateInfo = await manager.CheckForUpdate();
+                if (updateInfo.ReleasesToApply.Count > 0)
+                {
+                    RadWindow.Confirm(new DialogParameters()
+                    {
+                        Header = "Atualização",
+                        Content = "Existe uma atualização para o sistema, deseja atualiza?",
+                        Closed = async (object sender, WindowClosedEventArgs e) =>
+                        {
+                            var result = e.DialogResult;
+                            if (result == true)
+                            {
+                                await manager.UpdateApp();
+                                RadWindow.Alert("Sistema atualizado!\nFecha e abre o Sistema, para aplicar a atualização.");
+                            }
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                RadWindow.Alert(ex.Message);
+            }
+            */
         }
 		/// <summary>
         /// On Visual Style Changed.
@@ -239,7 +269,7 @@ namespace Expedicao
 
         private void ItensFaltantes_Click(object sender, RoutedEventArgs e)
         {
-            /*
+            
             ViewExpedicaoExcel viewExpedicaoExcel = new ViewExpedicaoExcel("ITENS_FALTANTES");
             DocumentContainer.SetHeader((DependencyObject)viewExpedicaoExcel, (object)"EXPEDIÇÃO ITENS FALTANTES");
             DocumentContainer.SetSizetoContentInMDI((DependencyObject)viewExpedicaoExcel, true);
@@ -247,8 +277,9 @@ namespace Expedicao
             DocumentContainer.SetMDIBounds((DependencyObject)viewExpedicaoExcel, new Rect((this._mdi.ActualWidth - 600.0) / 2.0, (this._mdi.ActualHeight - 80.0) / 2.0, 600.0, 80.0));
             this._mdi.CanMDIMaximize = false;
             this._mdi.Items.Add((object)viewExpedicaoExcel);
-            */
-            adicionarFilho(new ViewExpedicaoExcel("ITENS_FALTANTES"), "EXPEDIÇÃO ITENS FALTANTES", "EXPEDICAO_ITENS_FALTANTES");
+            
+
+            //adicionarFilho(new ViewExpedicaoExcel("ITENS_FALTANTES"), "EXPEDIÇÃO ITENS FALTANTES", "EXPEDICAO_ITENS_FALTANTES");
         }
 
         private void ItensCarregados_Click(object sender, RoutedEventArgs e)

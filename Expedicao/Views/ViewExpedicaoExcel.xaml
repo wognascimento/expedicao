@@ -10,26 +10,52 @@
              Loaded="UserControl_Loaded">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
         <Grid x:Name="load">
-            <syncfusion:SfBusyIndicator Name="sfBusyIndicator" IsBusy="True" AnimationType="Gear"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       AnimationSpeed="50" Control.Background="White"/>
+            <syncfusion:SfBusyIndicator 
+                Name="sfBusyIndicator" 
+                IsBusy="True" 
+                AnimationType="Gear"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                AnimationSpeed="50" 
+                Control.Background="White"/>
         </Grid>
+        
         <Grid x:Name="principal" Visibility="Hidden">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <syncfusion:SfMultiColumnDropDownControl x:Name="sfmcAprovados" Grid.Column="0" Margin="0,0,10,0" AutoGenerateColumns="true"
-                                               AllowIncrementalFiltering="True" AllowImmediatePopup="True"
-                                               AllowDiacriticSensitiveFiltering="False" DisplayMember="SiglaServ"
-                                               GridColumnSizer="AutoWithLastColumnFill" ItemsSource="{Binding AprovadosDetails}"/>
+            <syncfusion:SfMultiColumnDropDownControl 
+                x:Name="sfmcAprovados" 
+                Grid.Column="0" 
+                Margin="0,0,10,0" 
+                AutoGenerateColumns="true"
+                AllowIncrementalFiltering="True" 
+                AllowImmediatePopup="True"
+                AllowDiacriticSensitiveFiltering="False" 
+                DisplayMember="SiglaServ"
+                GridColumnSizer="AutoWithLastColumnFill" 
+                ItemsSource="{Binding AprovadosDetails}"/>
+            
             <Button Click="btnExcel_Click" Name="btnExcel" Grid.Column="1" Margin="0,0,10,0">
                 <Image Source="/icon/icons8-microsoft-excel-40.png"/>
             </Button>
-            <syncfusion:SfBusyIndicator Name="sfBusyIndicatorExcel" Grid.Column="1" IsBusy="False" AnimationType="Gear"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       AnimationSpeed="50" Control.Background="White" Margin="0,0,10,0"/>
+            
+            <syncfusion:SfBusyIndicator 
+                Name="sfBusyIndicatorExcel" 
+                Grid.Column="1" 
+                IsBusy="False" 
+                AnimationType="Gear"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                AnimationSpeed="50" 
+                Control.Background="White" 
+                Margin="0,0,10,0"/>
         </Grid>
     </Grid>
 

@@ -229,9 +229,16 @@ namespace Expedicao
             try
             {
                 using AppDatabase db = new();
+                /*
                 listAsync = await db.CarregamentoItenFaltantes
                     .Where(s => s.Sigla == sigla)
                     .ToListAsync();
+                */
+
+                listAsync = await (from f in db.CarregamentoItenFaltantes
+                             where f.Sigla == sigla
+                             select f).ToListAsync();
+
             }
             catch (Exception)
             {
