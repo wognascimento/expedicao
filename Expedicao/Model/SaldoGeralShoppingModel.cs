@@ -20,5 +20,8 @@ namespace Expedicao
         //public DateTime? fechamento_shopp { get; set; }
         public double? cubagem_memorial { get; set; }
         //public double? novo_perc {  get; set; }
+        public double? m3_media { get; set; }
+        //public double? pl_media { get; set; }
+        //public double? pb_media { get; set; }
     }
 }

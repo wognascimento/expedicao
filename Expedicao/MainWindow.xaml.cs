@@ -11,6 +11,7 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Telerik.Windows.Controls;
@@ -391,7 +392,7 @@ namespace Expedicao
                 IWorksheet worksheet = workbook.Worksheets[0];
 
                 using AppDatabase db = new();
-                IList<SaldoGeralShoppingModel> dados = await db.SaldoGeralShoppings.ToListAsync();
+                IList<SaldoGeralShoppingModel> dados = await db.SaldoGeralShoppings.OrderBy(s => s.sigla).ToListAsync();
                 ExcelImportDataOptions importDataOptions = new()
                 {
                     FirstRow = 1,
@@ -403,14 +404,14 @@ namespace Expedicao
         
 
                 
-                IConditionalFormats ConditionalFormats1 = worksheet.Range[$"A2:J{dados.Count+1}"].ConditionalFormats;
+                IConditionalFormats ConditionalFormats1 = worksheet.Range[$"A2:K{dados.Count+1}"].ConditionalFormats;
                 IConditionalFormat condition1 = ConditionalFormats1.AddCondition();
                 condition1.FormatType = ExcelCFType.Formula;
                 condition1.FirstFormula = "=$I2 >= 1";
                 condition1.BackColorRGB = Color.FromArgb(83, 255, 161);
                 
                 
-                IConditionalFormats ConditionalFormats2 = worksheet.Range[$"A2:J{dados.Count + 1}"].ConditionalFormats;
+                IConditionalFormats ConditionalFormats2 = worksheet.Range[$"A2:K{dados.Count + 1}"].ConditionalFormats;
                 IConditionalFormat condition2 = ConditionalFormats2.AddCondition();
                 condition2.FormatType = ExcelCFType.Formula;
                 condition2.FirstFormula = "=$I2 > 0,5";
@@ -418,7 +419,7 @@ namespace Expedicao
                 
 
                 
-                IConditionalFormats ConditionalFormats3 = worksheet.Range[$"A2:J{dados.Count + 1}"].ConditionalFormats;
+                IConditionalFormats ConditionalFormats3 = worksheet.Range[$"A2:K{dados.Count + 1}"].ConditionalFormats;
                 IConditionalFormat condition3 = ConditionalFormats3.AddCondition();
                 condition3.Operator = ExcelComparisonOperator.Equal;
                 condition3.FormatType = ExcelCFType.Formula;
