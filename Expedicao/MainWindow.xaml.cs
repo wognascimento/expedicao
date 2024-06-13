@@ -413,7 +413,7 @@ namespace Expedicao
                 IConditionalFormats ConditionalFormats2 = worksheet.Range[$"A2:J{dados.Count + 1}"].ConditionalFormats;
                 IConditionalFormat condition2 = ConditionalFormats2.AddCondition();
                 condition2.FormatType = ExcelCFType.Formula;
-                condition2.FirstFormula = "=$I2 > 0.5";
+                condition2.FirstFormula = "=$I2 > 0,5";
                 condition2.BackColorRGB = Color.FromArgb(29, 158, 255);
                 
 
@@ -422,7 +422,7 @@ namespace Expedicao
                 IConditionalFormat condition3 = ConditionalFormats3.AddCondition();
                 condition3.Operator = ExcelComparisonOperator.Equal;
                 condition3.FormatType = ExcelCFType.Formula;
-                condition3.FirstFormula = "=$I2 < 0.5";
+                condition3.FirstFormula = "=$I2 < 0,5";
                 condition3.BackColorRGB = Color.FromArgb(255, 255, 255);
 
                 //worksheet.Range["C:C"].NumberFormat = "_-* #.##0,00_-;-* #.##0,00_-;_-* "-"??_-;_-@_-";
