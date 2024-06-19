@@ -904,7 +904,7 @@ namespace Expedicao
             this._mdi.CanMDIMaximize = false;
             this._mdi.Items.Add((object)viewExpedicaoExcel);
             */
-            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_FALTANTES"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS FALTANTES", "EXPEDICAO_PRE-CONFERENCIA_ITENS_FALTANTES");
+            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_FALTANTES"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS FALTANTES", "EXPEDICAO_PRE_CONFERENCIA_ITENS_FALTANTES");
         }
 
         private void OnPreItensCarregadosClick(object sender, RoutedEventArgs e)
@@ -918,7 +918,7 @@ namespace Expedicao
             this._mdi.CanMDIMaximize = false;
             this._mdi.Items.Add((object)viewExpedicaoExcel);
             */
-            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_CONFERIDOS"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS CONFERIDOS", "EXPEDICAO_PRE-CONFERENCIA_ITENS_CONFERIDOS");
+            adicionarFilho(new ViewExpedicaoExcel("PRE_ITENS_CONFERIDOS"), "EXPEDIÇÃO PRÉ-CONFERENCIA ITENS CONFERIDOS", "EXPEDICAO_PRE_CONFERENCIA_ITENS_CONFERIDOS");
         }
 
         private void expedNotaCaminhao(object sender, RoutedEventArgs e)
