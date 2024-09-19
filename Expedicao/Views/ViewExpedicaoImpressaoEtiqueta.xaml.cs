@@ -149,52 +149,6 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"^FT16,141^A0N,25,24^FR^FH\^FD{DateTime.Now:MM/dd/yy}^FS");
                 streamWriter1.WriteLine($@"^FO131,21^GB517,102,102^FS");
                 streamWriter1.WriteLine($@"^FT131,102^A0N,81,60^FB517,1,0,C^FR^FH\^FD{row.Sigla}^FS");
-                streamWriter1.WriteLine($@"^FT688,151^BQN,2,4");
-                //if ((bool)row.Controlado)
-                streamWriter1.WriteLine($@"^FH\^FDLA,{row.Sigla}|{row.Volume}^FS");
-                streamWriter1.WriteLine($@"^BY3,3,56^FT234,195^BCN,,Y,N");
-                streamWriter1.WriteLine($@"^FD>;{row.Barcode}^FS");
-                streamWriter1.WriteLine($@"^FT685,172^A0N,18,16^FB90,1,0,C^FH\^FDCAMINHÃO^FS");
-                streamWriter1.WriteLine($@"^FT711,244^A0N,73,72^FB35,1,0,C^FH\^FD{row.BaiaCaminhao}^FS");
-                streamWriter1.WriteLine($@"^LRY^FO667,147^GB123,0,113^FS^LRN");
-                streamWriter1.WriteLine($@"^FT132,297^AAN,36,25^FB511,1,0,C^FH\^FDLOCAL DO SHOPPING^FS");
-                List<string> stringList1 = QuebraString(row.LocalShoppings, 43);
-                streamWriter1.WriteLine($@"^FT9,358^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList1.Count >= 1 ? stringList1[0].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT9,429^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList1.Count == 2 ? stringList1[1].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT108,1038^AAN,18,10^FB181,1,0,C^FH\^FDCONTROLE EXPED.^FS");
-                streamWriter1.WriteLine($@"^FO41,1057^GB312,98,98^FS");
-                streamWriter1.WriteLine($@"^FT41,1135^A0N,78,108^FB312,1,0,C^FR^FH\^FD{row.Volume}^FS");
-                streamWriter1.WriteLine($@"^FT667,906^AAN,18,10^FB49,1,0,C^FH\^FDITEM^FS");
-                streamWriter1.WriteLine($@"^FT553,1038^AAN,18,10^FB73,1,0,C^FH\^FDVOLUME^FS");//
-                streamWriter1.WriteLine($@"^FT379,1140^A0N,85,110^FB417,1,0,C^FH\^FD{row.VolExp} / {row.VolTotExp}^FS");//
-                streamWriter1.WriteLine($@"^FO609,922^GB162,85,85^FS");
-                streamWriter1.WriteLine($@"^FT609,990^A0N,68,67^FB162,1,0,C^FR^FH\^FD{row.ItemMemorial}^FS");
-                streamWriter1.WriteLine($@"^FT73,906^AAN,18,10^FB37,1,0,C^FH\^FDDET^FS");
-                streamWriter1.WriteLine($@"^FT132,510^AAN,36,25^FB511,1,0,C^FH\^FDDESCRIÇÃO PRODUTO^FS");
-                List<string> stringList2 = QuebraString(row.Descricao, 43);
-                streamWriter1.WriteLine($@"^FT10,586^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 1 ? stringList2[0].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT10,657^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 2 ? stringList2[1].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT10,728^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 3 ? stringList2[2].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT10,799^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 4 ? stringList2[3].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT10,870^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 5 ? stringList2[4].Trim() : "")}^FS");
-                streamWriter1.WriteLine($@"^FT10,990^A0N,68,67^FB160,1,0,C^FH\^FD{row.CodDetalhesCompl}^FS");
-                streamWriter1.WriteLine($@"^FT302,906^AAN,18,10^FB121,1,0,C^FH\^FDQUANTIDADE^FS");
-                streamWriter1.WriteLine($@"^FT297,990^A0N,68,67^FB128,1,0,C^FH\^FD{row.QtdExpedida}^FS");
-                streamWriter1.WriteLine($@"^PQ1,0,1,Y^XZ");
-                */
-
-                streamWriter1.WriteLine($@"^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR5,5~SD15^JUS^LRN^CI28^XZ");
-                streamWriter1.WriteLine($@"^XA");
-                streamWriter1.WriteLine($@"^MMT");
-                streamWriter1.WriteLine($@"^PW799");
-                streamWriter1.WriteLine($@"^LL1199");
-                streamWriter1.WriteLine($@"^LS0");
-                streamWriter1.WriteLine($@"^FO0,32^GFA,01152,01152,00012,:Z64:");
-                streamWriter1.WriteLine($@"eJztkT0KAjEQhTOLIlglldViKzmFhVcQq2U9goUwlSCWnkKsJLfwBm5hnZME3ajzI2wjCDZONXkzfO8lMeaXBQCfrFvnnO0e9brpMCeDQg0Gal/pbuzcnAyGWxmMptIrHcqzXMAfZAeX0ivdxUYuEE7CwTX3hejQTwnIYBiCxEHkQK1OgaCOt2zwxIdAxoDIBsUxhAnp15Qq4u+F88b3wjF1jBdnLfE5qOLnfQ5apbQ5A+fcE6jlz8hA5TfjR35LOvsOEFfUF8oXUn6g10H55kDc+zeD2HSCcCE/4HdsbEpeb+tg/vX1ugPL3lH5:5877");
-                streamWriter1.WriteLine($@"^FO16,117^GB86,31,31^FS");
-                streamWriter1.WriteLine($@"^FT16,141^A0N,25,24^FR^FH\^FD{DateTime.Now:MM/dd/yy}^FS");
-                streamWriter1.WriteLine($@"^FO131,21^GB517,102,102^FS");
-                streamWriter1.WriteLine($@"^FT131,102^A0N,81,60^FB517,1,0,C^FR^FH\^FD{row.Sigla}^FS");
                 streamWriter1.WriteLine($@"^FT646,283^BQN,2,6");
                 streamWriter1.WriteLine($@"^FH\^FDLA,{row.Sigla}|{row.Volume}^FS");
                 streamWriter1.WriteLine($@"^BY3,3,56^FT234,195^BCN,,Y,N");
@@ -226,6 +180,49 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"^FT280,990^A0N,70,67^FB200,1,0,C^FH\^FD{row.QtdExpedida}^FS");
                 streamWriter1.WriteLine($@"^LRY^FO9,157^GB123,0,113^FS^LRN");
                 streamWriter1.WriteLine($@"^PQ1,0,1,Y^XZ");
+                */
+
+                streamWriter1.WriteLine($@"^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR5,5~SD15^JUS^LRN^CI28^XZ");
+                streamWriter1.WriteLine($@"^XA");
+                streamWriter1.WriteLine($@"^MMT");
+                streamWriter1.WriteLine($@"^PW799");
+                streamWriter1.WriteLine($@"^LL1199");
+                streamWriter1.WriteLine($@"^LS0");
+                streamWriter1.WriteLine($@"^FO0,32^GFA,01152,01152,00012,:Z64:");
+                streamWriter1.WriteLine($@"eJztkT0KAjEQhTOLIlglldViKzmFhVcQq2U9goUwlSCWnkKsJLfwBm5hnZME3ajzI2wjCDZONXkzfO8lMeaXBQCfrFvnnO0e9brpMCeDQg0Gal/pbuzcnAyGWxmMptIrHcqzXMAfZAeX0ivdxUYuEE7CwTX3hejQTwnIYBiCxEHkQK1OgaCOt2zwxIdAxoDIBsUxhAnp15Qq4u+F88b3wjF1jBdnLfE5qOLnfQ5apbQ5A+fcE6jlz8hA5TfjR35LOvsOEFfUF8oXUn6g10H55kDc+zeD2HSCcCE/4HdsbEpeb+tg/vX1ugPL3lH5:5877");
+                streamWriter1.WriteLine($@"^FO16,117^GB86,31,31^FS");
+                streamWriter1.WriteLine($@"^FT16,141^A0N,25,24^FR^FH\^FD{DateTime.Now:dd/MM/yy}^FS");
+                streamWriter1.WriteLine($@"^FO131,21^GB517,102,102^FS");
+                streamWriter1.WriteLine($@"^FT131,102^A0N,81,60^FB517,1,0,C^FR^FH\^FD{row.Sigla}^FS");
+                streamWriter1.WriteLine($@"^FT295,382^BQN,2,10");
+                streamWriter1.WriteLine($@"^FH\^FDLA,{row.Sigla}|{row.Volume}^FS");
+                streamWriter1.WriteLine($@"^FT28,182^A0N,18,16^FB90,1,0,C^FH\^FDCAMINHÃO^FS");
+                streamWriter1.WriteLine($@"^FT53,254^A0N,73,72^FB35,1,0,C^FH\^FD{row.BaiaCaminhao}^FS");
+                streamWriter1.WriteLine($@"^FT132,390^AAN,36,25^FB511,1,0,C^FH\^FDLOCAL DO SHOPPING^FS");
+                List<string> stringList1 = QuebraString(row.LocalShoppings, 43);
+                streamWriter1.WriteLine($@"^FT9,451^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList1.Count >= 1 ? stringList1[0].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT9,522^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList1.Count == 2 ? stringList1[1].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT108,1051^AAN,18,10^FB181,1,0,C^FH\^FDCONTROLE EXPED.^FS");
+                streamWriter1.WriteLine($@"^FO41,1057^GB312,98,98^FS");
+                streamWriter1.WriteLine($@"^FT41,1135^A0N,78,108^FB312,1,0,C^FR^FH\^FD{row.Volume}^FS");
+                streamWriter1.WriteLine($@"^FT667,944^AAN,18,10^FB49,1,0,C^FH\^FDITEM^FS");
+                streamWriter1.WriteLine($@"^FT553,1051^AAN,18,10^FB73,1,0,C^FH\^FDVOLUME^FS");
+                streamWriter1.WriteLine($@"^FT379,1140^A0N,85,110^FB417,1,0,C^FH\^FD{row.VolExp} / {row.VolTotExp}^FS");
+                streamWriter1.WriteLine($@"^FO609,951^GB162,85,85^FS");
+                streamWriter1.WriteLine($@"^FT609,1019^A0N,68,67^FB162,1,0,C^FR^FH\^FD{row.ItemMemorial}^FS");
+                streamWriter1.WriteLine($@"^FT73,944^AAN,18,10^FB37,1,0,C^FH\^FDDET^FS");
+                streamWriter1.WriteLine($@"^FT132,566^AAN,36,25^FB511,1,0,C^FH\^FDDESCRIÇÃO PRODUTO^FS");
+                List<string> stringList2 = QuebraString(row.Descricao, 43);
+                streamWriter1.WriteLine($@"^FT10,634^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 1 ? stringList2[0].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT10,705^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 2 ? stringList2[1].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT10,776^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 3 ? stringList2[2].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT10,847^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 4 ? stringList2[3].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT10,918^A0N,56,33^FB778,1,0,C^FH\^FD{(stringList2.Count >= 5 ? stringList2[4].Trim() : "")}^FS");
+                streamWriter1.WriteLine($@"^FT10,1019^A0N,68,67^FB160,1,0,C^FH\^FD{row.CodDetalhesCompl}^FS");
+                streamWriter1.WriteLine($@"^FT302,944^AAN,18,10^FB121,1,0,C^FH\^FDQUANTIDADE^FS");
+                streamWriter1.WriteLine($@"^FT297,1019^A0N,68,67^FB128,1,0,C^FH\^FD{row.QtdExpedida}^FS");
+                streamWriter1.WriteLine($@"^LRY^FO9,157^GB123,0,113^FS^LRN");
+                streamWriter1.WriteLine($@" ^ PQ1,0,1,Y^XZ");
 
                 if ((bool)row.Anexo)
                     EtiquetaAnexo((long)row.CodDetalhesCompl, (long)row.Sequencia, row.Sigla, dt);
