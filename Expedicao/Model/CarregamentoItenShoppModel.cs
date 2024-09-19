@@ -52,5 +52,7 @@ namespace Expedicao
         public string? CodVol { get; set; }
         [Column("kit_solucao")]
         public double? KitSolucao { get; set; }
+        [Column("manual")]
+        public bool? Manual { get; set; }
     }
 }
