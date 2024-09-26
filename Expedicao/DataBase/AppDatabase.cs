@@ -38,6 +38,8 @@ namespace Expedicao
         public DbSet<PendenciaExpedicaoModel> PendenciaExpedicaos { get; set; }
         public DbSet<PreConferenciaItemFaltanteModel> PreConferenciaItemFaltantes { get; set; }
         public DbSet<PreConferenciaItemShoppModel> PreConferenciaItemShopps { get; set; }
+        public DbSet<CubagemSiglaCaminaoModel> CubagemSiglaCaminhoes { get; set; }
+        public DbSet<ItemCaminhaoModel> ItensCaminhoes { get; set; }
         
 
 

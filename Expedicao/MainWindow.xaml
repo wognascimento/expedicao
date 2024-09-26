@@ -24,7 +24,10 @@
                     <syncfusion:MenuItemAdv Click="expedTodosRomaneios_Click" Name="expedTodosRomaneios" Header="Todos"/>
                 </syncfusion:MenuItemAdv>
                 <syncfusion:MenuItemAdv Click="expedColetarDados_Click" Name="expedColetarDados" Header="Coletar dados"/>
-                <syncfusion:MenuItemAdv Click="expedNotaCaminhao" Name="expedNotaCaminao" Header="Nota por Caminão"/>
+                <syncfusion:MenuItemAdv Header="Nota Teorica">
+                    <syncfusion:MenuItemAdv Click="expedNotaCaminhao" Name="expedNotaCaminao" Header="Nota por Caminão"/>
+                    <syncfusion:MenuItemAdv Click="expedNotaCliente_Click" Name="expedNotaCliente" Header="Nota por Cliente"/>
+                </syncfusion:MenuItemAdv>
                 
                 <syncfusion:MenuItemAdv Click="ItensFaltantes_Click" Name="ItensFaltantes" Header="Itens Faltantes"/>
                 <syncfusion:MenuItemAdv Click="ItensCarregados_Click" Name="ItensCarregados" Header="Itens Carregados"/>

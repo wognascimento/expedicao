@@ -1,8 +1,13 @@
-﻿using SharpDX.DirectWrite;
+﻿using CsvHelper;
+using Expedicao.DataBaseLocal;
+using Expedicao.Model;
+using Microsoft.EntityFrameworkCore;
 using Syncfusion.UI.Xaml.Grid;
 using Syncfusion.UI.Xaml.Utility;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -43,6 +48,8 @@ namespace Expedicao.Views
         private const int Port = 9100;
         private static BaseCommand? print;
         private static BaseCommand? printAll;
+        private static BaseCommand? criarArquivo;
+        private static BaseCommand? criarArquivoCliente;
         private static StreamWriter? streamWriter1;// = new StreamWriter(@"C:\TEMP\ETIQUETA.TXT");
 
         public static BaseCommand Print
@@ -67,6 +74,24 @@ namespace Expedicao.Views
 
                 ContextMenuCommands.printAll ??= new BaseCommand(new Action<object>(ContextMenuCommands.OnPrintAllClicked));
                 return ContextMenuCommands.printAll;
+            }
+        }
+
+        public static BaseCommand CriarArquivo
+        {
+            get
+            {
+                ContextMenuCommands.criarArquivo ??= new BaseCommand(new Action<object>(ContextMenuCommands.OnCriarArquivoCaminhaoClicked));
+                return ContextMenuCommands.criarArquivo;
+            }
+        }
+
+        public static BaseCommand CriarArquivoCliente
+        {
+            get
+            {
+                ContextMenuCommands.criarArquivoCliente ??= new BaseCommand(new Action<object>(ContextMenuCommands.OnCriarArquivoClienteClicked));
+                return ContextMenuCommands.criarArquivoCliente;
             }
         }
 
@@ -325,6 +350,383 @@ namespace Expedicao.Views
                 stringList.Add(str);
             }
             return stringList;
+        }
+
+        private async static void OnCriarArquivoCaminhaoClicked(object obj)
+        {
+            var record = ((GridRecordContextMenuInfo)obj).Record as CubagemSiglaCaminaoModel;
+            using AppDatabase db = new();
+            try
+            {
+                var itens = await db.ItensCaminhoes.Where(w => w.sigla == record.sigla && w.baia_caminhao == record.baia_caminhao).ToListAsync();
+                var itensSemparametros = itens.Where(w => w.custo is null || w.custo == 0 || w.peso is null || w.peso == 0).ToList();
+
+                if(itensSemparametros.Count > 0)
+                {
+                    StreamWriter swP = new(@"C:\TEMP\PRODUTOS.TXT");
+                    foreach (var produto in itensSemparametros)
+                    {
+                        await swP.WriteLineAsync(produto.codcompladicional.ToString());
+                    }
+                    swP.Close();
+                    MessageBox.Show(@"EXISTEM PRODUTOS SEM CUSTO OU PREÇO, EM 'C:\TEMP\PRODUTOS.TXT' FOI SALVO A RELAÇÃO COM OS CÓDIGOS ");
+                    return;
+                }
+
+                var sequencia = new OrcamentoSequenceModel { Cliente = record.sigla };
+                db.OrcamentoSequences.Add(sequencia);
+                await db.SaveChangesAsync();
+                long num2 = sequencia.NumeroOrcamento.Value;
+
+                StreamWriter sw1 = new(@"C:\TEMP\ORCAMEN1.FSI");
+                await sw1.WriteLineAsync(
+                    /*01*/"F210" +
+                    /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
+                    /*03*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*04*/Convert.ToString("").PadRight(6, '0') +
+                    /*05*/Convert.ToString("").PadRight(30) +
+                    /*06*/Convert.ToString("").PadRight(30) +
+                    /*07*/Convert.ToString("").PadRight(10) +
+                    /*08*/Convert.ToString("").PadRight(50) +
+                    /*09*/Convert.ToString("").PadRight(30) +
+                    /*10*/Convert.ToString("").PadRight(2) +
+                    /*11*/Convert.ToString("").PadRight(9) +
+                    /*12*/Convert.ToString("").PadRight(50) +
+                    /*13*/Convert.ToString("").PadRight(30) +
+                    /*14*/Convert.ToString("").PadRight(2) +
+                    /*15*/Convert.ToString("").PadRight(9) +
+                    /*16*/Convert.ToString("").PadRight(3, '0') +
+                    /*17*/Convert.ToString("").PadRight(3, '0') +
+                    /*18*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*19*/Convert.ToString("").PadRight(4, '0') +
+                    /*20*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*21*/Convert.ToString("").PadRight(14, '0') +
+                    /*22*/Convert.ToString("").PadRight(6, '0') +
+                    /*23*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*24*/Convert.ToString("A").PadRight(2) +
+                    /*25*/Convert.ToString("").PadRight(60) +
+                    /*26*/Convert.ToString("").PadRight(60) +
+                    /*27*/Convert.ToString("").PadRight(60) +
+                    /*28*/Convert.ToString("").PadRight(60) +
+                    /*29*/Convert.ToString("").PadRight(60) +
+                    /*30*/Convert.ToString("").PadRight(60) +
+                    /*31*/Convert.ToString("").PadRight(60) +
+                    /*32*/Convert.ToString("").PadRight(60) +
+                    /*33*/Convert.ToString("").PadRight(4) +
+                    /*34*/Convert.ToString("").PadRight(2) +
+                    /*35*/Convert.ToString("").PadRight(50) +
+                    /*36*/Convert.ToString("").PadRight(30) +
+                    /*37*/Convert.ToString("").PadRight(30) +
+                    /*38*/Convert.ToString("A").PadRight(1));
+                sw1.Close();
+
+                StreamWriter sw2 = new(@"C:\TEMP\ORCAMEN2.FSI");
+                int item = 0;
+                for (int i = 0; i < itens.Count; ++i)
+                {
+                    ++item;
+                    await sw2.WriteLineAsync(
+                        /*01*/"F220" +
+                        /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
+                        /*03*/Convert.ToString(item).PadRight(14) +
+                        /*04*/Convert.ToString(itens[i].codcompladicional).PadRight(30) +
+                        /*05*/Convert.ToString(itens[i].descricaofiscal).PadRight(60) +
+                        /*06*/Convert.ToString("N").PadRight(1) +
+                        /*07*/Convert.ToString("").PadRight(60) +
+                        /*08*/Convert.ToString("").PadRight(60) +
+                        /*09*/Convert.ToString("").PadRight(60) +
+                        /*10*/Convert.ToString("").PadRight(60) +
+                        /*11*/Convert.ToString("").PadRight(60) +
+                        /*12*/Convert.ToString("").PadRight(60) +
+                        /*13*/Convert.ToString("").PadRight(60) +
+                        /*14*/Convert.ToString("").PadRight(60) +
+                        /*15*/Convert.ToString("").PadRight(60) +
+                        /*16*/string.Format("{0:000000000000.00}", itens[i].qtd).Replace(",", null).Replace(".", null) +
+                        /*17*/Convert.ToString(itens[i].unidade).PadRight(3) +
+                        /*18*/string.Format("{0:000000000000.00}", itens[i].custo).Replace(",", null).Replace(".", null) +
+                        /*19*/string.Format("{0:000000000000.00}", itens[i].qtd * itens[i].custo).Replace(",", null).Replace(".", null) +
+                        /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*25*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*28*/Convert.ToString("").PadRight(60) +
+                        /*29*/Convert.ToString("").PadRight(60) +
+                        /*30*/Convert.ToString("").PadRight(60) +
+                        /*31*/Convert.ToString("").PadRight(60) +
+                        /*32*/Convert.ToString("").PadRight(60) +
+                        /*33*/Convert.ToString("").PadRight(60) +
+                        /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*35*/Convert.ToString("A").PadRight(1));
+                }
+                sw2.Close();
+
+                IList listAsync;
+                listAsync = itens
+                    .Where(x => x.exportado_folhamatic == null)
+                    .OrderBy(x => x.descricaofiscal)
+                    .Select(x => new
+                    {
+                        IDENTIFICACAO = x.codcompladicional,
+                        DESCRICAO = x.descricaofiscal,
+                        NCM = x.ncm,
+                        CODBARRA = "",
+                        UNIDADEDECOMPRA = x.unidade,
+                        UNIDADEVENDA = x.unidade,
+                        SITUACAOTRIBUTARIAA = "0",
+                        SITUACAOTRIBUTARIAB = "41",
+                        CSOSN = "",
+                        SITTRIBPIS = "PIS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBCOFINS = "COFINS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBIPI = "IPI 99 - Outras saídas",
+                        IPI = "0",
+                        ICMS = "",
+                        REDUCAOICMS = "",
+                        ALIQCOFINS = "0",
+                        ALIQPIS = "",
+                        CATEGORIA = "",
+                        CEST = "",
+                        CFOP = "",
+                        CODIGODEBENEFICIOFISCAL = "",
+                        COMISSAODEVENDA = "",
+                        CUSTO = "",
+                        ESTOQUECOMPRA = "",
+                        ESTOQUEMAXIMO = "",
+                        ESTOQUEMINIMO = "",
+                        FATORUNIDDEVENDA = "1",
+                        ATIVO = "Sim",
+                        INDICADORDEESCALARELEVANTE = "",
+                        CNPJFABRICANTE = "",
+                        PESO = "",
+                        MATERIAPRIMA = "FALSO",
+                        PARAVENDA = "VERDADEIRO",
+                        MOEDA = "R$",
+                        OBSERVACOES = "",
+                        PRECODEVENDA1 = "",
+                        PRECODEVENDA2 = "",
+                        TIPODOPRODUTO = "3",
+                        PRODUTOTERCEIRO = "FALSO",
+                        CODTRIBUTACAONOSISTEMA = "7",
+                        CODENQUADRAMENTOIPI = "999",
+                        OPERACAOFATORCONVERSAO = ""
+                    })
+                    .ToList();
+
+                using (var streamWriter = new StreamWriter(@"C:\Temp\Produtos.csv"))
+                using (var csvWriter = new CsvWriter(streamWriter, new CultureInfo("pt-BR", true)))
+                {                                            
+                    csvWriter.WriteRecords(listAsync);
+                    streamWriter.Flush();
+                }
+
+                MessageBox.Show(@"AQUIVO CRIADO EM 'C:\TEMP'. VERIFICA SE TEM PRODUTOS NÃO ENVIADO PARA A IOB PELO ARQUIVO 'Produtos.csv'");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+        }
+
+        private async static void OnCriarArquivoClienteClicked(object obj)
+        {
+            var record = ((GridRecordContextMenuInfo)obj).Record as CubagemSiglaCaminaoModel; //((GridRecordContextMenuInfo)obj).Record = {Expedicao.Model.CubagemSiglaCaminaoModel}
+            using AppDatabase db = new();
+            try
+            {
+                var itens = db.ItensCaminhoes
+                    .AsEnumerable()
+                    .Where(w => w.sigla == record.sigla)
+                    .GroupBy(x => new { x.sigla, x.codcompladicional, x.descricaofiscal, x.unidade, x.ncm, x.custo, x.peso, x.exportado_folhamatic })
+                    .Select(g => new ItemCaminhaoModel
+                    {
+                        sigla = g.Key.sigla,
+                        codcompladicional = g.Key.codcompladicional,
+                        descricaofiscal = g.Key.descricaofiscal,
+                        unidade = g.Key.unidade,
+                        ncm = g.Key.ncm,
+                        qtd = g.Sum(x => x.qtd ?? 0),
+                        custo = g.Key.custo,
+                        peso = g.Key.peso,
+                        exportado_folhamatic = g.Key.exportado_folhamatic
+                    })
+                    .OrderBy(x => x.descricaofiscal)
+                    .ToList();
+
+                var itensSemparametros = itens.Where(w => w.custo is null || w.custo == 0 || w.peso is null || w.peso == 0).ToList();
+
+                if (itensSemparametros.Count > 0)
+                {
+                    StreamWriter swP = new(@"C:\TEMP\PRODUTOS.TXT");
+                    await swP.WriteAsync("");
+                    foreach (var produto in itensSemparametros)
+                    {
+                        await swP.WriteLineAsync(produto.codcompladicional.ToString());
+                    }
+                    swP.Close();
+                    MessageBox.Show(@"EXISTEM PRODUTOS SEM CUSTO OU PREÇO, EM 'C:\TEMP\PRODUTOS.TXT' FOI SALVO A RELAÇÃO COM OS CÓDIGOS ");
+                    return;
+                }
+
+                var sequencia = new OrcamentoSequenceModel { Cliente = record.sigla };
+                db.OrcamentoSequences.Add(sequencia);
+                await db.SaveChangesAsync();
+                long num2 = sequencia.NumeroOrcamento.Value;
+
+                StreamWriter sw1 = new(@"C:\TEMP\ORCAMEN1.FSI");
+                await sw1.WriteLineAsync(
+                    /*01*/"F210" +
+                    /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
+                    /*03*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*04*/Convert.ToString("").PadRight(6,'0') +
+                    /*05*/Convert.ToString("").PadRight(30) +
+                    /*06*/Convert.ToString("").PadRight(30) +
+                    /*07*/Convert.ToString("").PadRight(10) +
+                    /*08*/Convert.ToString("").PadRight(50) +
+                    /*09*/Convert.ToString("").PadRight(30) +
+                    /*10*/Convert.ToString("").PadRight(2) +
+                    /*11*/Convert.ToString("").PadRight(9) +
+                    /*12*/Convert.ToString("").PadRight(50) +
+                    /*13*/Convert.ToString("").PadRight(30) +
+                    /*14*/Convert.ToString("").PadRight(2) +
+                    /*15*/Convert.ToString("").PadRight(9) +
+                    /*16*/Convert.ToString("").PadRight(3, '0') +
+                    /*17*/Convert.ToString("").PadRight(3,'0') +
+                    /*18*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*19*/Convert.ToString("").PadRight(4,'0') +
+                    /*20*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*21*/Convert.ToString("").PadRight(14, '0') +
+                    /*22*/Convert.ToString("").PadRight(6, '0') +
+                    /*23*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*24*/Convert.ToString("A").PadRight(2) +
+                    /*25*/Convert.ToString("").PadRight(60) +
+                    /*26*/Convert.ToString("").PadRight(60) +
+                    /*27*/Convert.ToString("").PadRight(60) +
+                    /*28*/Convert.ToString("").PadRight(60) +
+                    /*29*/Convert.ToString("").PadRight(60) +
+                    /*30*/Convert.ToString("").PadRight(60) +
+                    /*31*/Convert.ToString("").PadRight(60) +
+                    /*32*/Convert.ToString("").PadRight(60) +
+                    /*33*/Convert.ToString("").PadRight(4) +
+                    /*34*/Convert.ToString("").PadRight(2) +
+                    /*35*/Convert.ToString("").PadRight(50) +
+                    /*36*/Convert.ToString("").PadRight(30) +
+                    /*37*/Convert.ToString("").PadRight(30) +
+                    /*38*/Convert.ToString("A").PadRight(1));
+                sw1.Close();
+
+                StreamWriter sw2 = new(@"C:\TEMP\ORCAMEN2.FSI");
+                int item = 0;
+                for (int i = 0; i < itens.Count; ++i)
+                {
+                    ++item;
+                    await sw2.WriteLineAsync(
+                        /*01*/"F220" +
+                        /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
+                        /*03*/Convert.ToString(item).PadRight(14) +
+                        /*04*/Convert.ToString(itens[i].codcompladicional).PadRight(30) +
+                        /*05*/Convert.ToString(itens[i].descricaofiscal).PadRight(60) +
+                        /*06*/Convert.ToString("N").PadRight(1) +
+                        /*07*/Convert.ToString("").PadRight(60) +
+                        /*08*/Convert.ToString("").PadRight(60) +
+                        /*09*/Convert.ToString("").PadRight(60) +
+                        /*10*/Convert.ToString("").PadRight(60) +
+                        /*11*/Convert.ToString("").PadRight(60) +
+                        /*12*/Convert.ToString("").PadRight(60) +
+                        /*13*/Convert.ToString("").PadRight(60) +
+                        /*14*/Convert.ToString("").PadRight(60) +
+                        /*15*/Convert.ToString("").PadRight(60) +
+                        /*16*/string.Format("{0:000000000000.00}", itens[i].qtd).Replace(",", null).Replace(".", null) +
+                        /*17*/Convert.ToString(itens[i].unidade).PadRight(3) +
+                        /*18*/string.Format("{0:000000000000.00}", itens[i].custo).Replace(",", null).Replace(".", null) +
+                        /*19*/string.Format("{0:000000000000.00}", itens[i].qtd * itens[i].custo).Replace(",", null).Replace(".", null) +
+                        /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*25*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*28*/Convert.ToString("").PadRight(60) +
+                        /*29*/Convert.ToString("").PadRight(60) +
+                        /*30*/Convert.ToString("").PadRight(60) +
+                        /*31*/Convert.ToString("").PadRight(60) +
+                        /*32*/Convert.ToString("").PadRight(60) +
+                        /*33*/Convert.ToString("").PadRight(60) +
+                        /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*35*/Convert.ToString("A").PadRight(1));
+                }
+                sw2.Close();
+
+                IList listAsync;
+                listAsync = itens
+                    .Where(x => x.exportado_folhamatic == null)
+                    .OrderBy(x => x.descricaofiscal)
+                    .Select(x => new
+                    {
+                        IDENTIFICACAO = x.codcompladicional,
+                        DESCRICAO = x.descricaofiscal,
+                        NCM = x.ncm,
+                        CODBARRA = "",
+                        UNIDADEDECOMPRA = x.unidade,
+                        UNIDADEVENDA = x.unidade,
+                        SITUACAOTRIBUTARIAA = "0",
+                        SITUACAOTRIBUTARIAB = "41",
+                        CSOSN = "",
+                        SITTRIBPIS = "PIS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBCOFINS = "COFINS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBIPI = "IPI 99 - Outras saídas",
+                        IPI = "0",
+                        ICMS = "",
+                        REDUCAOICMS = "",
+                        ALIQCOFINS = "0",
+                        ALIQPIS = "",
+                        CATEGORIA = "",
+                        CEST = "",
+                        CFOP = "",
+                        CODIGODEBENEFICIOFISCAL = "",
+                        COMISSAODEVENDA = "",
+                        CUSTO = "",
+                        ESTOQUECOMPRA = "",
+                        ESTOQUEMAXIMO = "",
+                        ESTOQUEMINIMO = "",
+                        FATORUNIDDEVENDA = "1",
+                        ATIVO = "Sim",
+                        INDICADORDEESCALARELEVANTE = "",
+                        CNPJFABRICANTE = "",
+                        PESO = "",
+                        MATERIAPRIMA = "FALSO",
+                        PARAVENDA = "VERDADEIRO",
+                        MOEDA = "R$",
+                        OBSERVACOES = "",
+                        PRECODEVENDA1 = "",
+                        PRECODEVENDA2 = "",
+                        TIPODOPRODUTO = "3",
+                        PRODUTOTERCEIRO = "FALSO",
+                        CODTRIBUTACAONOSISTEMA = "7",
+                        CODENQUADRAMENTOIPI = "999",
+                        OPERACAOFATORCONVERSAO = ""
+                    })
+                    .ToList();
+
+                using (var streamWriter = new StreamWriter(@"C:\Temp\Produtos.csv"))
+                using (var csvWriter = new CsvWriter(streamWriter, new CultureInfo("pt-BR", true)))
+                {
+                    csvWriter.WriteRecords(listAsync);
+                    streamWriter.Flush();
+                }
+
+                MessageBox.Show(@"AQUIVO CRIADO EM 'C:\TEMP'. VERIFICA SE TEM PRODUTOS NÃO ENVIADO PARA A IOB PELO ARQUIVO 'Produtos.csv'");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
         }
     }
 }

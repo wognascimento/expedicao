@@ -12,14 +12,14 @@ using System.Windows.Input;
 namespace Expedicao.Views
 {
     /// <summary>
-    /// Interação lógica para ViewSolicitarNotaCaminhao.xam
+    /// Interação lógica para ViewSolicitarNotaCliente.xam
     /// </summary>
-    public partial class ViewSolicitarNotaCaminhao : UserControl
+    public partial class ViewSolicitarNotaCliente : UserControl
     {
-        public ViewSolicitarNotaCaminhao()
+        public ViewSolicitarNotaCliente()
         {
             InitializeComponent();
-            this.DataContext = new ViewSolicitarNotaCaminhaoViewModel();
+            this.DataContext = new ViewSolicitarNotaClienteViewModel();
         }
 
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -28,7 +28,7 @@ namespace Expedicao.Views
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
 
-                ViewSolicitarNotaCaminhaoViewModel vm = (ViewSolicitarNotaCaminhaoViewModel)DataContext;
+                ViewSolicitarNotaClienteViewModel vm = (ViewSolicitarNotaClienteViewModel)DataContext;
                 vm.SiglasCaminhoes = await vm.GetSiglasCaminhoes();
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
@@ -38,10 +38,9 @@ namespace Expedicao.Views
                 MessageBox.Show(ex.Message);
             }
         }
-
     }
 
-    public class ViewSolicitarNotaCaminhaoViewModel : INotifyPropertyChanged
+    public class ViewSolicitarNotaClienteViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public void RaisePropertyChanged(string propName)
@@ -68,17 +67,13 @@ namespace Expedicao.Views
             try
             {
                 using AppDatabase db = new();
-                //var data = await db.CubagemSiglaCaminhoes.OrderBy(c => c.data_de_expedicao).ThenBy(c => c.sigla).ThenBy(c => c.baia_caminhao) .ToListAsync();
-                //return new ObservableCollection<CubagemSiglaCaminaoModel>(data);
-
                 var query = await db.CubagemSiglaCaminhoes
                     //.AsEnumerable() // Transforma em IEnumerable para acessar possíveis funcionalidades não suportadas por SQL (caso necessário)
-                    .GroupBy(x => new { x.data_de_expedicao, x.sigla, x.baia_caminhao })
+                    .GroupBy(x => new { x.data_de_expedicao, x.sigla })
                     .Select(g => new CubagemSiglaCaminaoModel
                     {
                         data_de_expedicao = g.Key.data_de_expedicao,
                         sigla = g.Key.sigla,
-                        baia_caminhao = g.Key.baia_caminhao,
                         preco = g.Sum(x => x.preco ?? 0),
                         volumes = g.Sum(x => x.volumes ?? 0),
                         pl = g.Sum(x => x.pl ?? 0),
@@ -87,7 +82,6 @@ namespace Expedicao.Views
                     })
                     .OrderBy(x => x.data_de_expedicao)
                     .ThenBy(x => x.sigla)
-                    .ThenBy(x => x.baia_caminhao)
                     .ToListAsync();
                 return new ObservableCollection<CubagemSiglaCaminaoModel>(query);
             }

@@ -935,6 +935,11 @@ namespace Expedicao
             adicionarFilho(new ViewSolicitarNotaCaminhao(), "SOLICITA NOTA FISCAL POR CAMINHÃO", "SOLICITA_NOTA_FISCAL_CAMINHAO");
         }
 
+        private void expedNotaCliente_Click(object sender, RoutedEventArgs e)
+        {
+            adicionarFilho(new ViewSolicitarNotaCliente(), "SOLICITA NOTA FISCAL POR CLIENTE", "SOLICITA_NOTA_FISCAL_CLIENTE");
+        }
+
         private void OnMdiCloseAllTabs(object sender, CloseTabEventArgs e)
         {
             _mdi.Items.Clear();
@@ -980,5 +985,6 @@ namespace Expedicao
                 }
             });
         }
+
     }
 }

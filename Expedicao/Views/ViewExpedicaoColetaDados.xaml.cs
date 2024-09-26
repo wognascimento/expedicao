@@ -40,6 +40,7 @@ namespace Expedicao.Views
         {
             InitializeComponent();
 
+            
             port.PortName = "COM1";
             port.BaudRate = 9600;
             port.Handshake = 0;
@@ -50,6 +51,7 @@ namespace Expedicao.Views
             port.RtsEnable = true;
             port.ReadTimeout = 200;
             port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
+            
         }
 
         private async void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
@@ -83,7 +85,7 @@ namespace Expedicao.Views
                 itens.ItemsSource = dados;
                 txtVolumes.Content = dados.Count; //await Task.Run(async () => await new ViewModelLocal().GetVolumes());
                 loading.Visibility = Visibility.Hidden;
-                port.Open();
+                //port.Open();
             }
             catch (Exception ex)
             {
@@ -296,44 +298,44 @@ namespace Expedicao.Views
                     Directory.CreateDirectory(@$"C:\Temp\NF\ORCAMENTO-{codigo}");
                     StreamWriter sw = new(@$"C:\Temp\NF\ORCAMENTO-{codigo}\ORCAMEN1.FSI");
                     await sw.WriteLineAsync(
-                        "F210" +
-                        Convert.ToString(codigo).ToString().PadLeft(6, '0') +
-                        DateTime.Now.ToString("ddMMyyyy") +
-                        Convert.ToString("").PadRight(6) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("").PadRight(10) +
-                        Convert.ToString("").PadRight(50) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("").PadRight(2) +
-                        Convert.ToString("").PadRight(9) +
-                        Convert.ToString("").PadRight(50) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("").PadRight(2) +
-                        Convert.ToString("").PadRight(9) +
-                        Convert.ToString("").PadRight(3) +
-                        Convert.ToString("").PadRight(3) +
-                        DateTime.Now.ToString("ddMMyyyy") +
-                        Convert.ToString("").PadRight(4) +
-                        DateTime.Now.ToString("ddMMyyyy") +
-                        Convert.ToString("").PadRight(14) +
-                        Convert.ToString("").PadRight(6) +
-                        Convert.ToString("").PadRight(8) +
-                        Convert.ToString("A").PadRight(2) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(60) +
-                        Convert.ToString("").PadRight(4) +
-                        Convert.ToString("").PadRight(2) +
-                        Convert.ToString("").PadRight(50) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("").PadRight(30) +
-                        Convert.ToString("A").PadRight(1));
+                        /*01*/"F210" +
+                    /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
+                    /*03*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*04*/Convert.ToString("").PadRight(6, '0') +
+                    /*05*/Convert.ToString("").PadRight(30) +
+                    /*06*/Convert.ToString("").PadRight(30) +
+                    /*07*/Convert.ToString("").PadRight(10) +
+                    /*08*/Convert.ToString("").PadRight(50) +
+                    /*09*/Convert.ToString("").PadRight(30) +
+                    /*10*/Convert.ToString("").PadRight(2) +
+                    /*11*/Convert.ToString("").PadRight(9) +
+                    /*12*/Convert.ToString("").PadRight(50) +
+                    /*13*/Convert.ToString("").PadRight(30) +
+                    /*14*/Convert.ToString("").PadRight(2) +
+                    /*15*/Convert.ToString("").PadRight(9) +
+                    /*16*/Convert.ToString("").PadRight(3, '0') +
+                    /*17*/Convert.ToString("").PadRight(3, '0') +
+                    /*18*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*19*/Convert.ToString("").PadRight(4, '0') +
+                    /*20*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*21*/Convert.ToString("").PadRight(14, '0') +
+                    /*22*/Convert.ToString("").PadRight(6, '0') +
+                    /*23*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*24*/Convert.ToString("A").PadRight(2) +
+                    /*25*/Convert.ToString("").PadRight(60) +
+                    /*26*/Convert.ToString("").PadRight(60) +
+                    /*27*/Convert.ToString("").PadRight(60) +
+                    /*28*/Convert.ToString("").PadRight(60) +
+                    /*29*/Convert.ToString("").PadRight(60) +
+                    /*30*/Convert.ToString("").PadRight(60) +
+                    /*31*/Convert.ToString("").PadRight(60) +
+                    /*32*/Convert.ToString("").PadRight(60) +
+                    /*33*/Convert.ToString("").PadRight(4) +
+                    /*34*/Convert.ToString("").PadRight(2) +
+                    /*35*/Convert.ToString("").PadRight(50) +
+                    /*36*/Convert.ToString("").PadRight(30) +
+                    /*37*/Convert.ToString("").PadRight(30) +
+                    /*38*/Convert.ToString("A").PadRight(1));
                     sw.Close();
 
 
@@ -342,41 +344,41 @@ namespace Expedicao.Views
                     foreach (var p in pedaco)
                     {
                         await sw.WriteLineAsync(
-                            "F220" +
-                            Convert.ToString(codigo).ToString().PadLeft(6, '0') +
-                            Convert.ToString(item).PadRight(14) +
-                            Convert.ToString(p.CodComplAdicional).PadRight(30) +
-                            Convert.ToString(p.DescricaoFiscal).PadRight(60) +
-                            Convert.ToString("N").PadRight(1) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            string.Format("{0:000000000000.00}", p.Qtd).Replace(",", null) +
-                            Convert.ToString(p.Unidade).PadRight(3) +
-                            string.Format("{0:000000000000.00}", p.Custo).Replace(",", null) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14, '0') +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14, '0') +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(60) +
-                            Convert.ToString("").PadRight(14) +
-                            Convert.ToString("A").PadRight(1));
+                            /*01*/"F220" +
+                        /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
+                        /*03*/Convert.ToString(item).PadRight(14) +
+                        /*04*/Convert.ToString(p.CodComplAdicional).PadRight(30) +
+                        /*05*/Convert.ToString(p.DescricaoFiscal).PadRight(60) +
+                        /*06*/Convert.ToString("N").PadRight(1) +
+                        /*07*/Convert.ToString("").PadRight(60) +
+                        /*08*/Convert.ToString("").PadRight(60) +
+                        /*09*/Convert.ToString("").PadRight(60) +
+                        /*10*/Convert.ToString("").PadRight(60) +
+                        /*11*/Convert.ToString("").PadRight(60) +
+                        /*12*/Convert.ToString("").PadRight(60) +
+                        /*13*/Convert.ToString("").PadRight(60) +
+                        /*14*/Convert.ToString("").PadRight(60) +
+                        /*15*/Convert.ToString("").PadRight(60) +
+                        /*16*/string.Format("{0:000000000000.00}", p.Qtd).Replace(",", null).Replace(".", null) +
+                        /*17*/Convert.ToString(p.Unidade).PadRight(3) +
+                        /*18*/string.Format("{0:000000000000.00}", p.Custo).Replace(",", null).Replace(".", null) +
+                        /*19*/string.Format("{0:000000000000.00}", p.Qtd * p.Custo).Replace(",", null).Replace(".", null) +
+                        /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*25*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*28*/Convert.ToString("").PadRight(60) +
+                        /*29*/Convert.ToString("").PadRight(60) +
+                        /*30*/Convert.ToString("").PadRight(60) +
+                        /*31*/Convert.ToString("").PadRight(60) +
+                        /*32*/Convert.ToString("").PadRight(60) +
+                        /*33*/Convert.ToString("").PadRight(60) +
+                        /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*35*/Convert.ToString("A").PadRight(1));
                         item++;
                     }
                     sw.Close();
@@ -400,44 +402,44 @@ namespace Expedicao.Views
             {
                 StreamWriter sw = new StreamWriter("ORCAMEN1.FSI");
                 await sw.WriteLineAsync(
-                    "F210" + 
-                    Convert.ToString(codigo).ToString().PadLeft(6, '0') + 
-                    DateTime.Now.ToString("ddMMyyyy") + 
-                    Convert.ToString("").PadRight(6) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("").PadRight(10) + 
-                    Convert.ToString("").PadRight(50) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("").PadRight(2) + 
-                    Convert.ToString("").PadRight(9) + 
-                    Convert.ToString("").PadRight(50) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("").PadRight(2) + 
-                    Convert.ToString("").PadRight(9) + 
-                    Convert.ToString("").PadRight(3) + 
-                    Convert.ToString("").PadRight(3) + 
-                    DateTime.Now.ToString("ddMMyyyy") + 
-                    Convert.ToString("").PadRight(4) + 
-                    DateTime.Now.ToString("ddMMyyyy") + 
-                    Convert.ToString("").PadRight(14) + 
-                    Convert.ToString("").PadRight(6) + 
-                    Convert.ToString("").PadRight(8) + 
-                    Convert.ToString("A").PadRight(2) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(60) + 
-                    Convert.ToString("").PadRight(4) + 
-                    Convert.ToString("").PadRight(2) + 
-                    Convert.ToString("").PadRight(50) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("").PadRight(30) + 
-                    Convert.ToString("A").PadRight(1));
+                    /*01*/"F210" +
+                    /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
+                    /*03*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*04*/Convert.ToString("").PadRight(6, '0') +
+                    /*05*/Convert.ToString("").PadRight(30) +
+                    /*06*/Convert.ToString("").PadRight(30) +
+                    /*07*/Convert.ToString("").PadRight(10) +
+                    /*08*/Convert.ToString("").PadRight(50) +
+                    /*09*/Convert.ToString("").PadRight(30) +
+                    /*10*/Convert.ToString("").PadRight(2) +
+                    /*11*/Convert.ToString("").PadRight(9) +
+                    /*12*/Convert.ToString("").PadRight(50) +
+                    /*13*/Convert.ToString("").PadRight(30) +
+                    /*14*/Convert.ToString("").PadRight(2) +
+                    /*15*/Convert.ToString("").PadRight(9) +
+                    /*16*/Convert.ToString("").PadRight(3, '0') +
+                    /*17*/Convert.ToString("").PadRight(3, '0') +
+                    /*18*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*19*/Convert.ToString("").PadRight(4, '0') +
+                    /*20*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*21*/Convert.ToString("").PadRight(14, '0') +
+                    /*22*/Convert.ToString("").PadRight(6, '0') +
+                    /*23*/DateTime.Now.ToString("ddMMyyyy") +
+                    /*24*/Convert.ToString("A").PadRight(2) +
+                    /*25*/Convert.ToString("").PadRight(60) +
+                    /*26*/Convert.ToString("").PadRight(60) +
+                    /*27*/Convert.ToString("").PadRight(60) +
+                    /*28*/Convert.ToString("").PadRight(60) +
+                    /*29*/Convert.ToString("").PadRight(60) +
+                    /*30*/Convert.ToString("").PadRight(60) +
+                    /*31*/Convert.ToString("").PadRight(60) +
+                    /*32*/Convert.ToString("").PadRight(60) +
+                    /*33*/Convert.ToString("").PadRight(4) +
+                    /*34*/Convert.ToString("").PadRight(2) +
+                    /*35*/Convert.ToString("").PadRight(50) +
+                    /*36*/Convert.ToString("").PadRight(30) +
+                    /*37*/Convert.ToString("").PadRight(30) +
+                    /*38*/Convert.ToString("A").PadRight(1));
                 sw.Close();
 
             }
@@ -465,41 +467,41 @@ namespace Expedicao.Views
                 {
                     ++item;
                     await sw.WriteLineAsync(
-                        "F220" + 
-                        Convert.ToString(codigo).ToString().PadLeft(6, '0') + 
-                        Convert.ToString(item).PadRight(14) + 
-                        Convert.ToString(itens[i].CodComplAdicional).PadRight(30) + 
-                        Convert.ToString(itens[i].DescricaoFiscal).PadRight(60) + 
-                        Convert.ToString("N").PadRight(1) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        string.Format("{0:000000000000.00}", itens[i].Qtd).Replace(",", null).Replace(".", null) + 
-                        Convert.ToString(itens[i].Unidade).PadRight(3) + 
-                        string.Format("{0:000000000000.00}", itens[i].Custo).Replace(",", null).Replace(".", null) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14, '0') + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14, '0') + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(60) + 
-                        Convert.ToString("").PadRight(14) + 
-                        Convert.ToString("A").PadRight(1));
+                        /*01*/"F220" +
+                        /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
+                        /*03*/Convert.ToString(item).PadRight(14) +
+                        /*04*/Convert.ToString(itens[i].CodComplAdicional).PadRight(30) +
+                        /*05*/Convert.ToString(itens[i].DescricaoFiscal).PadRight(60) +
+                        /*06*/Convert.ToString("N").PadRight(1) +
+                        /*07*/Convert.ToString("").PadRight(60) +
+                        /*08*/Convert.ToString("").PadRight(60) +
+                        /*09*/Convert.ToString("").PadRight(60) +
+                        /*10*/Convert.ToString("").PadRight(60) +
+                        /*11*/Convert.ToString("").PadRight(60) +
+                        /*12*/Convert.ToString("").PadRight(60) +
+                        /*13*/Convert.ToString("").PadRight(60) +
+                        /*14*/Convert.ToString("").PadRight(60) +
+                        /*15*/Convert.ToString("").PadRight(60) +
+                        /*16*/string.Format("{0:000000000000.00}", itens[i].Qtd).Replace(",", null).Replace(".", null) +
+                        /*17*/Convert.ToString(itens[i].Unidade).PadRight(3) +
+                        /*18*/string.Format("{0:000000000000.00}", itens[i].Custo).Replace(",", null).Replace(".", null) +
+                        /*19*/string.Format("{0:000000000000.00}", itens[i].Qtd * itens[i].Custo).Replace(",", null).Replace(".", null) +
+                        /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*25*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*28*/Convert.ToString("").PadRight(60) +
+                        /*29*/Convert.ToString("").PadRight(60) +
+                        /*30*/Convert.ToString("").PadRight(60) +
+                        /*31*/Convert.ToString("").PadRight(60) +
+                        /*32*/Convert.ToString("").PadRight(60) +
+                        /*33*/Convert.ToString("").PadRight(60) +
+                        /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        /*35*/Convert.ToString("A").PadRight(1));
                 }
                 sw.Close();
 

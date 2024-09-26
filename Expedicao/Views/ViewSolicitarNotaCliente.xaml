@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Expedicao.Views.ViewSolicitarNotaCaminhao"
+﻿<UserControl x:Class="Expedicao.Views.ViewSolicitarNotaCliente"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -8,8 +8,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Loaded="UserControl_Loaded">
     
-    
     <Grid>
+
 
         <syncfusion:SfDataGrid 
             x:Name="dataGrid"    
@@ -22,7 +22,7 @@
 
             <syncfusion:SfDataGrid.RecordContextMenu>
                 <ContextMenu>
-                    <MenuItem Command="{Binding Source={x:Static Member=local:ContextMenuCommands.CriarArquivo}}"
+                    <MenuItem Command="{Binding Source={x:Static Member=local:ContextMenuCommands.CriarArquivoCliente}}"
                               CommandParameter="{Binding}"
                               Header="Criar Arquivo">
                     </MenuItem>
@@ -34,34 +34,32 @@
                 <syncfusion:GridTextColumn MappingName="est" />
                 <syncfusion:GridTextColumn MappingName="cidade" />
                 <syncfusion:GridTextColumn MappingName="sigla" />
-                <syncfusion:GridTextColumn MappingName="baia_caminhao" />
-                <syncfusion:GridTextColumn MappingName="placa_caminhao" />
                 <syncfusion:GridNumericColumn 
-                    MappingName="preco"
+                    MappingName="preco" 
                     NumberDecimalDigits="2"
                     NumberDecimalSeparator=","
                     NumberGroupSizes="3" 
                     NumberGroupSeparator="."/>
                 <syncfusion:GridNumericColumn 
                     MappingName="volumes" 
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
+                     NumberDecimalDigits="2"
+                     NumberDecimalSeparator=","
+                     NumberGroupSizes="3" 
+                     NumberGroupSeparator="."/>
                 <syncfusion:GridNumericColumn 
                     MappingName="pl" 
                     NumberDecimalDigits="2"
                     NumberDecimalSeparator=","
                     NumberGroupSizes="3" 
                     NumberGroupSeparator="."/>
-                <syncfusion:GridNumericColumn 
+                <syncfusion:GridNumericColumn
                     MappingName="pb" 
                     NumberDecimalDigits="2"
                     NumberDecimalSeparator=","
                     NumberGroupSizes="3" 
                     NumberGroupSeparator="."/>
                 <syncfusion:GridNumericColumn 
-                    MappingName="m3" 
+                    MappingName="m3"
                     NumberDecimalDigits="2"
                     NumberDecimalSeparator=","
                     NumberGroupSizes="3" 
@@ -69,7 +67,8 @@
             </syncfusion:SfDataGrid.Columns>
         </syncfusion:SfDataGrid>
 
-        
+
+
     </Grid>
     
 </UserControl>
