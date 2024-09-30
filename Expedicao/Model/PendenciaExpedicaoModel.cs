@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
@@ -7,6 +8,7 @@ namespace Expedicao
     [Table("view_pendencia_expedicao", Schema = "expedicao")]
     public class PendenciaExpedicaoModel
     {
+        public DateTime? data_de_expedicao { get; set; }
         public string? sigla { get; set; }
         public string? item_memorial { get; set; }
         public string? baia_caminhao {  get; set; }
