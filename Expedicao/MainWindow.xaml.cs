@@ -1,4 +1,5 @@
-﻿using Expedicao.Views;
+﻿using CsvHelper;
+using Expedicao.Views;
 using Microsoft.EntityFrameworkCore;
 using Squirrel;
 using Syncfusion.SfSkinManager;
@@ -6,11 +7,14 @@ using Syncfusion.Windows.Tools.Controls;
 using Syncfusion.XlsIO;
 using Syncfusion.XlsIO.Implementation.PivotTables;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -986,5 +990,98 @@ namespace Expedicao
             });
         }
 
+        private async void OnProdutoCSVClick(object sender, RoutedEventArgs e)
+        {
+            //var dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(await Task.Run(async () => await new ViewModelLocal().GetRomaneios())));
+
+
+            IList listAsync;
+            try
+            {
+                using AppDatabase db = new();
+                listAsync = await db.CarregamentoItemCaminhaos
+                    .GroupBy(x => new
+                    {
+                        x.CodComplAdicional,
+                        x.DescricaoFiscal,
+                        x.Qtd,
+                        x.Custo,
+                        x.Peso,
+                        x.Unidade,
+                        x.Ncm
+                    })
+                    .OrderBy(x => x.Key.DescricaoFiscal)
+                    .Select(x => new
+                    {
+                        //x.Key.CodComplAdicional,
+                        //x.Key.DescricaoFiscal,
+                        //x.Key.Unidade
+
+                        IDENTIFICACAO = x.Key.CodComplAdicional,
+                        DESCRICAO = x.Key.DescricaoFiscal,
+                        NCM = x.Key.Ncm,
+                        CODBARRA = "",
+                        UNIDADEDECOMPRA = x.Key.Unidade,
+                        UNIDADEVENDA = x.Key.Unidade,
+                        SITUACAOTRIBUTARIAA = "0",
+                        SITUACAOTRIBUTARIAB = "41",
+                        CSOSN = "",
+                        SITTRIBPIS = "PIS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBCOFINS = "COFINS 70 - Operação de Aquisição sem Direito a Crédito",
+                        SITTRIBIPI = "IPI 99 - Outras saídas",
+                        IPI = "0",
+                        ICMS = "0",
+                        REDUCAOICMS = "0",
+                        ALIQCOFINS = "0",
+                        ALIQPIS = "",
+                        CATEGORIA = "",
+                        CEST = "",
+                        CFOP = "",
+                        CODIGODEBENEFICIOFISCAL = "0",
+                        COMISSAODEVENDA = "",
+                        CUSTO = "",
+                        ESTOQUECOMPRA = "",
+                        ESTOQUEMAXIMO = "",
+                        ESTOQUEMINIMO = "",
+                        FATORUNIDDEVENDA = "1",
+                        ATIVO = "Sim",
+                        INDICADORDEESCALARELEVANTE = "",
+                        CNPJFABRICANTE = "",
+                        PESO = "",
+                        MATERIAPRIMA = "FALSO",
+                        PARAVENDA = "VERDADEIRO",
+                        MOEDA = "R$",
+                        OBSERVACOES = "",
+                        PRECODEVENDA1 = "",
+                        PRECODEVENDA2 = "",
+                        TIPODOPRODUTO = "3",
+                        PRODUTOTERCEIRO = "FALSO",
+                        CODTRIBUTACAONOSISTEMA = "7",
+                        CODENQUADRAMENTOIPI = "999",
+                        OPERACAOFATORCONVERSAO = ""
+                    })
+                    .ToListAsync();
+
+                var nomePasta = "NF";
+                var nomeArquivo = "Produtos.csv";
+                var caminhoArquivo = @"C:\Temp\" + nomePasta;
+
+                if (!Directory.Exists(caminhoArquivo))
+                    Directory.CreateDirectory(caminhoArquivo);
+
+                //using (var streamWriter = new StreamWriter(Path.Combine(caminhoArquivo, nomeArquivo)))
+                using var streamWriter = new StreamWriter(@"C:\Temp\Produtos.csv");
+                using var csvWriter = new CsvWriter(streamWriter, new CultureInfo("pt-BR", true));
+                //csvWriter.Context.RegisterClassMap<DadosAnexoMap>();                                               
+                csvWriter.WriteRecords(listAsync);
+                streamWriter.Flush();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            
+        }
     }
 }

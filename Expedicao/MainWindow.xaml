@@ -55,6 +55,8 @@
                 </syncfusion:MenuItemAdv>
                 <syncfusion:MenuItemAdv Header="Expedição Virtual" Click="OnExpedicaoVirtualClick"/>
             </syncfusion:MenuItemAdv>
+
+            <syncfusion:MenuItemAdv Header="Produtos Matic" Click="OnProdutoCSVClick"/>
         </syncfusion:MenuAdv>
 
         <syncfusion:DocumentContainer
