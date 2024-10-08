@@ -11,6 +11,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -352,6 +354,18 @@ namespace Expedicao.Views
             return stringList;
         }
 
+        private static string RemoverAcentos(string texto)
+        {
+            // Normaliza o texto para separar os acentos das letras
+            string textoNormalizado = texto.Normalize(NormalizationForm.FormD);
+
+            // Expressão regular para remover caracteres não-ASCII (acentos)
+            Regex regexAcentos = new Regex(@"\p{IsCombiningDiacriticalMarks}+");
+
+            // Remove os acentos
+            return regexAcentos.Replace(textoNormalizado, "").Normalize(NormalizationForm.FormC);
+        }
+
         private async static void OnCriarArquivoCaminhaoClicked(object obj)
         {
             var record = ((GridRecordContextMenuInfo)obj).Record as CubagemSiglaCaminaoModel;
@@ -430,7 +444,7 @@ namespace Expedicao.Views
                         /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
                         /*03*/Convert.ToString(item).PadRight(14) +
                         /*04*/Convert.ToString(itens[i].codcompladicional).PadRight(30) +
-                        /*05*/Convert.ToString(itens[i].descricaofiscal).PadRight(60) +
+                        /*05*/Convert.ToString(RemoverAcentos(itens[i].descricaofiscal)).PadRight(60) + 
                         /*06*/Convert.ToString("N").PadRight(1) +
                         /*07*/Convert.ToString("").PadRight(60) +
                         /*08*/Convert.ToString("").PadRight(60) +
@@ -471,7 +485,7 @@ namespace Expedicao.Views
                     .Select(x => new
                     {
                         IDENTIFICACAO = x.codcompladicional,
-                        DESCRICAO = x.descricaofiscal,
+                        DESCRICAO = RemoverAcentos(x.descricaofiscal),
                         NCM = x.ncm,
                         CODBARRA = "",
                         UNIDADEDECOMPRA = x.unidade,
@@ -628,7 +642,7 @@ namespace Expedicao.Views
                         /*02*/Convert.ToString(num2).ToString().PadLeft(6, '0') +
                         /*03*/Convert.ToString(item).PadRight(14) +
                         /*04*/Convert.ToString(itens[i].codcompladicional).PadRight(30) +
-                        /*05*/Convert.ToString(itens[i].descricaofiscal).PadRight(60) +
+                        /*05*/Convert.ToString(RemoverAcentos(itens[i].descricaofiscal)).PadRight(60) + 
                         /*06*/Convert.ToString("N").PadRight(1) +
                         /*07*/Convert.ToString("").PadRight(60) +
                         /*08*/Convert.ToString("").PadRight(60) +
@@ -669,7 +683,7 @@ namespace Expedicao.Views
                     .Select(x => new
                     {
                         IDENTIFICACAO = x.codcompladicional,
-                        DESCRICAO = x.descricaofiscal,
+                        DESCRICAO = RemoverAcentos(x.descricaofiscal), 
                         NCM = x.ncm,
                         CODBARRA = "",
                         UNIDADEDECOMPRA = x.unidade,

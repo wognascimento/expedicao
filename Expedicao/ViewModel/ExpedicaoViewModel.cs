@@ -6,8 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 namespace Expedicao
 {
@@ -367,6 +368,18 @@ namespace Expedicao
             return listAsync;
         }
 
+        private static string RemoverAcentos(string texto)
+        {
+            // Normaliza o texto para separar os acentos das letras
+            string textoNormalizado = texto.Normalize(NormalizationForm.FormD);
+
+            // Expressão regular para remover caracteres não-ASCII (acentos)
+            Regex regexAcentos = new Regex(@"\p{IsCombiningDiacriticalMarks}+");
+
+            // Remove os acentos
+            return regexAcentos.Replace(textoNormalizado, "").Normalize(NormalizationForm.FormC);
+        }
+
         public async Task<IList> GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(
           List<string> siglas)
         {
@@ -394,7 +407,7 @@ namespace Expedicao
                         //x.Key.Unidade
 
                         IDENTIFICACAO = x.Key.CodComplAdicional,
-                        DESCRICAO = x.Key.DescricaoFiscal,
+                        DESCRICAO = RemoverAcentos(x.Key.DescricaoFiscal),
                         NCM = x.Key.Ncm,
                         CODBARRA = "",
                         UNIDADEDECOMPRA = x.Key.Unidade,

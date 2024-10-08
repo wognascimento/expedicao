@@ -14,6 +14,8 @@ using System.Linq;
 using System.Media;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -265,6 +267,20 @@ namespace Expedicao.Views
             await Task.Delay(2000);
         }
 
+
+        private static string RemoverAcentos(string texto)
+        {
+            // Normaliza o texto para separar os acentos das letras
+            string textoNormalizado = texto.Normalize(NormalizationForm.FormD);
+
+            // Expressão regular para remover caracteres não-ASCII (acentos)
+            Regex regexAcentos = new Regex(@"\p{IsCombiningDiacriticalMarks}+");
+
+            // Remove os acentos
+            return regexAcentos.Replace(textoNormalizado, "").Normalize(NormalizationForm.FormC);
+        }
+
+
         private async Task CriarOrcamentokAsync()
         {
             try
@@ -341,7 +357,7 @@ namespace Expedicao.Views
                         /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
                         /*03*/Convert.ToString(item).PadRight(14) +
                         /*04*/Convert.ToString(p.CodComplAdicional).PadRight(30) +
-                        /*05*/Convert.ToString(p.DescricaoFiscal).PadRight(60) +
+                        /*05*/Convert.ToString(RemoverAcentos(p.DescricaoFiscal)).PadRight(60) +
                         /*06*/Convert.ToString("N").PadRight(1) +
                         /*07*/Convert.ToString("").PadRight(60) +
                         /*08*/Convert.ToString("").PadRight(60) +
@@ -466,7 +482,7 @@ namespace Expedicao.Views
                         /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
                         /*03*/Convert.ToString(item).PadRight(14) +
                         /*04*/Convert.ToString(itens[i].CodComplAdicional).PadRight(30) +
-                        /*05*/Convert.ToString(itens[i].DescricaoFiscal).PadRight(60) +
+                        /*05*/Convert.ToString(RemoverAcentos(itens[i].DescricaoFiscal)).PadRight(60) +
                         /*06*/Convert.ToString("N").PadRight(1) +
                         /*07*/Convert.ToString("").PadRight(60) +
                         /*08*/Convert.ToString("").PadRight(60) +
