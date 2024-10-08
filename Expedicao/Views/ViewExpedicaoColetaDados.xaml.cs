@@ -223,7 +223,7 @@ namespace Expedicao.Views
                     await Task.Run(() => CriarOrcamento2TaskAsync(codigo));
                     //await Task.Run(CriarOrcamentokAsync);
 
-                    //await Task.Run(() => SendMailAsync(NExportado));
+                    await Task.Run(() => SendMailAsync(NExportado));
 
 
                     await Task.Run(() => new ViewModelLocal().GetRemoveAllItemFaltante());
@@ -354,7 +354,7 @@ namespace Expedicao.Views
                         /*15*/Convert.ToString("").PadRight(60) +
                         /*16*/string.Format("{0:000000000000.00}", p.Qtd).Replace(",", null).Replace(".", null) +
                         /*17*/Convert.ToString(p.Unidade).PadRight(3) +
-                        /*18*/string.Format("{0:000000000.00000}", p.Custo).Replace(",", null).Replace(".", null) +
+                        /*18*/string.Format("{0:000000000000.00}", p.Custo).Replace(",", null).Replace(".", null) +
                         /*19*/string.Format("{0:000000000000.00}", p.Qtd * p.Custo).Replace(",", null).Replace(".", null) +
                         /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
@@ -479,7 +479,7 @@ namespace Expedicao.Views
                         /*15*/Convert.ToString("").PadRight(60) +
                         /*16*/string.Format("{0:000000000000.00}", itens[i].Qtd).Replace(",", null).Replace(".", null) +
                         /*17*/Convert.ToString(itens[i].Unidade).PadRight(3) +
-                        /*18*/string.Format("{0:0000000000.0000}", itens[i].Custo).Replace(",", null).Replace(".", null) +
+                        /*18*/string.Format("{0:000000000000.00}", itens[i].Custo).Replace(",", null).Replace(".", null) +
                         /*19*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +

@@ -399,7 +399,7 @@ namespace Expedicao
                         CODBARRA = "",
                         UNIDADEDECOMPRA = x.Key.Unidade,
                         UNIDADEVENDA = x.Key.Unidade,
-                        SITUACAOTRIBUTARIAA = "",
+                        SITUACAOTRIBUTARIAA = "0",
                         SITUACAOTRIBUTARIAB = "41",
                         CSOSN = "",
                         SITTRIBPIS = "PIS 70 - Operação de Aquisição sem Direito a Crédito",
