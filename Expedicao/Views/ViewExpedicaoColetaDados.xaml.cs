@@ -1,29 +1,22 @@
-﻿using Syncfusion.UI.Xaml.Grid;
-using System.Collections.Generic;
+﻿using CsvHelper;
+using Expedicao.DataBaseLocal;
+using Syncfusion.XlsIO;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.IO.Ports;
+using System.Linq;
+using System.Media;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Expedicao.DataBaseLocal;
-using System.Collections;
-using System.Media;
-using System.ComponentModel;
-using Syncfusion.XlsIO;
-using System.Diagnostics;
-using System.IO;
-using System.Collections.ObjectModel;
-using System.Net.Mail;
-using System.Net;
-using Syncfusion.XlsIO.Interfaces;
-using System.Runtime.CompilerServices;
-using System.Drawing;
-using Microsoft.VisualBasic;
-using System.Linq;
-using System.IO.Compression;
-using System.Formats.Asn1;
-using System.Globalization;
-using CsvHelper;
 
 namespace Expedicao.Views
 {
@@ -230,14 +223,14 @@ namespace Expedicao.Views
                     await Task.Run(() => CriarOrcamento2TaskAsync(codigo));
                     //await Task.Run(CriarOrcamentokAsync);
 
-                    await Task.Run(() => SendMailAsync(NExportado));
+                    //await Task.Run(() => SendMailAsync(NExportado));
 
 
                     await Task.Run(() => new ViewModelLocal().GetRemoveAllItemFaltante());
                     await Task.Run(() => new ViewModelLocal().GetRemoveAllItemCarregado());
                     await Task.Run(() => new ViewModelLocal().GetRemoveAllIRomaneios());
 
-                    itens.ItemsSource = await Task.Run(() => new ViewModelLocal().Getaitens());
+                    //itens.ItemsSource = await Task.Run(() => new ViewModelLocal().Getaitens());
    
 
                     loading.Visibility = Visibility.Hidden;
@@ -361,7 +354,7 @@ namespace Expedicao.Views
                         /*15*/Convert.ToString("").PadRight(60) +
                         /*16*/string.Format("{0:000000000000.00}", p.Qtd).Replace(",", null).Replace(".", null) +
                         /*17*/Convert.ToString(p.Unidade).PadRight(3) +
-                        /*18*/string.Format("{0:000000000000.00}", p.Custo).Replace(",", null).Replace(".", null) +
+                        /*18*/string.Format("{0:000000000.00000}", p.Custo).Replace(",", null).Replace(".", null) +
                         /*19*/string.Format("{0:000000000000.00}", p.Qtd * p.Custo).Replace(",", null).Replace(".", null) +
                         /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
@@ -379,6 +372,7 @@ namespace Expedicao.Views
                         /*33*/Convert.ToString("").PadRight(60) +
                         /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*35*/Convert.ToString("A").PadRight(1));
+
                         item++;
                     }
                     sw.Close();
@@ -466,6 +460,7 @@ namespace Expedicao.Views
                 for (int i = 0; i < itens.Count; ++i)
                 {
                     ++item;
+                    decimal valorFormatado = (decimal)(itens[i].Custo * 1000);
                     await sw.WriteLineAsync(
                         /*01*/"F220" +
                         /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
@@ -484,8 +479,8 @@ namespace Expedicao.Views
                         /*15*/Convert.ToString("").PadRight(60) +
                         /*16*/string.Format("{0:000000000000.00}", itens[i].Qtd).Replace(",", null).Replace(".", null) +
                         /*17*/Convert.ToString(itens[i].Unidade).PadRight(3) +
-                        /*18*/string.Format("{0:000000000000.00}", itens[i].Custo).Replace(",", null).Replace(".", null) +
-                        /*19*/string.Format("{0:000000000000.00}", itens[i].Qtd * itens[i].Custo).Replace(",", null).Replace(".", null) +
+                        /*18*/string.Format("{0:0000000000.0000}", itens[i].Custo).Replace(",", null).Replace(".", null) +
+                        /*19*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +

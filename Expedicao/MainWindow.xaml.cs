@@ -1062,6 +1062,8 @@ namespace Expedicao
                     })
                     .ToListAsync();
 
+                var produtos = await db.CarregamentoItemCaminhaos.OrderBy(x => x.DescricaoFiscal).ToListAsync();
+
                 var nomePasta = "NF";
                 var nomeArquivo = "Produtos.csv";
                 var caminhoArquivo = @"C:\Temp\" + nomePasta;
@@ -1075,6 +1077,109 @@ namespace Expedicao
                 //csvWriter.Context.RegisterClassMap<DadosAnexoMap>();                                               
                 csvWriter.WriteRecords(listAsync);
                 streamWriter.Flush();
+
+                StreamWriter sw = new(@"C:\Temp\PRODUTOS.FSI");
+                foreach (var produto in produtos)
+                {
+                    await sw.WriteLineAsync
+                        (
+                            /*01*/Convert.ToString("F030").ToString().PadRight(4) +
+                            /*02*/Convert.ToString(produto.CodComplAdicional).ToString().PadRight(30) +
+                            /*03*/Convert.ToString(produto.DescricaoFiscal).ToString().PadRight(60) +
+                            /*04*/Convert.ToString("0").ToString().PadLeft(10, '0') +
+                            /*05*/Convert.ToString("0").ToString().PadLeft(10, '0') +
+                            /*06*/Convert.ToString(produto.Unidade).ToString().PadRight(3) +
+                            /*07*/string.Format("{0:000000000000.00000}", 0).Replace(",", null).Replace(".", null) +
+                            /*08*/Convert.ToString("1").ToString().PadRight(1) +
+                            /*09*/string.Format("{0:000000000000.0000}", 0).Replace(",", null).Replace(".", null) +
+                            /*10*/Convert.ToString("0").ToString().PadRight(3) +
+                            /*11*/string.Format("{0:0000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*12*/Convert.ToString("S").ToString().PadRight(1) +
+                            /*13*/Convert.ToString("N").ToString().PadRight(1) +
+                            /*14*/string.Format("{0:0000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*15*/string.Format("{0:0000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*16*/string.Format("{0:0000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*17*/Convert.ToString("0").ToString().PadLeft(7, '0') +
+                            /*18*/Convert.ToString(DateTime.Now.ToString("ddMMyyyy")).ToString().PadRight(8) +
+                            /*19*/Convert.ToString("").ToString().PadRight(5) +
+                            /*20*/Convert.ToString("").ToString().PadRight(2) +
+                            /*21*/Convert.ToString("0").ToString().PadLeft(1, '0') + 
+                            /*22*/Convert.ToString("0").ToString().PadLeft(2, '0') +
+                            /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*25*/Convert.ToString("N").ToString().PadRight(1) +
+                            /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*28*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*29*/Convert.ToString("").ToString().PadRight(14) +
+                            /*30*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*31*/string.Format("{0:000000000000.0000}", 0).Replace(",", null).Replace(".", null) +
+                            /*32*/string.Format("{0:000000000000.0000}", 0).Replace(",", null).Replace(".", null) +
+                            /*33*/string.Format("{0:000000000000.0000}", 0).Replace(",", null).Replace(".", null) +
+                            /*34*/string.Format("{0:000000000000.0000}", 0).Replace(",", null).Replace(".", null) +
+                            /*35*/string.Format("{0:000000000000.00000}", 0).Replace(",", null).Replace(".", null) +
+                            /*36*/string.Format("{0:000000000000.00000}", 0).Replace(",", null).Replace(".", null) +
+                            /*37*/Convert.ToString("0").ToString().PadLeft(8) +
+                            /*38*/Convert.ToString("").ToString().PadRight(50) +
+                            /*39*/Convert.ToString("").ToString().PadRight(50) +
+                            /*40*/Convert.ToString("").ToString().PadRight(50) +
+                            /*41*/Convert.ToString("").ToString().PadRight(50) +
+                            /*42*/Convert.ToString("").ToString().PadRight(50) +
+                            /*43*/Convert.ToString("").ToString().PadRight(50) +
+                            /*44*/Convert.ToString("").ToString().PadRight(50) +
+                            /*45*/Convert.ToString("").ToString().PadRight(50) +
+                            /*46*/Convert.ToString("").ToString().PadRight(50) +
+                            /*47*/Convert.ToString("").ToString().PadRight(50) +
+                            /*48*/Convert.ToString("").ToString().PadRight(50) +
+                            /*49*/Convert.ToString("").ToString().PadRight(50) +
+                            /*50*/Convert.ToString("").ToString().PadRight(50) +
+                            /*51*/Convert.ToString("").ToString().PadRight(50) +
+                            /*52*/Convert.ToString("").ToString().PadRight(50) +
+                            /*53*/Convert.ToString("").ToString().PadRight(140) +
+                            /*54*/Convert.ToString(DateTime.Now.ToString("ddMMyyyy")).ToString().PadRight(8) +
+                            /*55*/Convert.ToString(DateTime.Now.ToString("ddMMyyyy")).ToString().PadRight(8) +
+                            /*56*/Convert.ToString("").ToString().PadRight(18) +
+                            /*57*/Convert.ToString("").ToString().PadRight(40) +
+                            /*58*/Convert.ToString("").ToString().PadRight(3) +
+                            /*59*/Convert.ToString(DateTime.Now.ToString("ddMMyyyy")).ToString().PadRight(8) +
+                            /*60*/Convert.ToString("").ToString().PadRight(30) +
+                            /*61*/Convert.ToString("").ToString().PadRight(30) + 
+                            /*62*/Convert.ToString("0").ToString().PadLeft(2, '0') +
+                            /*63*/Convert.ToString("0").ToString().PadLeft(2, '0') +
+                            /*64*/Convert.ToString("0").ToString().PadLeft(2, '0') +
+                            /*65*/Convert.ToString("0").ToString().PadLeft(3, '0') +
+                            /*66*/Convert.ToString("").ToString().PadRight(14) +
+                            /*67*/Convert.ToString("").ToString().PadRight(2) +
+                            /*68*/Convert.ToString("").ToString().PadRight(30) +
+                            /*69*/Convert.ToString("").ToString().PadRight(2) +
+                            /*70*/Convert.ToString("").ToString().PadRight(30) +
+                            /*71*/Convert.ToString("0").ToString().PadLeft(4, '0') +
+                            /*72*/Convert.ToString("").ToString().PadRight(30) +
+                            /*73*/Convert.ToString("").ToString().PadRight(5) +
+                            /*74*/Convert.ToString("").ToString().PadRight(30) +
+                            /*75*/Convert.ToString("").ToString().PadRight(50) +
+                            /*76*/Convert.ToString("").ToString().PadRight(50) +
+                            /*77*/Convert.ToString("").ToString().PadRight(50) +
+                            /*78*/Convert.ToString("").ToString().PadRight(50) +
+                            /*79*/Convert.ToString("").ToString().PadRight(50) +
+                            /*80*/Convert.ToString("").ToString().PadRight(50) +
+                            /*81*/Convert.ToString("").ToString().PadRight(50) +
+                            /*82*/Convert.ToString("").ToString().PadRight(50) +
+                            /*83*/Convert.ToString("").ToString().PadRight(50) +
+                            /*84*/Convert.ToString("").ToString().PadRight(50) +
+                            /*85*/Convert.ToString("").ToString().PadRight(50) +
+                            /*86*/Convert.ToString("").ToString().PadRight(50) +
+                            /*87*/Convert.ToString("").ToString().PadRight(50) +
+                            /*88*/Convert.ToString("").ToString().PadRight(50) +
+                            /*89*/Convert.ToString("").ToString().PadRight(50) +
+                            /*90*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*91*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                            /*92*/Convert.ToString("99").ToString().PadRight(2) +
+                            /*93*/Convert.ToString("A").ToString().PadRight(1) 
+                        );
+                }
+
+                MessageBox.Show(@"ARQUIVOS CRIADOS NO DIRETÓRIO 'C:\TEMP'");
             }
             catch (Exception ex)
             {
