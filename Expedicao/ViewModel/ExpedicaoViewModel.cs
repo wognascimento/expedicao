@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Expedicao
 {
@@ -606,7 +607,8 @@ namespace Expedicao
                         x.planilha,
                         x.descricao_completa,
                         x.liquido,
-                        x.bruto
+                        x.bruto,
+                        controlado = x.prodcontrolado == "0" ? "NÃO" : "SIM"
                     })
                     .ToListAsync();
             }

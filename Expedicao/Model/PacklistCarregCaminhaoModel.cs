@@ -27,5 +27,6 @@ namespace Expedicao
     public string? descricao_completa { get; set; }
     public string? caminhao { get; set; }
     public DateTime? data { get; set; }
+    public string? prodcontrolado { get; set; }
   }
 }

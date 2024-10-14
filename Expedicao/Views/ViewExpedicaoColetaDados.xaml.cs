@@ -928,7 +928,7 @@ namespace Expedicao.Views
             emailMessage.To.Add(new MailAddress("grupo_nota_fiscal@cipolatti.com.br"));
             emailMessage.CC.Add(new MailAddress("expedicao@cipolatti.com.br"));
             emailMessage.CC.Add(new MailAddress("operacionalinterno@cipolatti.com.br"));
-            emailMessage.CC.Add(new MailAddress("wesley_oliveira@cipolatti.com.br"));
+            emailMessage.CC.Add(new MailAddress("helpdesk@cipolatti.com.br"));
             
             emailMessage.Subject = "Solicitação Nota Fisca Shopping";
             emailMessage.Body = "Em anexo arquivos para emissão da nota fiscal para o cliente " + aprovadoModel.Nome + " - " + aprovadoModel.Sigla + ", caminhão: " + Dispatcher.Invoke(() => txtPlaca.Content.ToString());
@@ -994,6 +994,7 @@ namespace Expedicao.Views
                     worksheet.Range["F2"].Text = "Descrição";
                     worksheet.Range["G2"].Text = "Liquido";
                     worksheet.Range["H2"].Text = "Bruto";
+                    worksheet.Range["I2"].Text = "Controlado";
                     workbook.SetPaletteColor(8, Color.FromArgb((int)byte.MaxValue, 174, 33));
                     headerStyle = workbook.Styles.Add("HeaderStyle");
                     headerStyle.BeginUpdate();
@@ -1022,10 +1023,10 @@ namespace Expedicao.Views
                     //interpolatedStringHandler.AppendFormatted<int>(list.Count + 2);
                     //string stringAndClear = interpolatedStringHandler.ToStringAndClear();
 
-                    range[$"A3:H{list.Count + 2}"].CellStyle = bodyStyle;
+                    range[$"A3:I{list.Count + 2}"].CellStyle = bodyStyle;
                     worksheet.Rows[1].CellStyle = headerStyle;
                     worksheet.ImportData(list, 3, 1, false);
-                    worksheet.PageSetup.PrintTitleColumns = "$A:$H";
+                    worksheet.PageSetup.PrintTitleColumns = "$A:$I";
                     worksheet.PageSetup.PrintTitleRows = "$1:$2";
                     worksheet.AutofitColumn(1);
                     worksheet.SetColumnWidth(2, 30.0);
