@@ -17,26 +17,63 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <syncfusion:ToolBarAdv GripperVisibility="Hidden" OverflowButtonVisibility="Hidden" Band="1">
-            <syncfusion:ButtonAdv Click="RibbonButton_Click" SizeMode="Large" LargeIcon="/icon/icons8-caminhao-interestadual-32.png"
-                            SmallIcon="/icon/icons8-caminhao-interestadual-32.png" IconWidth="32" IconHeight="32"
-                            Content="Carregar Romaneio" Label="Carregar Romaneio"/>
+            <syncfusion:ButtonAdv 
+                Click="RibbonButton_Click" 
+                SizeMode="Large" 
+                LargeIcon="/icon/icons8-caminhao-interestadual-32.png"
+                SmallIcon="/icon/icons8-caminhao-interestadual-32.png" 
+                IconWidth="32" 
+                IconHeight="32"
+                Content="Carregar Romaneio" 
+                Label="Carregar Romaneio"/>
             <Separator/>
-            <syncfusion:ButtonAdv Click="RibbonButton_Click_1" SizeMode="Large" LargeIcon="/icon/icons8-alimentacao-de-papel-32.png"
-                            SmallIcon="/icon/icons8-alimentacao-de-papel-32.png" IconWidth="32" IconHeight="32"
-                            Content="Lookup Itens" Label="Lookup Itens"/>
+            <syncfusion:ButtonAdv 
+                Click="RibbonButton_Click_1" 
+                SizeMode="Large" 
+                LargeIcon="/icon/icons8-alimentacao-de-papel-32.png"
+                SmallIcon="/icon/icons8-alimentacao-de-papel-32.png" 
+                IconWidth="32" 
+                IconHeight="32"
+                Content="Lookup Itens" 
+                Label="Lookup Itens"/>
             <Separator/>
-            <syncfusion:ButtonAdv Click="RibbonButton_Click_2" SizeMode="Large" LargeIcon="/icon/icons8-enviar-documento-32.png"
-                            SmallIcon="/icon/icons8-enviar-documento-32.png" IconWidth="32" IconHeight="32"
-                            Content="Enviar Itens Carregados" Label="Enviar Itens Carregados"/>
+            <syncfusion:ButtonAdv 
+                Click="RibbonButton_Click_2" 
+                SizeMode="Large" 
+                LargeIcon="/icon/icons8-enviar-documento-32.png"    
+                SmallIcon="/icon/icons8-enviar-documento-32.png" 
+                IconWidth="32" 
+                IconHeight="32"    
+                Content="Enviar Itens Carregados" 
+                Label="Enviar Itens Carregados"/>
             <Separator/>
-            <syncfusion:ButtonAdv Click="RibbonButton_Click_3" SizeMode="Large"
-                            LargeIcon="/icon/icons8-enviar-documento-por-e-mail-32.png"
-                            SmallIcon="/icon/icons8-enviar-documento-por-e-mail-32.png" IconWidth="32" IconHeight="32"
-                            Content="Solicitar Nota Fiscal" Label="Solicitar Nota Fiscal"/>
+            <syncfusion:ButtonAdv 
+                Click="RibbonButton_Click_3" 
+                SizeMode="Large"      
+                LargeIcon="/icon/icons8-enviar-documento-por-e-mail-32.png"          
+                SmallIcon="/icon/icons8-enviar-documento-por-e-mail-32.png" 
+                IconWidth="32" 
+                IconHeight="32"     
+                Content="Solicitar Nota Fiscal" 
+                Label="Solicitar Nota Fiscal"/>
             <Separator/>
-            <syncfusion:ButtonAdv Click="ButtonAdv_Click" SizeMode="Large" LargeIcon="/icon/checklist.png"
-                            SmallIcon="/icon/checklist.png" IconWidth="32" IconHeight="32" Content="Pack List"
-                            Label="Pack List"/>
+            <syncfusion:ButtonAdv 
+                Click="ButtonAdv_Click" 
+                SizeMode="Large" 
+                LargeIcon="/icon/checklist.png"      
+                SmallIcon="/icon/checklist.png" 
+                IconWidth="32" 
+                IconHeight="32" 
+                Content="Pack List"         
+                Label="Pack List"/>
+            <Separator/>
+            <syncfusion:ButtonAdv 
+                Click="AlterarDados_Click" 
+                LargeIcon="{x:Null}"      
+                SmallIcon="{x:Null}" 
+                Content="Alterar Volumes"         
+                Label="Alterar Volumes" 
+                Width="60"/>
         </syncfusion:ToolBarAdv>
         <syncfusion:SfDataGrid ItemsSourceChanged="itens_ItemsSourceChanged" x:Name="itens" Grid.Row="2"
                            ColumnSizer="AutoWithLastColumnFill" AllowFiltering="True" AutoGenerateColumns="False">

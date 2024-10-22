@@ -50,6 +50,7 @@ namespace Expedicao
         {
             //optionsBuilder.UseNpgsql($"host={dB.Host};user id={dB.Username};password={dB.Password};database={dB.Database};Pooling=false;Timeout=300;CommandTimeout=300;");
 
+            /*
             optionsBuilder.UseNpgsql(
                 $"host={dB.Host};" +
                 $"user id={dB.Username};" +
@@ -59,6 +60,20 @@ namespace Expedicao
                 $"CommandTimeout=300;" +
                 $"KeepAlive=300;"
                 );
+            */
+
+            optionsBuilder.UseNpgsql(
+                $"host={dB.Host};" +
+                $"user id={dB.Username};" +
+                $"password={dB.Password};" +
+                $"database={dB.Database};" +
+                $"Pooling=false;" +
+                $"Timeout=300;" +
+                $"CommandTimeout=300;" +
+                $"Application Name=SIG Expedicao <{dB.Database}>;",
+                options => { options.EnableRetryOnFailure(); }
+                );
+            optionsBuilder.EnableSensitiveDataLogging();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

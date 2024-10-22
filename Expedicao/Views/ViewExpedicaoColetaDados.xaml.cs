@@ -1,5 +1,7 @@
 ﻿using CsvHelper;
 using Expedicao.DataBaseLocal;
+using Expedicao.Model;
+using Microsoft.EntityFrameworkCore;
 using Syncfusion.XlsIO;
 using System;
 using System.Collections;
@@ -19,6 +21,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Expedicao.Views
 {
@@ -1066,6 +1069,81 @@ namespace Expedicao.Views
                 return;
             port.Close();
             port.Dispose();
+        }
+
+        private async void AlterarDados_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dialog = new();
+
+            //ConfCargaGerals
+            using AppDatabase db = new();
+            try
+            {
+                dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Planilha do Excel|*.xls;*.xlsx"
+                };
+                bool? result = dialog.ShowDialog();
+
+                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
+
+                string filename = dialog.FileName;
+
+                using ExcelEngine excelEngine = new();
+                IApplication application = excelEngine.Excel;
+                application.DefaultVersion = ExcelVersion.Xlsx;
+                IWorkbook workbook = application.Workbooks.OpenReadOnly(filename);
+                IWorksheet worksheet = workbook.Worksheets[0];
+
+                if (result == true)
+                {
+                    List<BarcodeModel> dadosExcel = worksheet.ExportData<BarcodeModel>(1, 1, 5000, 1);
+                    var volumes = dadosExcel.Where(x => x.barcode != null).ToList();
+
+                    if(txtPlaca.Content.ToString().Length == 0)
+                        throw new InvalidOperationException("Precisa selecionar o romaneio");
+
+                    var strategy = db.Database.CreateExecutionStrategy();
+                     await strategy.ExecuteAsync(async () => 
+                     {
+                         using var transaction = db.Database.BeginTransaction();
+                         try
+                         {
+                             foreach (var volume in volumes)
+                             {
+                                 var vol = await db.ConfCargaGerals.FirstOrDefaultAsync(x=> x.Barcode == volume.barcode) ?? throw new InvalidOperationException("Existe código não carregado na lista enviada");
+                                 vol.Caminhao = txtPlaca.Content.ToString();
+                                 vol.Data = this.DataCarregamento;
+                                 vol.DataAltera = DateTime.Now.Date;
+                                 vol.AlteradoPor = Environment.UserName;
+                                 db.ConfCargaGerals.Update(vol);
+                                 await db.SaveChangesAsync();  
+                             }
+                             transaction.Commit();
+                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                             MessageBox.Show("volumes enviados alterado conforme Romaneio selecionado", "Operação Concluída");
+                         }
+                         catch (DbUpdateException ex)
+                         {
+                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                             transaction.Rollback();
+                             MessageBox.Show(ex?.InnerException?.Message, "Operação Cancelada");
+                         }
+                         catch(Exception ex)
+                         {
+                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                             transaction.Rollback();
+                             MessageBox.Show(ex?.Message, "Operação Cancelada");
+                         }
+
+                     });
+                }
+            }
+            catch (Exception ex)
+            {
+                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                MessageBox.Show(ex.Message, "Operação Cancelada");
+            }
         }
     }
 }
