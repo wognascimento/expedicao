@@ -343,7 +343,7 @@ namespace Expedicao
             {
                 using AppDatabase db = new();
                 listAsync = await db.CarregamentoItemCaminhaos
-                    .Where(x => siglas.Contains(x.SiglaServ) && x.Custo == (double?)0.0 || x.Peso == new double?())
+                    .Where(x => siglas.Contains(x.SiglaServ) && (x.Custo == (double?)0.0 || x.Custo == new double?()) || x.Peso == new double?())
                     .GroupBy(x => new
                     {
                         x.CodComplAdicional,
@@ -355,9 +355,9 @@ namespace Expedicao
                     })
                     .OrderBy(x => x.Key.DescricaoFiscal).Select(x => new
                     {
-                        CodComplAdicional = x.Key.CodComplAdicional,
-                        DescricaoFiscal = x.Key.DescricaoFiscal,
-                        Unidade = x.Key.Unidade,
+                        x.Key.CodComplAdicional,
+                        x.Key.DescricaoFiscal,
+                        x.Key.Unidade,
                         Custo = x.Sum(t => t.Custo),
                         Peso = x.Sum(t => t.Peso)
                     }).ToListAsync();
