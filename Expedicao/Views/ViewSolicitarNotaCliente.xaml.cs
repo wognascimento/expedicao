@@ -69,10 +69,12 @@ namespace Expedicao.Views
                 using AppDatabase db = new();
                 var query = await db.CubagemSiglaCaminhoes
                     //.AsEnumerable() // Transforma em IEnumerable para acessar possíveis funcionalidades não suportadas por SQL (caso necessário)
-                    .GroupBy(x => new { x.data_de_expedicao, x.sigla })
+                    .GroupBy(x => new { x.data_de_expedicao, x.sigla, x.est, x.cidade })
                     .Select(g => new CubagemSiglaCaminaoModel
                     {
                         data_de_expedicao = g.Key.data_de_expedicao,
+                        est = g.Key.est,
+                        cidade = g.Key.cidade,
                         sigla = g.Key.sigla,
                         preco = g.Sum(x => x.preco ?? 0),
                         volumes = g.Sum(x => x.volumes ?? 0),
