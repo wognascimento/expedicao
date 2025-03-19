@@ -22,7 +22,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -381,8 +381,14 @@
 
         </syncfusion:SfTextInputLayout>
 
-        <syncfusion:ButtonAdv Click="btnNovo_Click" x:Name="btnNovo" Label="NOVO" Grid.Column="0" Grid.Row="12" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
-        <syncfusion:ButtonAdv Click="btnGravar_Click" x:Name="btnGravar" Label="GRAVAR" Grid.Column="1" Grid.Row="12" Margin="10,0,0,0" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
+        <Grid Grid.Column="0" Grid.Row="12" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <syncfusion:ButtonAdv Click="btnNovo_Click" x:Name="btnNovo" Label="NOVO" Grid.Column="0" Grid.Row="12" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
+            <syncfusion:ButtonAdv Click="btnGravar_Click" x:Name="btnGravar" Label="GRAVAR" Grid.Column="1" Grid.Row="12" Margin="10,0,0,0" SizeMode="Large" LargeIcon="{x:Null}" SmallIcon="{x:Null}"/>
+        </Grid>
     </Grid>
 
 </UserControl>
