@@ -33,6 +33,7 @@ namespace Expedicao.Views
         SerialPort port = new();
         int index;
         DateTime DataCarregamento = new DateTime();
+        DataBase BaseSettings = DataBase.Instance;
 
         public ViewExpedicaoColetaDados()
         {
@@ -260,10 +261,10 @@ namespace Expedicao.Views
             excel.DefaultVersion = (ExcelVersion)3;
             IWorkbook iworkbook = excel.Workbooks.Create(1);
             iworkbook.Worksheets[0].ImportData(reports, 1, 1, true);
-            iworkbook.SaveAs("ProdutoSemParametro.xlsx");
+            iworkbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\ProdutoSemParametro.xlsx");
             iworkbook.Close();
             excelEngine.Dispose();
-            Process.Start(new ProcessStartInfo("ProdutoSemParametro.xlsx")
+            Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\ProdutoSemParametro.xlsx")
             {
                 UseShellExecute = true
             });
@@ -1043,10 +1044,10 @@ namespace Expedicao.Views
                     worksheet.PageSetup.TopMargin = 0.0;
                     worksheet.PageSetup.BottomMargin = 0.5;
                     worksheet.PageSetup.RightFooter = "&P";
-                    workbook.SaveAs("PACKING-LIST-SHOPPING.xlsx");
+                    workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\PACKING-LIST-SHOPPING.xlsx");
                     workbook.Close();
                     excelEngine.Dispose();
-                    Process.Start(new ProcessStartInfo("PACKING-LIST-SHOPPING.xlsx")
+                    Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\PACKING-LIST-SHOPPING.xlsx")
                     {
                         UseShellExecute = true
                     });

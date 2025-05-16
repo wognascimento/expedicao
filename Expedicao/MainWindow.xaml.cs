@@ -31,6 +31,7 @@ namespace Expedicao
 
         private DataBase dB = DataBase.Instance;
         private UpdateManager manager;
+        DataBase BaseSettings = DataBase.Instance;
 
         #region Fields
         private string currentVisualStyle;
@@ -324,11 +325,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\exped.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\exped.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\exped.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\exped.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -366,11 +367,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\caixas_enderecadas.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\caixas_enderecadas.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\caixas_enderecadas.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\caixas_enderecadas.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -454,11 +455,11 @@ namespace Expedicao
 
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\saldo_geral_shopping.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\saldo_geral_shopping.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\saldo_geral_shopping.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\saldo_geral_shopping.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -495,11 +496,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\produtos_expedidos_data.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\produtos_expedidos_data.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\produtos_expedidos_data.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\produtos_expedidos_data.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -537,11 +538,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\cubagem_dia.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_dia.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\cubagem_dia.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_dia.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -578,11 +579,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\cubagem_ano_atual_ano_anterior.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_ano_atual_ano_anterior.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\cubagem_ano_atual_ano_anterior.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_ano_atual_ano_anterior.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -619,11 +620,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\cubagem_prevista_cliente.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_prevista_cliente.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\cubagem_prevista_cliente.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_prevista_cliente.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -701,11 +702,11 @@ namespace Expedicao
                 pivotTable.DisplayFieldCaptions = true;
 
                 workbook.Worksheets[1].Activate();
-                workbook.SaveAs(@"c:\relatorios\cubagem_fracionada_caminhao.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_fracionada_caminhao.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\cubagem_fracionada_caminhao.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_fracionada_caminhao.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -783,11 +784,11 @@ namespace Expedicao
                 pivotTable.DisplayFieldCaptions = true;
 
                 workbook.Worksheets[1].Activate();
-                workbook.SaveAs(@"c:\relatorios\cubagem_fracionada_caminhao.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_fracionada_caminhao.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\cubagem_fracionada_caminhao.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\cubagem_fracionada_caminhao.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -824,11 +825,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\pendencias_expedicao.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\pendencias_expedicao.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\pendencias_expedicao.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\pendencias_expedicao.xlsx")
                 {
                     UseShellExecute = true
                 });
@@ -865,11 +866,11 @@ namespace Expedicao
                 };
                 worksheet.ImportData(dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@"c:\relatorios\expedicao_virtual.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\expedicao_virtual.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
-                Process.Start(new ProcessStartInfo(@"c:\relatorios\expedicao_virtual.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\expedicao_virtual.xlsx")
                 {
                     UseShellExecute = true
                 });

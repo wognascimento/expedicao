@@ -84,6 +84,11 @@ $updateJson | Out-File -FilePath "$projectPath\version.json"
 scp $zipFullPath $serverUploadPath
 scp "$projectPath\version.json" "root@192.168.0.49:/var/www/updates/downloads/expedicao/version.json"
 
+$credencial = Get-Credential -UserName "cipodominio\administrador"
+New-PSDrive -Name "RedeTemp" -PSProvider FileSystem -Root "\\192.168.0.163\sig\instaladores" -Credential $credencial
+Copy-Item -Path "$projectPath\Output\Expedicao.exe"  -Destination "RedeTemp:"
+Remove-PSDrive -Name "RedeTemp"
+
 # Opcional: Remover arquivos temporários
 Remove-Item $zipFullPath
 Remove-Item "$projectPath\version.json"

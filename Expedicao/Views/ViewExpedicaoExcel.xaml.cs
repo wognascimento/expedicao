@@ -15,6 +15,7 @@ namespace Expedicao.Views
     public partial class ViewExpedicaoExcel : UserControl
     {
         public string Consulta { get; set; }
+        DataBase BaseSettings = DataBase.Instance;
 
         public ViewExpedicaoExcel(string consulta)
         {
@@ -79,14 +80,14 @@ namespace Expedicao.Views
                 };
                 worksheet.ImportData((IEnumerable)dados, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs($"{Consulta}.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\{Consulta}.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
                 await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Visible));
                 await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = false));
 
-                Process.Start(new ProcessStartInfo($"{Consulta}.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\{Consulta}.xlsx")
                 {
                     UseShellExecute = true
                 });

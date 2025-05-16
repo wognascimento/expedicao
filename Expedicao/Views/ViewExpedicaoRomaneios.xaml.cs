@@ -17,7 +17,8 @@ namespace Expedicao.Views
     /// </summary>
     public partial class ViewExpedicaoRomaneios : UserControl
     {
-        public List<RomaneioModel> Romaneios = new List<RomaneioModel>();
+        public List<RomaneioModel> Romaneios = [];
+        DataBase BaseSettings = DataBase.Instance;
 
         public string LocalAberto { get; set; }
         public RomaneioModel Romaneio { get; set; }
@@ -87,7 +88,7 @@ namespace Expedicao.Views
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
 
-                ExcelEngine excelEngine = new ExcelEngine();
+                ExcelEngine excelEngine = new();
                 IApplication excel = excelEngine.Excel;
                 excel.DefaultVersion = ExcelVersion.Xlsx;
                 IWorkbook workbook = excel.Workbooks.Create(1);
@@ -105,12 +106,12 @@ namespace Expedicao.Views
                 };
                 worksheet.ImportData(vm.Romaneios, importDataOptions);
                 worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs($"ROMANEIOS.xlsx");
+                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\ROMANEIOS.xlsx");
                 workbook.Close();
                 excelEngine.Dispose();
 
 
-                Process.Start(new ProcessStartInfo($"ROMANEIOS.xlsx")
+                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\ROMANEIOS.xlsx")
                 {
                     UseShellExecute = true
                 });
