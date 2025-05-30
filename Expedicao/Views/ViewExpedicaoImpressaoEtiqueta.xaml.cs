@@ -267,8 +267,8 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"eJztkT0KAjEQhTOLIlglldViKzmFhVcQq2U9goUwlSCWnkKsJLfwBm5hnZME3ajzI2wjCDZONXkzfO8lMeaXBQCfrFvnnO0e9brpMCeDQg0Gal/pbuzcnAyGWxmMptIrHcqzXMAfZAeX0ivdxUYuEE7CwTX3hejQTwnIYBiCxEHkQK1OgaCOt2zwxIdAxoDIBsUxhAnp15Qq4u+F88b3wjF1jBdnLfE5qOLnfQ5apbQ5A+fcE6jlz8hA5TfjR35LOvsOEFfUF8oXUn6g10H55kDc+zeD2HSCcCE/4HdsbEpeb+tg/vX1ugPL3lH5:5877");
                 streamWriter1.WriteLine($@"^FO16,117^GB86,31,31^FS");
                 streamWriter1.WriteLine($@"^FT16,141^A0N,25,24^FR^FH\^FD{DateTime.Now:dd/MM/yy}^FS");
-                streamWriter1.WriteLine($@"^FO236,21^GB326,102,102^FS");
-                streamWriter1.WriteLine($@"^FT236,102^A0N,81,67^FB326,1,0,C^FR^FH\^FD{row.Sigla}^FS");
+                streamWriter1.WriteLine($@"^FO150,21^GB500,102,102^FS");
+                streamWriter1.WriteLine($@"^FT150,102^A0N,60,55^FB510,1,0,C^FR^FH\^FD{row.Sigla}^FS");
                 streamWriter1.WriteLine($@"^FT255,457^BQN,3,10");
                 string volume = $@"{row.Sigla}|{row.Volume}"; //volume.PadRight(35);
                 streamWriter1.WriteLine($@"^FH\^FDQA,{volume,-35}^FS");
@@ -292,12 +292,12 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"^FT279,1019^A0N,68,84^FB164,1,0,C^FH\^FD{row.QtdExpedida}^FS");
 
                 streamWriter1.WriteLine($@"^LRY^FO9,157^GB123,0,113^FS^LRN");
-                streamWriter1.WriteLine($@"^FO236,127^GB326,310,8^FS");
+                streamWriter1.WriteLine($@"^FO236,127^GB326,310,4^FS");
 
                 if(row.Controlado.HasValue && row.Controlado.Value)
                 {
-                    streamWriter1.WriteLine($@"^FT299,465^A0N,31,31^FH\^FDCONTROLADO^FS");
-                    streamWriter1.WriteLine($@"^LRY^FO236,437^GB326,0,38^FS^LRN");
+                    streamWriter1.WriteLine($@"^FT320,467^A0N,30,30^FH\^FDCONTROLADO^FS");
+                    streamWriter1.WriteLine($@"^LRY^FO236,438^GB326,0,38^FS^LRN");
                 }
 
                 streamWriter1.WriteLine($@"^PQ1,0,1,Y^XZ");
