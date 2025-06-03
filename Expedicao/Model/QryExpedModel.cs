@@ -15,6 +15,7 @@ namespace Expedicao
         public string? descricao_completa {get; set; }
         public string? unidade {get; set; }
         public double? qtd_expedida {get; set; }
+        public string? modelo_de_cx { get; set; }
         public int? vol_exp {get; set; }
         public int? vol_tot_exp {get; set; }
         public double? pl {get; set; }
@@ -22,6 +23,7 @@ namespace Expedicao
         public double? largura {get; set; }
         public double? altura {get; set; }
         public double? profundidade {get; set; }
+        public double? cubagem { get; set; }
         public string? inserido_por {get; set; }
         public DateTime? inserido_em {get; set; }
         public string? alterado_por {get; set; }

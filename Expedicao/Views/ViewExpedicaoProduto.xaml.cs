@@ -544,7 +544,14 @@ namespace Expedicao.Views
             {
                 using AppDatabase db = new();
                 //db.Entry<ExpedModel>(exped).State = !exped.CodExped.HasValue ? EntityState.Added : EntityState.Modified;
-                await db.Expeds.SingleMergeAsync(exped);
+                //await db.Expeds.SingleMergeAsync(exped);
+
+                var expedExistente = await db.Expeds.FindAsync(exped.CodExped);
+                if (expedExistente == null)
+                    await db.Expeds.AddAsync(exped);
+                else
+                    db.Entry(expedExistente).CurrentValues.SetValues(exped);
+
                 await db.SaveChangesAsync();
                 return exped;
             }
