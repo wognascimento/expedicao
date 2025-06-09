@@ -28,5 +28,6 @@ namespace Expedicao
         public DateTime? inserido_em {get; set; }
         public string? alterado_por {get; set; }
         public DateTime? alterado_quando { get; set; }
+        public int? semana { get; set; }
     }
 }
