@@ -170,9 +170,16 @@ namespace Expedicao.Views
             try
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
+                AprovadoModel? aprovado = this.aprovados.SelectedItem as AprovadoModel;
+                var grid = ((SfDataGrid)sender);
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
                 ExpedModel data = (ExpedModel)e.RowData;
+                data.CodVol = $"{aprovado.SiglaServ}-{data.Volume}";
                 ExpedModel expedModel = await Task.Run(() => vm.AddExpedAsync(data));
+                //((ExpedModel)e.RowData).CodExped = expedModel.CodExped;
+                grid.View.Records[grid.ResolveToRecordIndex(e.RowIndex)].Data = expedModel;
+                grid.View.Refresh();
+
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
             catch (Exception ex)
@@ -543,17 +550,21 @@ namespace Expedicao.Views
             try
             {
                 using AppDatabase db = new();
-                //db.Entry<ExpedModel>(exped).State = !exped.CodExped.HasValue ? EntityState.Added : EntityState.Modified;
-                //await db.Expeds.SingleMergeAsync(exped);
-
                 var expedExistente = await db.Expeds.FindAsync(exped.CodExped);
                 if (expedExistente == null)
-                    await db.Expeds.AddAsync(exped);
+                {
+                    var result = await db.Expeds.AddAsync(exped);
+                    await db.SaveChangesAsync();
+                    await db.Entry(result.Entity).ReloadAsync();
+                    return result.Entity;
+                }
                 else
+                {
                     db.Entry(expedExistente).CurrentValues.SetValues(exped);
-
-                await db.SaveChangesAsync();
-                return exped;
+                    await db.SaveChangesAsync();
+                    await db.Entry(expedExistente).ReloadAsync();
+                    return expedExistente;
+                }   
             }
             catch (Exception)
             {
