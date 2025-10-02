@@ -473,6 +473,18 @@ namespace Expedicao.Views
             {
                 //Dispatcher.Invoke(() => txtPlaca.Content.ToString());
 
+                IApplication excel = new ExcelEngine().Excel;
+                excel.DefaultVersion = ExcelVersion.Xlsx;
+                IWorkbook workbook = excel.Workbooks.Create(1);
+                IWorksheet worksheet = workbook.Worksheets[0];
+
+                worksheet.Range["A1"].Text = "ITEM";
+                worksheet.Range["B1"].Text = "CODIGO PRODUTO";
+                worksheet.Range["C1"].Text = "DESCRIÇÃO";
+                worksheet.Range["D1"].Text = "QUANTIDADE";
+                worksheet.Range["E1"].Text = "VALOR UNITÁRIO";
+                worksheet.Range["F1"].Text = "UNIDADE";
+
                 var siglas = await Task.Run(() => new ViewModelLocal().GetRomaneios());
                 var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));  //await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, "");
                 StreamWriter sw = new StreamWriter("ORCAMEN2.FSI");
@@ -517,8 +529,17 @@ namespace Expedicao.Views
                         /*33*/Convert.ToString("").PadRight(60) +
                         /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
                         /*35*/Convert.ToString("A").PadRight(1));
+
+                    worksheet.Range[@$"A{item+1}"].Number = item;
+                    worksheet.Range[@$"B{item+1}"].Number =  Convert.ToDouble(itens[i].CodComplAdicional);
+                    worksheet.Range[@$"C{item+1}"].Text = itens[i].DescricaoFiscal;
+                    worksheet.Range[@$"D{item+1}"].Number = Convert.ToDouble(itens[i].Qtd);
+                    worksheet.Range[@$"E{item+1}"].Number = Convert.ToDouble(itens[i].Custo);
+                    worksheet.Range[@$"F{item+1}"].Text = itens[i].Unidade;
                 }
                 sw.Close();
+
+                workbook.SaveAs("ITENS.xlsx");
 
                 var volumes = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
                 
@@ -937,13 +958,13 @@ namespace Expedicao.Views
             emailMessage.Subject = "Solicitação Nota Fisca Shopping";
             emailMessage.Body = "Em anexo arquivos para emissão da nota fiscal para o cliente " + aprovadoModel.Nome + " - " + aprovadoModel.Sigla + ", caminhão: " + Dispatcher.Invoke(() => txtPlaca.Content.ToString());
             emailMessage.Priority = MailPriority.High;// 2;
+            Attachment attachment = new("ITENS.xlsx");
             Attachment attachment1 = new("ORCAMEN1.FSI");
             Attachment attachment2 = new("ORCAMEN2.FSI");
-            //Attachment attachment = new(@"C:\Temp\ORCAMENTO.zip");
             Attachment attachment3 = new("Informacoes_Complementares.xlsx");
+            emailMessage.Attachments.Add(attachment);
             emailMessage.Attachments.Add(attachment1);
             emailMessage.Attachments.Add(attachment2);
-            //emailMessage.Attachments.Add(attachment);
             emailMessage.Attachments.Add(attachment3);
             if (prodNExport > 0)
                 emailMessage.Attachments.Add(new Attachment("Produtos.csv"));
