@@ -30,18 +30,20 @@ namespace Expedicao
         public double? QtdExpedida { get; set; }
         [Column("nome_caixa")]
         public string? NomeCaixa { get; set; }
-        [Column("setor")]
-        public string? Setor { get; set; }
-        [Column("codigo")]
-        public long? Codigo { get; set; }
-        [Column("barcode")]
-        public string? Barcode { get; set; }
-        [Column("codvol")]
-        public string? CodVol { get; set; }
+        //[Column("setor")]
+        //public string? Setor { get; set; }
+        //[Column("codigo")]
+        //public long? Codigo { get; set; }
+        //[Column("barcode")]
+        //public string? Barcode { get; set; }
+        //[Column("codvol")]
+        //public string? CodVol { get; set; }
         [Column("m3_volume")]
         public double? M3Volume { get; set; }
         [Column("item_memorial")]
         public string? ItemMemorial { get; set; }
+        [Column("local_shoppings")]
+        public string? LocalShopping { get; set; }
         [Column("baia_caminhao")]
         public string? BaiaCaminhao { get; set; }
         [Column("endereco")]
