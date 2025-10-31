@@ -1,103 +1,174 @@
-﻿using Syncfusion.XlsIO;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Expedicao.Model;
+using Microsoft.EntityFrameworkCore;
+using Syncfusion.XlsIO;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace Expedicao.Views
+namespace Expedicao.Views;
+
+/// <summary>
+/// Interação lógica para ViewExpedicaoExcel.xam
+/// </summary>
+public partial class ViewExpedicaoExcel : UserControl
 {
-    /// <summary>
-    /// Interação lógica para ViewExpedicaoExcel.xam
-    /// </summary>
-    public partial class ViewExpedicaoExcel : UserControl
+    public string Consulta { get; set; }
+    DataBase BaseSettings = DataBase.Instance;
+
+    public ViewExpedicaoExcel(string consulta)
     {
-        public string Consulta { get; set; }
-        DataBase BaseSettings = DataBase.Instance;
+        InitializeComponent();
+        DataContext = new ViewExpedicaoExcelViewModel();
+        this.Consulta = consulta;
+    }
 
-        public ViewExpedicaoExcel(string consulta)
+    private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        try
         {
-            InitializeComponent();
-            this.Consulta = consulta;
+            //this.sfmcAprovados.ItemsSource = await Task.Run(() => new AprovadoViewModel().GetAprovados());
+
+            if (DataContext is ViewExpedicaoExcelViewModel vm)
+                await vm.GetAprovados();
+
+            this.sfBusyIndicator.IsBusy = false;
+            this.principal.Visibility = Visibility.Visible;
         }
-
-        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        catch (Exception ex)
         {
-            try
-            {
-                this.sfmcAprovados.ItemsSource = await Task.Run(() => new AprovadoViewModel().GetAprovados());
-                this.sfBusyIndicator.IsBusy = false;
-                this.principal.Visibility = Visibility.Visible;
-            }
-            catch (Exception ex)
-            {
-                int num = (int)MessageBox.Show(ex.Message);
-            }
+            MessageBox.Show(ex.Message);
         }
+    }
 
-        private async void btnExcel_Click(object sender, RoutedEventArgs e)
+    private async void btnExcel_Click(object sender, RoutedEventArgs e)
+    {
+        try
         {
-            try
+            ExcelEngine excelEngine = new ExcelEngine();
+            IApplication excel = excelEngine.Excel;
+            excel.DefaultVersion = ExcelVersion.Xlsx;
+            IWorkbook workbook = excel.Workbooks.Create(1);
+            IWorksheet worksheet = workbook.Worksheets[0];
+
+            await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Hidden));
+            await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = true));
+
+            object dados = new();
+
+            if (DataContext is ViewExpedicaoExcelViewModel vm)
             {
-                ExcelEngine excelEngine = new ExcelEngine();
-                IApplication excel = excelEngine.Excel;
-                excel.DefaultVersion = ExcelVersion.Xlsx;
-                IWorkbook workbook = excel.Workbooks.Create(1);
-                IWorksheet worksheet = workbook.Worksheets[0];
-
-                await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Hidden));
-                await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = true));
-
-
-                AprovadoModel aprovado = sfmcAprovados.SelectedItem as AprovadoModel;
-                object dados = new object();
-
+                //var aprovados = sfmcAprovados.SelectedItems;
+                //ObservableCollection<AprovadoModel> aprovados = (ObservableCollection<AprovadoModel>)sfmcAprovados.SelectedItems;
+                
                 if (Consulta == "ITENS_FALTANTES")
                 {
-                    dados = await new ExpedicaoViewModel().GetItensFaltanteAsync(aprovado.SiglaServ);
+                    dados = await vm.GetItensFaltanteAsync();
                 }
                 else if (Consulta == "ITENS_CARREGADOS")
                 {
-                    dados = await new ExpedicaoViewModel().GetCarregamentoItensAsync(aprovado.SiglaServ);
+                    dados = await vm.GetCarregamentoItensAsync();
                 }
                 else if (Consulta == "PRE_ITENS_FALTANTES")
                 {
-                    dados = await new ExpedicaoViewModel().GetPreItensFaltanteAsync(aprovado.SiglaServ);
+                    dados = await vm.GetPreItensFaltanteAsync();
                 }
                 else if (Consulta == "PRE_ITENS_CONFERIDOS")
                 {
-                    dados = await new ExpedicaoViewModel().GetPreItensShoppAsync(aprovado.SiglaServ);
+                    dados = await vm.GetPreItensShoppAsync();
                 }
-
-                ExcelImportDataOptions importDataOptions = new ExcelImportDataOptions()
-                {
-                    FirstRow = 1,
-                    FirstColumn = 1,
-                    IncludeHeader = true,
-                    PreserveTypes = true
-                };
-                worksheet.ImportData((IEnumerable)dados, importDataOptions);
-                worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\{Consulta}.xlsx");
-                workbook.Close();
-                excelEngine.Dispose();
-
-                await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Visible));
-                await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = false));
-
-                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\{Consulta}.xlsx")
-                {
-                    UseShellExecute = true
-                });
             }
-            catch (Exception ex)
+
+
+            var arquivo = @$"{BaseSettings.CaminhoSistema}\Impressos\{Consulta}-{DateTime.Now:fffffff}.xlsx";
+            ExcelImportDataOptions importDataOptions = new()
             {
-                 MessageBox.Show(ex.Message );
-            }
-            
-        }
+                FirstRow = 1,
+                FirstColumn = 1,
+                IncludeHeader = true,
+                PreserveTypes = true
+            };
+            worksheet.ImportData((IEnumerable)dados, importDataOptions);
+            worksheet.UsedRange.AutofitColumns();
+            workbook.SaveAs(arquivo);
+            workbook.Close();
+            excelEngine.Dispose();
 
+            await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Visible));
+            await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = false));
+
+            Process.Start(new ProcessStartInfo(arquivo)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+             MessageBox.Show(ex.Message );
+        }
+        
+    }
+
+}
+
+public partial class ViewExpedicaoExcelViewModel : ObservableObject
+{
+
+    [ObservableProperty]
+    private ObservableCollection<AprovadoModel> aprovados = [];
+
+    [ObservableProperty]
+    private ObservableCollection<object> selectedItems = [];
+
+
+    public async Task GetAprovados()
+    {
+        using AppDatabase db = new();
+        Aprovados = new ObservableCollection<AprovadoModel>(await db.Aprovados.OrderBy(c => c.SiglaServ).ToListAsync());
+    }
+
+    public async Task<ObservableCollection<CarregamentoItenFaltanteModel>> GetItensFaltanteAsync()
+    {
+        using AppDatabase db = new();
+        var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList(); 
+        return new ObservableCollection<CarregamentoItenFaltanteModel>(
+            await (from f in db.CarregamentoItenFaltantes
+                   where siglas.Contains(f.Sigla)
+                   select f).ToListAsync());
+    }
+
+    public async Task<ObservableCollection<CarregamentoItenShoppModel>> GetCarregamentoItensAsync()
+    {
+        using AppDatabase db = new();
+        var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
+        return new ObservableCollection<CarregamentoItenShoppModel>(await db.CarregamentoItenShopps
+            .Where(s => siglas.Contains(s.Sigla))
+            .ToListAsync());
+    }
+
+    public async Task<ObservableCollection<PreConferenciaItemFaltanteModel>> GetPreItensFaltanteAsync()
+    {
+        using AppDatabase db = new();
+        var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
+        return new ObservableCollection<PreConferenciaItemFaltanteModel>(await db.PreConferenciaItemFaltantes
+            .Where(s => siglas.Contains(s.sigla))
+            .ToListAsync());
+    }
+
+    public async Task<IList<PreConferenciaItemShoppModel>> GetPreItensShoppAsync()
+    {
+        using AppDatabase db = new();
+        var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
+        return new ObservableCollection<PreConferenciaItemShoppModel>(await db.PreConferenciaItemShopps
+            .Where(s => siglas.Contains(s.sigla))
+            .ToListAsync());
     }
 }
+

@@ -1,7 +1,6 @@
 ﻿using CsvHelper;
 using Expedicao.Views;
 using Microsoft.EntityFrameworkCore;
-using Squirrel;
 using Syncfusion.SfSkinManager;
 using Syncfusion.Windows.Tools.Controls;
 using Syncfusion.XlsIO;
@@ -30,7 +29,6 @@ namespace Expedicao
     {
 
         private DataBase dB = DataBase.Instance;
-        private UpdateManager manager;
         DataBase BaseSettings = DataBase.Instance;
 
         #region Fields

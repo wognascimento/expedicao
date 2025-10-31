@@ -34,13 +34,24 @@
                 x:Name="sfmcAprovados" 
                 Grid.Column="0" 
                 Margin="0,0,10,0" 
-                AutoGenerateColumns="true"
+                AutoGenerateColumns="false"
                 AllowIncrementalFiltering="True" 
                 AllowImmediatePopup="True"
                 AllowDiacriticSensitiveFiltering="False" 
                 DisplayMember="SiglaServ"
+                SelectionMode="Multiple"
                 GridColumnSizer="AutoWithLastColumnFill" 
-                ItemsSource="{Binding AprovadosDetails}"/>
+                ItemsSource="{Binding Aprovados}"
+                SelectedItems="{Binding SelectedItems}">
+
+                <syncfusion:SfMultiColumnDropDownControl.Columns>
+                    <syncfusion:GridTextColumn MappingName="Sigla" AllowFiltering="True" />
+                    <syncfusion:GridTextColumn MappingName="SiglaServ" AllowFiltering="True" />
+                    <syncfusion:GridTextColumn MappingName="Nome" AllowFiltering="True" />
+                    <syncfusion:GridTextColumn MappingName="Cidade" AllowFiltering="True" />
+                </syncfusion:SfMultiColumnDropDownControl.Columns>
+
+            </syncfusion:SfMultiColumnDropDownControl>
             
             <Button Click="btnExcel_Click" Name="btnExcel" Grid.Column="1" Margin="0,0,10,0">
                 <Image Source="/icon/icons8-microsoft-excel-40.png"/>
