@@ -8,81 +8,43 @@ namespace Expedicao
   public class RomaneioModel
   {
     [Key]
-    [Column("cod_romaneiro")]
-    public long? CodRomaneiro { get; set; }
-    [Column("data_carregamento")]
-    public DateTime? DataCarregamento { get; set; }
-    [Column("hora_chegada")]
-    public TimeSpan? HoraChegada { get; set; }
-    [Column("codtransportadora")]
-    public long? CodTransportadora { get; set; }
-    [Column("nome_motorista")]
-    public string? NomeMotorista { get; set; }
-    [Column("placa_caminhao")]
-    public string? PlacaCaminhao { get; set; }
-    [Column("placa_cidade")]
-    public string? PlacaCidade { get; set; }
-    [Column("placa_estado")]
-    public string? PlacaEstado { get; set; }
-    [Column("placa_carroceria")]
-    public string? PlacaCarroceria { get; set; }
-    [Column("placa_carroceria_cidade")]
-    public string? PlacaCarroceriaCidade { get; set; }
-    [Column("placa_carroceria_estado")]
-    public string? PlacaCarroceriaEstado { get; set; }
-    [Column("numero_container")]
-    public string? NumeroContainer { get; set; }
-    [Column("bau_altura")]
-    public double? BauAltura { get; set; }
-    [Column("bau_largura")]
-    public double? BauLargura { get; set; }
-    [Column("bau_profundidade")]
-    public double? BauProfundidade { get; set; }
-    [Column("m3_carregado")]
-    public double? M3Carregado { get; set; }
-    [Column("bau_soba")]
-    public double? BauSoba { get; set; }
-    [Column("condicao_caminhao")]
-    public string? CondicaoCaminhao { get; set; }
-    [Column("inicio_carregamento")]
-    public TimeSpan? InicioCarregamento { get; set; }
-    [Column("termino_carregamento")]
-    public TimeSpan? TerminoCarregamento { get; set; }
-    [Column("numero_caminhao")]
-    public long? NumeroCaminhao { get; set; }
-    [Column("shopping_destino")]
-    public string? ShoppingDestino { get; set; }
-    [Column("local_carregamento")]
-    public string? LocalCarregamento { get; set; }
-    [Column("num_lacres")]
-    public string? NumLacres { get; set; }
-    [Column("nome_conferente")]
-    public string? NomeConferente { get; set; }
-    [Column("numero_cnh")]
-    public string? NumeroCnh { get; set; }
-    [Column("telefone_motorista")]
-    public string? TelefoneMotorista { get; set; }
-    [Column("m3_portaria")]
-    public double? M3Portaria { get; set; }
-    [Column("operacao")]
-    public string? Operacao { get; set; }
-    [Column("conferente_descarregamento")]
-    public string? ConferenteDescarregamento { get; set; }
-    [Column("lacre_chegada")]
-    public string? LacreChegada { get; set; }
-    [Column("hora_inicio_descarregamento")]
-    public TimeSpan? HoraInicioDescarregamento { get; set; }
-    [Column("hora_termino_descarregamento")]
-    public TimeSpan? HoraTerminoDescarregamento { get; set; }
-    [Column("data_inicio_descarregamento")]
-    public DateTime? DataInicioDescarregamento { get; set; }
-    [Column("data_termino_descarregamento")]
-    public DateTime? DataTerminoDescarregamento { get; set; }
-    [Column("data_saida_caminhao")]
-    public DateTime? DataSaidaCaminhao { get; set; }
-    [Column("hora_saida_caminhao")]
-    public TimeSpan? HoraSaidaCaminhao { get; set; }
-    [Column("data_hora_liberacao")]
-    public DateTime? DataHoraLiberacao { get; set; }
+    public long? cod_romaneiro { get; set; }
+    public DateTime? data_carregamento { get; set; }
+    public TimeSpan? hora_chegada { get; set; }
+    public long? codtransportadora { get; set; }
+    public string? nome_motorista { get; set; }
+    public string? placa_caminhao { get; set; }
+    public string? placa_cidade { get; set; }
+    public string? placa_estado { get; set; }
+    public string? placa_carroceria { get; set; }
+    public string? placa_carroceria_cidade { get; set; }
+    public string? placa_carroceria_estado { get; set; }
+    public string? numero_container { get; set; }
+    public double? bau_altura { get; set; }
+    public double? bau_largura { get; set; }
+    public double? bau_profundidade { get; set; }
+    public double? m3_carregado { get; set; }
+    public double? bau_soba { get; set; }
+    public string? condicao_caminhao { get; set; }
+    public TimeSpan? inicio_carregamento { get; set; }
+    public TimeSpan? termino_carregamento { get; set; }
+    public long? numero_caminhao { get; set; }
+    public string? shopping_destino { get; set; }
+    public string? local_carregamento { get; set; }
+    public string? num_lacres { get; set; }
+    public string? nome_conferente { get; set; }
+    public string? numero_cnh { get; set; }
+    public string? telefone_motorista { get; set; }
+    public double? m3_portaria { get; set; }
+    public string? operacao { get; set; }
+    public string? conferente_descarregamento { get; set; }
+    public string? lacre_chegada { get; set; }
+    public TimeSpan? hora_inicio_descarregamento { get; set; }
+    public TimeSpan? hora_termino_descarregamento { get; set; }
+    public DateTime? data_inicio_descarregamento { get; set; }
+    public DateTime? data_termino_descarregamento { get; set; }
+    public DateTime? data_saida_caminhao { get; set; }
+    public TimeSpan? hora_saida_caminhao { get; set; }
+    public DateTime? data_hora_liberacao { get; set; }
   }
 }

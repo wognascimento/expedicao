@@ -112,10 +112,10 @@ namespace Expedicao.Views
                     await new ViewModelLocal().GetAdicionarRomaneio(new Romaneio()
                     {
                         id_aprovado = 0,
-                        placa = romaneio.PlacaCarroceria,
-                        sigla = romaneio.ShoppingDestino,
-                        conferente = romaneio.NomeConferente,
-                        data = (DateTime)romaneio.DataCarregamento
+                        placa = romaneio.placa_carroceria,
+                        sigla = romaneio.shopping_destino,
+                        conferente = romaneio.nome_conferente,
+                        data = (DateTime)romaneio.data_carregamento
                     });
                 Label label = txtSigla;
                 label.Content = string.Join("; ", await new ViewModelLocal().GetRomaneios());

@@ -18,7 +18,7 @@ namespace Expedicao
                 //db.Entry<RomaneioModel>(romaneio).State = !romaneio.CodRomaneiro.HasValue ? EntityState.Added : EntityState.Modified;
                 await db.Romaneios.SingleMergeAsync(romaneio);
                 int num = await db.SaveChangesAsync();
-                long? codRomaneiro = romaneio.CodRomaneiro;
+                long? codRomaneiro = romaneio.cod_romaneiro;
             }
             catch (Exception)
             {
@@ -33,7 +33,7 @@ namespace Expedicao
             try
             {
                 using AppDatabase db = new();
-                listAsync = await db.Romaneios.OrderBy<RomaneioModel, string>((Expression<Func<RomaneioModel, string>>)(n => n.ShoppingDestino)).ThenBy<RomaneioModel, long>(n => (long)n.NumeroCaminhao).ToListAsync<RomaneioModel>();
+                listAsync = await db.Romaneios.OrderBy<RomaneioModel, string>((Expression<Func<RomaneioModel, string>>)(n => n.shopping_destino)).ThenBy<RomaneioModel, long>(n => (long)n.numero_caminhao).ToListAsync<RomaneioModel>();
             }
             catch (Exception)
             {

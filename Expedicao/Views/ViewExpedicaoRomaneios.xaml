@@ -23,12 +23,12 @@
             AllowFiltering="True" 
             AutoGenerateColumns="False" AllowResizingColumns="True" AllowRowHoverHighlighting="True">
             <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridNumericColumn MappingName="CodRomaneiro" NumberDecimalDigits="0" HeaderText="Cod"/>
-                <syncfusion:GridTextColumn MappingName="ShoppingDestino" HeaderText="Shopping"/>
-                <syncfusion:GridNumericColumn MappingName="NumeroCaminhao" NumberDecimalDigits="0" HeaderText="Caminhao" ColumnSizer="SizeToHeader"/>
-                <syncfusion:GridTextColumn MappingName="PlacaCarroceria" HeaderText="Placa"/>
-                <syncfusion:GridTextColumn MappingName="Operacao" HeaderText="Operação"/>
-                <syncfusion:GridTemplateColumn x:Name="acao" MappingName="CodRomaneiro" HeaderText="" syncfusion:FocusManagerHelper.WantsKeyInput="True"
+                <syncfusion:GridNumericColumn MappingName="cod_romaneiro" NumberDecimalDigits="0" HeaderText="Cod"/>
+                <syncfusion:GridTextColumn MappingName="shopping_destino" HeaderText="Shopping"/>
+                <syncfusion:GridNumericColumn MappingName="numero_caminhao" NumberDecimalDigits="0" HeaderText="Caminhao" ColumnSizer="SizeToHeader"/>
+                <syncfusion:GridTextColumn MappingName="placa_carroceria" HeaderText="Placa"/>
+                <syncfusion:GridTextColumn MappingName="operacao" HeaderText="Operação"/>
+                <syncfusion:GridTemplateColumn x:Name="acao" MappingName="cod_romaneiro" HeaderText="" syncfusion:FocusManagerHelper.WantsKeyInput="True"
                                        ColumnSizer="SizeToCells" AllowFiltering="False">
                     <syncfusion:GridColumnBase.CellTemplate>
                         <DataTemplate>

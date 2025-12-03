@@ -138,7 +138,7 @@ namespace Expedicao.Views
                 if (this.LocalAberto == "PRINCIPAL")
                 {
                     Window window = new Window();
-                    window.Title = "EXPEDIÇÃO ROMANEIO " + dataContext.CodRomaneiro.ToString();
+                    window.Title = "EXPEDIÇÃO ROMANEIO " + dataContext.cod_romaneiro.ToString();
                     window.Content = new ViewExpedicaoRomaneio(dataContext);
                     window.SizeToContent = SizeToContent.WidthAndHeight;
                     window.ResizeMode = ResizeMode.NoResize;

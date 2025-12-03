@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Syncfusion.UI.Xaml.Diagram;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Expedicao.Views
 {
@@ -52,41 +56,41 @@ namespace Expedicao.Views
                     
 
                 IList<AprovadoModel> itemsSource1 = (IList<AprovadoModel>)shopping_destino.ItemsSource;
-                int num1 = itemsSource1.IndexOf(itemsSource1.Where(a => a.SiglaServ.Equals(vm.Romaneio.ShoppingDestino)).FirstOrDefault());
+                int num1 = itemsSource1.IndexOf(itemsSource1.Where(a => a.SiglaServ.Equals(vm.Romaneio.shopping_destino)).FirstOrDefault());
 
                 IList<TranportadoraModel> itemsSource2 = (IList<TranportadoraModel>)codtransportadora.ItemsSource;
-                int num2 = itemsSource2.IndexOf(itemsSource2.Where(t => t.CodTransportadora.Equals(vm.Romaneio.CodTransportadora)).FirstOrDefault());
+                int num2 = itemsSource2.IndexOf(itemsSource2.Where(t => t.CodTransportadora.Equals(vm.Romaneio.codtransportadora)).FirstOrDefault());
 
                 operacao.ItemsSource = vm.OperacoesList;
                 condicao_caminhao.ItemsSource = vm.CondicaoCaminhaoList;
-                operacao.SelectedIndex = vm.OperacoesList.FindIndex(o => o.Equals(vm.Romaneio.Operacao));
-                cod_romaneiro.Value = vm.Romaneio.CodRomaneiro;
-                data_carregamento.DateTime = new DateTime?((DateTime)vm.Romaneio.DataCarregamento);
-                hora_chegada.Value = vm.Romaneio.HoraChegada.ToString();
+                operacao.SelectedIndex = vm.OperacoesList.FindIndex(o => o.Equals(vm.Romaneio.operacao));
+                cod_romaneiro.Value = vm.Romaneio.cod_romaneiro;
+                data_carregamento.DateTime = new DateTime?((DateTime)vm.Romaneio.data_carregamento);
+                hora_chegada.Value = vm.Romaneio.hora_chegada.ToString();
                 shopping_destino.SelectedIndex = num1;
-                numero_caminhao.Value = new long?((long)vm.Romaneio.NumeroCaminhao);
-                local_carregamento.Text = vm.Romaneio.LocalCarregamento;
+                numero_caminhao.Value = new long?((long)vm.Romaneio.numero_caminhao);
+                local_carregamento.Text = vm.Romaneio.local_carregamento;
                 codtransportadora.SelectedIndex = num2;
-                nome_motorista.Text = vm.Romaneio.NomeMotorista;
-                numero_cnh.Text = vm.Romaneio.NumeroCnh;
-                telefone_motorista.Text = vm.Romaneio.TelefoneMotorista;
-                condicao_caminhao.SelectedIndex = vm.CondicaoCaminhaoList.FindIndex(c => c.Equals(vm.Romaneio.CondicaoCaminhao));
-                placa_caminhao.Text = vm.Romaneio.PlacaCaminhao;
-                placa_cidade.Text = vm.Romaneio.PlacaCidade;
-                placa_estado.Text = vm.Romaneio.PlacaEstado;
-                placa_carroceria.Text = vm.Romaneio.PlacaCarroceria;
-                placa_carroceria_cidade.Text = vm.Romaneio.PlacaCarroceriaCidade;
-                placa_carroceria_estado.Text = vm.Romaneio.PlacaCarroceriaEstado;
-                bau_altura.Value = new double?((double)vm.Romaneio.BauAltura);
-                bau_largura.Value = new double?((double)vm.Romaneio.BauLargura);
-                bau_profundidade.Value = new double?((double)vm.Romaneio.BauProfundidade);
-                m3_carregado.Value = new double?((double)vm.Romaneio?.M3Carregado);
-                bau_soba.Value = new double?((double)vm.Romaneio?.BauSoba);
-                m3_portaria.Value = new double?((double)vm.Romaneio?.M3Portaria);
-                nome_conferente.Text = vm.Romaneio.NomeConferente;
-                num_lacres.Text = vm.Romaneio.NumLacres;
-                numero_container.Text = vm.Romaneio.NumeroContainer;
-                dateSaida.DateTime = new DateTime?((DateTime)vm.Romaneio.DataHoraLiberacao);
+                nome_motorista.Text = vm.Romaneio.nome_motorista;
+                numero_cnh.Text = vm.Romaneio.numero_cnh;
+                telefone_motorista.Text = vm.Romaneio.telefone_motorista;
+                condicao_caminhao.SelectedIndex = vm.CondicaoCaminhaoList.FindIndex(c => c.Equals(vm.Romaneio.condicao_caminhao));
+                placa_caminhao.Text = vm.Romaneio.placa_caminhao;
+                placa_cidade.Text = vm.Romaneio.placa_cidade;
+                placa_estado.Text = vm.Romaneio.placa_estado;
+                placa_carroceria.Text = vm.Romaneio.placa_carroceria;
+                placa_carroceria_cidade.Text = vm.Romaneio.placa_carroceria_cidade;
+                placa_carroceria_estado.Text = vm.Romaneio.placa_carroceria_estado;
+                bau_altura.Value = new double?((double)vm.Romaneio.bau_altura);
+                bau_largura.Value = new double?((double)vm.Romaneio.bau_largura);
+                bau_profundidade.Value = new double?((double)vm.Romaneio.bau_profundidade);
+                m3_carregado.Value = new double?((double)vm.Romaneio?.m3_carregado);
+                bau_soba.Value = new double?((double)vm.Romaneio?.bau_soba);
+                m3_portaria.Value = new double?((double)vm.Romaneio?.m3_portaria);
+                nome_conferente.Text = vm.Romaneio.nome_conferente;
+                num_lacres.Text = vm.Romaneio.num_lacres;
+                numero_container.Text = vm.Romaneio.numero_container;
+                dateSaida.DateTime = vm.Romaneio?.data_hora_liberacao;//new DateTime?((DateTime)vm.Romaneio?.data_hora_liberacao);
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
@@ -129,34 +133,34 @@ namespace Expedicao.Views
                 foreach (AprovadoModel selectedItem in shopping_destino.SelectedItems)
                 {
                         RomaneioModel Romaneio = new RomaneioModel();
-                        Romaneio.CodRomaneiro = vm.Romaneio?.CodRomaneiro;
-                        Romaneio.Operacao = operacao.SelectionBoxItem.ToString();
-                        Romaneio.DataCarregamento = data_carregamento.DateTime.Value;
-                        Romaneio.HoraChegada = TimeSpan.Parse(hora_chegada.Value.ToString());
-                        Romaneio.ShoppingDestino = selectedItem.SiglaServ;
-                        Romaneio.NumeroCaminhao = numero_caminhao.Value.Value;
-                        Romaneio.LocalCarregamento = local_carregamento.Text;
-                        Romaneio.CodTransportadora = (codtransportadora.SelectedItem as TranportadoraModel).CodTransportadora;
-                        Romaneio.NomeMotorista = nome_motorista.Text;
-                        Romaneio.NumeroCnh = numero_cnh.Text;
-                        Romaneio.TelefoneMotorista = telefone_motorista.Text;
-                        Romaneio.CondicaoCaminhao = condicao_caminhao.SelectionBoxItem.ToString();
-                        Romaneio.PlacaCaminhao = placa_caminhao.Text;
-                        Romaneio.PlacaCidade = placa_cidade.Text;
-                        Romaneio.PlacaEstado = placa_estado.Text;
-                        Romaneio.PlacaCarroceria = placa_carroceria.Text;
-                        Romaneio.PlacaCarroceriaCidade = placa_carroceria_cidade.Text;
-                        Romaneio.PlacaCarroceriaEstado = placa_carroceria_estado.Text;
-                        Romaneio.BauAltura = bau_altura?.Value;
-                        Romaneio.BauLargura = bau_largura?.Value;
-                        Romaneio.BauProfundidade = bau_profundidade?.Value;
-                        Romaneio.M3Carregado = m3_carregado?.Value;
-                        Romaneio.BauSoba = bau_soba?.Value;
-                        Romaneio.M3Portaria = m3_portaria?.Value;
-                        Romaneio.NomeConferente = nome_conferente.Text;
-                        Romaneio.NumLacres = num_lacres.Text;
-                        Romaneio.NumeroContainer = numero_container.Text;
-                        Romaneio.DataHoraLiberacao = dateSaida.DateTime.Value;
+                        Romaneio.cod_romaneiro = vm.Romaneio?.cod_romaneiro;
+                        Romaneio.operacao = operacao.SelectionBoxItem.ToString();
+                        Romaneio.data_carregamento = data_carregamento.DateTime.Value;
+                        Romaneio.hora_chegada = TimeSpan.Parse(hora_chegada.Value.ToString());
+                        Romaneio.shopping_destino = selectedItem.SiglaServ;
+                        Romaneio.numero_caminhao = numero_caminhao.Value.Value;
+                        Romaneio.local_carregamento = local_carregamento.Text;
+                        Romaneio.codtransportadora = (codtransportadora.SelectedItem as TranportadoraModel).CodTransportadora;
+                        Romaneio.nome_motorista = nome_motorista.Text;
+                        Romaneio.numero_cnh = numero_cnh.Text;
+                        Romaneio.telefone_motorista = telefone_motorista.Text;
+                        Romaneio.condicao_caminhao = condicao_caminhao.SelectionBoxItem.ToString();
+                        Romaneio.placa_caminhao = placa_caminhao.Text;
+                        Romaneio.placa_cidade = placa_cidade.Text;
+                        Romaneio.placa_estado = placa_estado.Text;
+                        Romaneio.placa_carroceria = placa_carroceria.Text;
+                        Romaneio.placa_carroceria_cidade = placa_carroceria_cidade.Text;
+                        Romaneio.placa_carroceria_estado = placa_carroceria_estado.Text;
+                        Romaneio.bau_altura = bau_altura?.Value;
+                        Romaneio.bau_largura = bau_largura?.Value;
+                        Romaneio.bau_profundidade = bau_profundidade?.Value;
+                        Romaneio.m3_carregado = m3_carregado?.Value;
+                        Romaneio.bau_soba = bau_soba?.Value;
+                        Romaneio.m3_portaria = m3_portaria?.Value;
+                        Romaneio.nome_conferente = nome_conferente.Text;
+                        Romaneio.num_lacres = num_lacres.Text;
+                        Romaneio.numero_container = numero_container.Text;
+                        Romaneio.data_hora_liberacao = dateSaida.DateTime.Value;
                         RomaneioModel romaneioModel = await vm.SaveAsync(Romaneio);
                 }
                 //}
@@ -324,6 +328,8 @@ namespace Expedicao.Views
 
     public class RomaneioViewModel : INotifyPropertyChanged
     {
+
+        private readonly DataBase BaseSettings = DataBase.Instance;
         /*
         private List<string> operacoes = new List<string>()
         {
@@ -427,8 +433,9 @@ namespace Expedicao.Views
         }
 
 
-        public async Task<RomaneioModel> SaveAsync(RomaneioModel romaneio)
+        public async Task<RomaneioModel> SaveAsync(RomaneioModel model)
         {
+            /*
             try
             {
                 using AppDatabase db = new AppDatabase();
@@ -441,6 +448,179 @@ namespace Expedicao.Views
                 throw;
             }
             return romaneio;
+            */
+
+            using var conn = new NpgsqlConnection(BaseSettings.ConnectionString);
+            var sqlSelect = @"SELECT * FROM expedicao.t_romaneio WHERE cod_romaneiro = @cod_romaneiro";
+            var existente = await conn.QueryFirstOrDefaultAsync<RomaneioModel?>(sqlSelect, new { model.cod_romaneiro });
+            if (existente == null)
+            {
+                // INSERT
+                var sqlInsert = @"
+                    INSERT INTO expedicao.t_romaneio
+                    (   
+                        operacao,
+                        data_carregamento,
+                        hora_chegada,
+                        shopping_destino,
+                        numero_caminhao,
+                        local_carregamento,
+                        codtransportadora,
+                        nome_motorista,
+                        numero_cnh,
+                        telefone_motorista,
+                        condicao_caminhao,
+                        placa_caminhao,
+                        placa_cidade,
+                        placa_estado,
+                        placa_carroceria,
+                        placa_carroceria_cidade,
+                        placa_carroceria_estado,
+                        bau_altura,
+                        bau_largura,
+                        bau_profundidade,
+                        m3_carregado,
+                        bau_soba,
+                        m3_portaria,
+                        nome_conferente,
+                        num_lacres,
+                        numero_container,
+                        data_hora_liberacao
+                    )
+                    VALUES
+                    (
+                        @operacao,
+                        @data_carregamento,
+                        @hora_chegada,
+                        @shopping_destino,
+                        @numero_caminhao,
+                        @local_carregamento,
+                        @codtransportadora,
+                        @nome_motorista,
+                        @numero_cnh,
+                        @telefone_motorista,
+                        @condicao_caminhao,
+                        @placa_caminhao,
+                        @placa_cidade,
+                        @placa_estado,
+                        @placa_carroceria,
+                        @placa_carroceria_cidade,
+                        @placa_carroceria_estado,
+                        @bau_altura,
+                        @bau_largura,
+                        @bau_profundidade,
+                        @m3_carregado,
+                        @bau_soba,
+                        @m3_portaria,
+                        @nome_conferente,
+                        @num_lacres,
+                        @numero_container,
+                        @data_hora_liberacao
+                    )
+                    RETURNING cod_romaneiro;
+                ";
+                model.cod_romaneiro = await conn.ExecuteScalarAsync<int>(sqlInsert, model);
+            }
+            else
+            {
+                var tipo = typeof(RomaneioModel);
+                // 2) Lista de SETs só dos alterados
+                var setList = new List<string>();
+                var parametros = new DynamicParameters();
+                foreach (var prop in tipo.GetProperties())
+                {
+                    if (prop.Name.Equals("cod_romaneiro", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var valorNovo = prop.GetValue(model);
+                    var valorAntigo = prop.GetValue(existente);
+
+                    // Ignora valores nulos do modelo novo
+                    // (você pode mudar esse comportamento)
+                    if (valorNovo == null)
+                        continue;
+
+                    // Só adiciona se mudou
+                    if (!Equals(valorNovo, valorAntigo))
+                    {
+                        setList.Add($"{prop.Name} = @{prop.Name}");
+                        parametros.Add(prop.Name, valorNovo);
+                    }
+                }
+                // Se nada mudou, não atualizar
+                if (setList.Count == 0)
+                    return model;
+                // 3) Completar parâmetros com @id
+                parametros.Add("cod_romaneiro", model.cod_romaneiro);
+                // 4) Montar SQL final
+                var sqlUpdate = $@"
+                    UPDATE expedicao.t_romaneio
+                    SET {string.Join(", ", setList)}
+                    WHERE cod_romaneiro = @cod_romaneiro;
+                ";
+                await conn.ExecuteAsync(sqlUpdate, model);
+
+                string[] campos = [
+                    "placa_carroceria",
+                    "data_carregamento",
+                    "codtransportadora"
+                ];
+                // verifica se algum dos campos monitorados realmente foi alterado
+                bool camposAlterados = setList.Any(s => campos.Any(c => s.Contains(c)));
+                if (camposAlterados)
+                {
+                    var updateServicosList = new List<string>();
+                    parametros = new DynamicParameters();
+                    // SE placa mudou → incluir no UPDATE
+                    if (setList.Any(s => s.Contains("placa_carroceria")))
+                    {
+                        updateServicosList.Add("placa_caminhao = @placa_carroceria");
+                        parametros.Add("placa_carroceria", model.placa_carroceria);
+                    }
+                    // SE data mudou → incluir no UPDATE
+                    if (setList.Any(s => s.Contains("data_carregamento")))
+                    {
+                        updateServicosList.Add("data_chegada_cipolatti = @data_carregamento");
+                        parametros.Add("data_carregamento", model.data_carregamento);
+                    }
+                    // SE transportadora mudou → incluir no UPDATE
+                    if (setList.Any(s => s.Contains("codtransportadora")))
+                    {
+                        var transp = Tranportadoras.SingleOrDefault(t => t.CodTransportadora == model.codtransportadora);
+                        updateServicosList.Add("transportadora = @transportadora");
+                        parametros.Add("transportadora", transp.NomeTransportadora);
+                    }
+                    // se nenhum campo do romaneio mudou → não faz nada
+                    if (updateServicosList.Count == 0)
+                        return model;
+
+                    // parametros fixos
+                    parametros.Add("siglaserv", model.shopping_destino);
+                    parametros.Add("caminhao", string.Format("{0:00}", model.numero_caminhao));
+
+                    string sqlUpdateServicos = "";
+
+                    if (model.operacao == "DESCARREGAMENTO SHOPPING")
+                        sqlUpdateServicos = $@"
+                            UPDATE operacional.t_cargas_desmontagem
+                            SET {string.Join(", ", updateServicosList)}
+                            WHERE siglaserv = @siglaserv
+                              AND caminhao = @caminhao;
+                        ";
+                    /*else
+                        sqlUpdateServicos = $@"
+                            UPDATE operacional.t_cargas_carregamento
+                            SET {string.Join(", ", updateServicosList)}
+                            WHERE siglaserv = @siglaserv
+                              AND caminhao = @caminhao
+                              AND operacao = 'CARREGAMENTO SHOPPING';
+                        ";*/
+
+                    await conn.ExecuteAsync(sqlUpdateServicos, parametros);
+                }
+            }
+
+            return model;
         }
 
         public async Task<ObservableCollection<RomaneioModel>> GetRomaneiosAsync()
@@ -449,7 +629,7 @@ namespace Expedicao.Views
             try
             {
                 using AppDatabase db = new();
-                var data = await db.Romaneios.OrderBy(n => n.ShoppingDestino).ThenBy(n => n.NumeroCaminhao).ToListAsync();
+                var data = await db.Romaneios.OrderBy(n => n.shopping_destino).ThenBy(n => n.numero_caminhao).ToListAsync();
                 return new ObservableCollection<RomaneioModel>(data);
             }
             catch (Exception)
