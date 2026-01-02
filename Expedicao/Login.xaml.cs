@@ -31,6 +31,7 @@ namespace Expedicao
             {
                 try
                 {
+                    DataBase dB = DataBase.Instance;
                     DirectoryEntry directoryEntry = new DirectoryEntry("LDAP://cipodominio.com.br:389", txtLogin.Text, txtSenha.Password);
                     DirectorySearcher directorySearcher = new DirectorySearcher(directoryEntry);
                     directorySearcher.Filter = "(SAMAccountName=" + txtLogin.Text + ")";
@@ -55,6 +56,7 @@ namespace Expedicao
                         config.Save(ConfigurationSaveMode.Modified);
 
                         ConfigurationManager.RefreshSection("appSettings");
+                        dB.ConnectionString = $"Host={dB.Host};Database={dB.Database};Username={txtLogin.Text};Password={dB.Password}";
 
                         this.DialogResult = true;
                         this.Close();

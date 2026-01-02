@@ -963,6 +963,7 @@ namespace Expedicao
             {
                 var appSettings = ConfigurationManager.GetSection("appSettings") as NameValueCollection;
                 dB.Username = appSettings[0];
+                dB.ConnectionString = $"Host={BaseSettings.Host};Database={BaseSettings.Database};Username={BaseSettings.Username};Password={BaseSettings.Password}";
                 txtUsername.Text = dB.Username;
             }
             catch (Exception ex)
@@ -982,6 +983,7 @@ namespace Expedicao
                     if (e.PromptResult != null)
                     {
                         dB.Database = e.PromptResult;
+                        dB.ConnectionString = $"Host={BaseSettings.Host};Database={BaseSettings.Database};Username={BaseSettings.Username};Password={BaseSettings.Password}";
                         txtDataBase.Text = dB.Database;
                         _mdi.Items.Clear();
                     }
