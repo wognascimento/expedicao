@@ -363,3 +363,14 @@ MigrationBackup/
 FodyWeavers.xsd
 Deployment/
 /Expedicao/Output/Expedicao.exe
+
+# SIG deploy artifacts
+/publish/
+/artifacts/
+/redist/
+/application-*.zip
+/version.json
+/Expedicao/publish/
+/Expedicao/artifacts/
+/Expedicao/redist/
+/Expedicao/version.json

@@ -1,9 +1,8 @@
-﻿using Syncfusion.UI.Xaml.Grid;
-using Syncfusion.XlsIO;
+using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,7 +25,7 @@ namespace Expedicao.Views
         public ViewExpedicaoRomaneios(string localAberto)
         {
             InitializeComponent();
-            this.DataContext = new RomaneioViewModel();
+            DataContext = new RomaneioViewModel();
             LocalAberto = localAberto;
         }
 
@@ -36,17 +35,18 @@ namespace Expedicao.Views
             {
                 RomaneioViewModel vm = (RomaneioViewModel)DataContext;
                 vm.Romaneios = await Task.Run(vm.GetRomaneiosAsync);
+                loadingDetalhes.IsBusy = false;
+                loadingDetalhes.Visibility = Visibility.Hidden;
+
                 if (LocalAberto == "PRINCIPAL")
                 {
                     BSelecionados.Visibility = Visibility.Visible;
-                    loadingDetalhes.Visibility = Visibility.Hidden;
-                    itens.SelectionMode = GridSelectionMode.Single;
+                    itens.SelectionMode = SelectionMode.Single;
                 }
-                else if(LocalAberto == "CARREGAMENTO")
+                else if (LocalAberto == "CARREGAMENTO")
                 {
-                    loadingDetalhes.Visibility = Visibility.Hidden;
                     BSelecionadosRomaneio.Visibility = Visibility.Visible;
-                    itens.SelectionMode = GridSelectionMode.Multiple;
+                    itens.SelectionMode = SelectionMode.Multiple;
                     acao.Width = 0;
                 }
             }
@@ -58,99 +58,78 @@ namespace Expedicao.Views
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            
         }
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            
-           foreach (RomaneioModel selectedItem in itens.SelectedItems.Cast<RomaneioModel>())
-           {
-               Romaneios.Add(selectedItem);
-           }
-
-           Window.GetWindow(sender as DependencyObject).DialogResult = new bool?(true);
-           
-        }
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            /*
-            foreach (RomaneioModel selectedItem in itens.SelectedItems.Cast<RomaneioModel>())
+            foreach (var selectedItem in itens.SelectedItems.Cast<RomaneioModel>())
             {
                 Romaneios.Add(selectedItem);
             }
 
-            Window.GetWindow(sender as DependencyObject).DialogResult = new bool?(true);
-            */
+            Window.GetWindow(sender as DependencyObject).DialogResult = true;
+        }
 
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
             try
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
 
-                ExcelEngine excelEngine = new();
-                IApplication excel = excelEngine.Excel;
-                excel.DefaultVersion = ExcelVersion.Xlsx;
-                IWorkbook workbook = excel.Workbooks.Create(1);
-                IWorksheet worksheet = workbook.Worksheets[0];
-
-
                 RomaneioViewModel vm = (RomaneioViewModel)DataContext;
+                var outputPath = Path.Combine(BaseSettings.CaminhoSistema, "Impressos", "ROMANEIOS.xlsx");
+                Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
-                ExcelImportDataOptions importDataOptions = new ExcelImportDataOptions()
+                using (var workbook = new XLWorkbook())
                 {
-                    FirstRow = 1,
-                    FirstColumn = 1,
-                    IncludeHeader = true,
-                    PreserveTypes = true
-                };
-                worksheet.ImportData(vm.Romaneios, importDataOptions);
-                worksheet.UsedRange.AutofitColumns();
-                workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\ROMANEIOS.xlsx");
-                workbook.Close();
-                excelEngine.Dispose();
+                    var worksheet = workbook.Worksheets.Add("Romaneios");
+                    var table = worksheet.Cell(1, 1).InsertTable(vm.Romaneios, "Romaneios", true);
+                    table.Theme = XLTableTheme.TableStyleMedium2;
+                    worksheet.Columns().AdjustToContents();
+                    workbook.SaveAs(outputPath);
+                }
 
-
-                Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\ROMANEIOS.xlsx")
+                Process.Start(new ProcessStartInfo(outputPath)
                 {
                     UseShellExecute = true
                 });
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-
             }
             catch (Exception ex)
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
                 MessageBox.Show(ex.Message);
             }
-
-            
         }
-
-    
 
         private void btnAcao_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                RomaneioModel dataContext = (e.Source as Button).DataContext as RomaneioModel;
-                if (this.LocalAberto == "PRINCIPAL")
+                RomaneioModel? dataContext = (e.Source as Button)?.DataContext as RomaneioModel;
+                if (dataContext is null)
+                    return;
+
+                if (LocalAberto == "PRINCIPAL")
                 {
-                    Window window = new Window();
-                    window.Title = "EXPEDIÇÃO ROMANEIO " + dataContext.cod_romaneiro.ToString();
-                    window.Content = new ViewExpedicaoRomaneio(dataContext);
-                    window.SizeToContent = SizeToContent.WidthAndHeight;
-                    window.ResizeMode = ResizeMode.NoResize;
+                    Window window = new()
+                    {
+                        Title = "EXPEDIÇÃO ROMANEIO " + dataContext.cod_romaneiro,
+                        Content = new ViewExpedicaoRomaneio(dataContext),
+                        SizeToContent = SizeToContent.WidthAndHeight,
+                        ResizeMode = ResizeMode.NoResize
+                    };
                     window.ShowDialog();
                 }
-                else
+                else if (LocalAberto == "CARREGAMENTO")
                 {
-                    if (!(this.LocalAberto == "CARREGAMENTO"))
-                        return;
-                    foreach (RomaneioModel selectedItem in (Collection<object>)this.itens.SelectedItems)
-                        this.Romaneios.Add(selectedItem);
-                    Window.GetWindow(sender as DependencyObject).DialogResult = new bool?(true);
+                    foreach (var selectedItem in itens.SelectedItems.Cast<RomaneioModel>())
+                    {
+                        Romaneios.Add(selectedItem);
+                    }
+
+                    Window.GetWindow(sender as DependencyObject).DialogResult = true;
                 }
             }
             catch (Exception ex)

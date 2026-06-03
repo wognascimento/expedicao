@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              xmlns:app="clr-namespace:Expedicao"
              xmlns:local="clr-namespace:Expedicao.Views" 
              mc:Ignorable="d" 
@@ -16,28 +16,30 @@
 
     <Grid>
 
-        <syncfusion:SfDataGrid 
+        <telerik:RadGridView 
             x:Name="dataGrid"    
             AutoGenerateColumns="False" 
-            ColumnSizer="AutoWithLastColumnFill" 
-            AllowFiltering="True"
-            ShowRowHeader="True" 
+            IsFilteringAllowed="True"
+            ShowGroupPanel="False"
+            RowIndicatorVisibility="Visible"
+            CanUserResizeColumns="True"
+            IsReadOnly="False"
             ItemsSource="{Binding Cubagens}"
             SelectedItem="{Binding Cubagem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
             RowValidated="dataGrid_RowValidated">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridTextColumn MappingName="sigla" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="sigla_serv" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="tema" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="item" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridNumericColumn MappingName="qtd" ColumnSizer="SizeToCells" DisplayBinding="{Binding Path=qtd, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"/>
-                <syncfusion:GridTextColumn MappingName="local" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="detalhe_local" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="descricaocomercial" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn MappingName="dimensao" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridNumericColumn MappingName="cubagem" ColumnSizer="SizeToHeader" DisplayBinding="{Binding Path=cubagem, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" AllowEditing="True"/>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla}" Header="sigla" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla_serv}" Header="sigla_serv" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding tema}" Header="tema" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding item}" Header="item" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding qtd}" Header="qtd" DataFormatString="{}{0:N2}" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding local}" Header="local" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding detalhe_local}" Header="detalhe_local" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding descricaocomercial}" Header="descricaocomercial" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding dimensao}" Header="dimensao" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding cubagem}" Header="cubagem" DataFormatString="{}{0:N2}"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
 
     </Grid>
     

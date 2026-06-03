@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              xmlns:local="clr-namespace:Expedicao.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="850"
@@ -16,51 +16,42 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         
-        <syncfusion:SfDataGrid 
+        <telerik:RadGridView 
             x:Name="itens" 
             ItemsSource = "{Binding Romaneios}"
-            ColumnSizer="SizeToCells" 
-            AllowFiltering="True" 
-            AutoGenerateColumns="False" AllowResizingColumns="True" AllowRowHoverHighlighting="True">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridNumericColumn MappingName="cod_romaneiro" NumberDecimalDigits="0" HeaderText="Cod"/>
-                <syncfusion:GridTextColumn MappingName="shopping_destino" HeaderText="Shopping"/>
-                <syncfusion:GridNumericColumn MappingName="numero_caminhao" NumberDecimalDigits="0" HeaderText="Caminhao" ColumnSizer="SizeToHeader"/>
-                <syncfusion:GridTextColumn MappingName="placa_carroceria" HeaderText="Placa"/>
-                <syncfusion:GridTextColumn MappingName="operacao" HeaderText="Operação"/>
-                <syncfusion:GridTemplateColumn x:Name="acao" MappingName="cod_romaneiro" HeaderText="" syncfusion:FocusManagerHelper.WantsKeyInput="True"
-                                       ColumnSizer="SizeToCells" AllowFiltering="False">
-                    <syncfusion:GridColumnBase.CellTemplate>
+            IsFilteringAllowed="True" 
+            AutoGenerateColumns="False"
+            CanUserResizeColumns="True"
+            ShowGroupPanel="False">
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding cod_romaneiro}" Header="Cod" DataFormatString="{}{0:N0}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding shopping_destino}" Header="Shopping"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding numero_caminhao}" Header="Caminhao" DataFormatString="{}{0:N0}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding placa_carroceria}" Header="Placa"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding operacao}" Header="Operação"/>
+                <telerik:GridViewColumn x:Name="acao" Header="" IsFilterable="False">
+                    <telerik:GridViewColumn.CellTemplate>
                         <DataTemplate>
-                            <Button x:Name="btnAcao" Content="Selecionar" syncfusion:FocusManagerHelper.FocusedElement="True"
-                      Command="{Binding Path=DataContext.RowDataCommand, ElementName=sfGrid}"
-                      CommandParameter="{Binding}" Click="btnAcao_Click"/>
+                            <telerik:RadButton x:Name="btnAcao" Content="Selecionar" Click="btnAcao_Click"/>
                         </DataTemplate>
-                    </syncfusion:GridColumnBase.CellTemplate>
-                </syncfusion:GridTemplateColumn>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
+                    </telerik:GridViewColumn.CellTemplate>
+                </telerik:GridViewColumn>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
         
-        <Border x:Name="loadingDetalhes" Grid.Row="1" Height="50" VerticalAlignment="Bottom" Background="Black"
-            BorderBrush="Black" BorderThickness="1" Opacity="50">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                         AnimationType="Gear" Control.Background="Black"/>
-            </StackPanel>
-        </Border>
+        <telerik:RadBusyIndicator x:Name="loadingDetalhes" Grid.Row="1" Height="50" VerticalAlignment="Bottom" IsBusy="True"/>
         
         <Border x:Name="BSelecionados" Grid.Row="1" Height="50" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
             Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                <Button Click="Button_Click_1" Margin="5" Content="ENVIAR PARA EXCEL" VerticalAlignment="Center" Height="50"/>
+                <telerik:RadButton Click="Button_Click_1" Margin="5" Content="ENVIAR PARA EXCEL" VerticalAlignment="Center" Height="50"/>
             </StackPanel>
         </Border>
 
         <Border x:Name="BSelecionadosRomaneio" Grid.Row="1" Height="50" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
             Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                <Button Click="Button_Click_2" Margin="5" Content="SELECIONAR" VerticalAlignment="Center" Height="50"/>
+                <telerik:RadButton Click="Button_Click_2" Margin="5" Content="SELECIONAR" VerticalAlignment="Center" Height="50"/>
             </StackPanel>
         </Border>
 

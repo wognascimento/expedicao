@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Syncfusion.UI.Xaml.Diagram;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +11,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Expedicao.Views
 {
@@ -65,8 +63,8 @@ namespace Expedicao.Views
                 condicao_caminhao.ItemsSource = vm.CondicaoCaminhaoList;
                 operacao.SelectedIndex = vm.OperacoesList.FindIndex(o => o.Equals(vm.Romaneio.operacao));
                 cod_romaneiro.Value = vm.Romaneio.cod_romaneiro;
-                data_carregamento.DateTime = new DateTime?((DateTime)vm.Romaneio.data_carregamento);
-                hora_chegada.Value = vm.Romaneio.hora_chegada.ToString();
+                data_carregamento.SelectedDate = vm.Romaneio.data_carregamento;
+                hora_chegada.SelectedTime = vm.Romaneio.hora_chegada;
                 shopping_destino.SelectedIndex = num1;
                 numero_caminhao.Value = new long?((long)vm.Romaneio.numero_caminhao);
                 local_carregamento.Text = vm.Romaneio.local_carregamento;
@@ -90,7 +88,7 @@ namespace Expedicao.Views
                 nome_conferente.Text = vm.Romaneio.nome_conferente;
                 num_lacres.Text = vm.Romaneio.num_lacres;
                 numero_container.Text = vm.Romaneio.numero_container;
-                dateSaida.DateTime = vm.Romaneio?.data_hora_liberacao;//new DateTime?((DateTime)vm.Romaneio?.data_hora_liberacao);
+                dateSaida.SelectedDate = vm.Romaneio?.data_hora_liberacao;
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
@@ -134,33 +132,33 @@ namespace Expedicao.Views
                 {
                         RomaneioModel Romaneio = new RomaneioModel();
                         Romaneio.cod_romaneiro = vm.Romaneio?.cod_romaneiro;
-                        Romaneio.operacao = operacao.SelectionBoxItem.ToString();
-                        Romaneio.data_carregamento = data_carregamento.DateTime.Value;
-                        Romaneio.hora_chegada = TimeSpan.Parse(hora_chegada.Value.ToString());
+                        Romaneio.operacao = operacao.SelectedItem?.ToString();
+                        Romaneio.data_carregamento = data_carregamento.SelectedDate!.Value;
+                        Romaneio.hora_chegada = hora_chegada.SelectedTime!.Value;
                         Romaneio.shopping_destino = selectedItem.SiglaServ;
-                        Romaneio.numero_caminhao = numero_caminhao.Value.Value;
+                        Romaneio.numero_caminhao = ToLong(numero_caminhao.Value);
                         Romaneio.local_carregamento = local_carregamento.Text;
                         Romaneio.codtransportadora = (codtransportadora.SelectedItem as TranportadoraModel).CodTransportadora;
                         Romaneio.nome_motorista = nome_motorista.Text;
                         Romaneio.numero_cnh = numero_cnh.Text;
                         Romaneio.telefone_motorista = telefone_motorista.Text;
-                        Romaneio.condicao_caminhao = condicao_caminhao.SelectionBoxItem.ToString();
+                        Romaneio.condicao_caminhao = condicao_caminhao.SelectedItem?.ToString();
                         Romaneio.placa_caminhao = placa_caminhao.Text;
                         Romaneio.placa_cidade = placa_cidade.Text;
                         Romaneio.placa_estado = placa_estado.Text;
                         Romaneio.placa_carroceria = placa_carroceria.Text;
                         Romaneio.placa_carroceria_cidade = placa_carroceria_cidade.Text;
                         Romaneio.placa_carroceria_estado = placa_carroceria_estado.Text;
-                        Romaneio.bau_altura = bau_altura?.Value;
-                        Romaneio.bau_largura = bau_largura?.Value;
-                        Romaneio.bau_profundidade = bau_profundidade?.Value;
-                        Romaneio.m3_carregado = m3_carregado?.Value;
-                        Romaneio.bau_soba = bau_soba?.Value;
-                        Romaneio.m3_portaria = m3_portaria?.Value;
+                        Romaneio.bau_altura = ToDouble(bau_altura.Value);
+                        Romaneio.bau_largura = ToDouble(bau_largura.Value);
+                        Romaneio.bau_profundidade = ToDouble(bau_profundidade.Value);
+                        Romaneio.m3_carregado = ToDouble(m3_carregado.Value);
+                        Romaneio.bau_soba = ToDouble(bau_soba.Value);
+                        Romaneio.m3_portaria = ToDouble(m3_portaria.Value);
                         Romaneio.nome_conferente = nome_conferente.Text;
                         Romaneio.num_lacres = num_lacres.Text;
                         Romaneio.numero_container = numero_container.Text;
-                        Romaneio.data_hora_liberacao = dateSaida.DateTime.Value;
+                        Romaneio.data_hora_liberacao = dateSaida.SelectedDate;
                         RomaneioModel romaneioModel = await vm.SaveAsync(Romaneio);
                 }
                 //}
@@ -177,32 +175,33 @@ namespace Expedicao.Views
         {
             this.operacao.SelectedValue = null;
             this.operacao.IsDropDownOpen = true;
-            this.cod_romaneiro.Text = "0";
-            this.data_carregamento.DateTime = new DateTime?();
-            this.hora_chegada.Value = null;
-            this.shopping_destino.SelectedValue = null;
-            this.numero_caminhao.Text = null;
-            ((TextBox)this.local_carregamento).Text = "JACAREÍ";
+            this.cod_romaneiro.Value = 0;
+            this.data_carregamento.SelectedDate = null;
+            this.hora_chegada.SelectedTime = null;
+            this.shopping_destino.SelectedItems.Clear();
+            this.numero_caminhao.Value = null;
+            this.local_carregamento.Text = "JACAREÍ";
             this.codtransportadora.SelectedValue = null;
-            ((TextBox)this.nome_motorista).Text = null;
-            ((TextBox)this.numero_cnh).Text = null;
-            ((TextBox)this.telefone_motorista).Text = null;
+            this.nome_motorista.Text = null;
+            this.numero_cnh.Text = null;
+            this.telefone_motorista.Text = null;
             this.condicao_caminhao.SelectedValue = null;
-            ((TextBox)this.placa_caminhao).Text = null;
-            ((TextBox)this.placa_cidade).Text = null;
-            ((TextBox)this.placa_estado).Text = null;
-            ((TextBox)this.placa_carroceria).Text = null;
-            ((TextBox)this.placa_carroceria_cidade).Text = null;
-            ((TextBox)this.placa_carroceria_estado).Text = null;
-            this.bau_altura.Value = new double?();
-            this.bau_largura.Value = new double?();
-            this.bau_profundidade.Value = new double?();
-            this.m3_carregado.Value = new double?();
-            this.bau_soba.Value = new double?();
-            this.m3_portaria.Value = new double?();
-            ((TextBox)this.nome_conferente).Text = null;
-            ((TextBox)this.num_lacres).Text = null;
-            ((TextBox)this.numero_container).Text = null;
+            this.placa_caminhao.Text = null;
+            this.placa_cidade.Text = null;
+            this.placa_estado.Text = null;
+            this.placa_carroceria.Text = null;
+            this.placa_carroceria_cidade.Text = null;
+            this.placa_carroceria_estado.Text = null;
+            this.bau_altura.Value = null;
+            this.bau_largura.Value = null;
+            this.bau_profundidade.Value = null;
+            this.m3_carregado.Value = null;
+            this.bau_soba.Value = null;
+            this.m3_portaria.Value = null;
+            this.nome_conferente.Text = null;
+            this.num_lacres.Text = null;
+            this.numero_container.Text = null;
+            this.dateSaida.SelectedDate = null;
             this.operacao.Focusable = true;
             this.operacao.Focus();
         }
@@ -216,27 +215,25 @@ namespace Expedicao.Views
                 operacao.IsDropDownOpen = true;
                 return false;
             }
-            if (!data_carregamento.DateTime.HasValue)
+            if (!data_carregamento.SelectedDate.HasValue)
             {
                 MessageBox.Show("Data de Carregamento é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 data_carregamento.Focus();
-                data_carregamento.IsDropDownOpen = true;
                 return false;
             }
-            if (hora_chegada.Text == "")
+            if (!hora_chegada.SelectedTime.HasValue)
             {
                 MessageBox.Show("Hora do Carregamento é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 hora_chegada.Focus();
                 return false;
             }
-            if (shopping_destino.SelectedValue == null)
+            if (shopping_destino.SelectedItems.Count == 0)
             {
                 MessageBox.Show("Shopping é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 shopping_destino.Focus();
-                shopping_destino.IsDropDownOpen = true;
                 return false;
             }
-            if (numero_caminhao.Text == "")
+            if (!numero_caminhao.Value.HasValue)
             {
                 MessageBox.Show("Nº de Caminhão é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 numero_caminhao.Focus();
@@ -298,19 +295,19 @@ namespace Expedicao.Views
                 placa_estado.Focus();
                 return false;
             }
-            if (bau_altura.Text == "")
+            if (!bau_altura.Value.HasValue)
             {
                 MessageBox.Show("Altura é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 bau_altura.Focus();
                 return false;
             }
-            if (bau_largura.Text == "")
+            if (!bau_largura.Value.HasValue)
             {
                 MessageBox.Show("Largura é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 bau_largura.Focus();
                 return false;
             }
-            if (bau_profundidade.Text == "")
+            if (!bau_profundidade.Value.HasValue)
             {
                 MessageBox.Show("Profundidade é obrigatório", "Informação requerida", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 bau_profundidade.Focus();
@@ -323,6 +320,16 @@ namespace Expedicao.Views
                 return false;
             }
             return true;
+        }
+
+        private static long? ToLong(double? value)
+        {
+            return value.HasValue ? Convert.ToInt64(value.Value) : null;
+        }
+
+        private static double? ToDouble(double? value)
+        {
+            return value;
         }
     }
 
@@ -638,7 +645,7 @@ namespace Expedicao.Views
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public void RaisePropertyChanged(string propName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));

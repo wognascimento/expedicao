@@ -3,8 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:interactivity="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              xmlns:local="clr-namespace:Expedicao"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" 
@@ -24,122 +23,95 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         
-        <syncfusion:SfMultiColumnDropDownControl SelectionChanged="Aprovados_SelectionChanged" x:Name="aprovados" Grid.Row="0"
-                                             ValueMember="IdAprovado" DisplayMember="SiglaServ" AllowAutoComplete="True"
-                                             AutoGenerateColumns="False" GridColumnSizer="AutoWithLastColumnFill" Width="270" PopupWidth="600"
-                                             HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="10,10,0,10"
-                                             Text="Seleciona o cliente" ItemsSource="{Binding Aprovados}">
-
-            <syncfusion:SfMultiColumnDropDownControl.Columns>
-                <syncfusion:GridTextColumn MappingName="IdAprovado"/>
-                <syncfusion:GridTextColumn MappingName="SiglaServ"/>
-                <syncfusion:GridTextColumn MappingName="Nome"/>
-            </syncfusion:SfMultiColumnDropDownControl.Columns>
-        </syncfusion:SfMultiColumnDropDownControl>
+        <telerik:RadComboBox SelectionChanged="Aprovados_SelectionChanged"
+                             x:Name="aprovados"
+                             Grid.Row="0"
+                             DisplayMemberPath="SiglaServ"
+                             IsEditable="True"
+                             IsTextSearchEnabled="True"
+                             OpenDropDownOnFocus="True"
+                             Width="360"
+                             HorizontalAlignment="Left"
+                             Margin="10,10,0,10"
+                             EmptyText="Seleciona o cliente"
+                             ItemsSource="{Binding Aprovados}"/>
         
-        <syncfusion:SfDataGrid 
+        <telerik:RadGridView 
             x:Name="dataGrid"
             Grid.Row="1"      
             SelectionChanged="DataGrid_SelectionChanged"  
             AutoGenerateColumns="False" 
-            ColumnSizer="AutoWithLastColumnFill" 
-            AllowFiltering="True"
-            ShowRowHeader="True" 
+            IsFilteringAllowed="True"
+            ShowGroupPanel="False"
+            IsReadOnly="True"
             ItemsSource="{Binding ChkDetails}"
             SelectedItem="{Binding ChkDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridTextColumn HeaderText="Item" MappingName="ItemMemorial" ColumnSizer="SizeToCells"/>
-                <syncfusion:GridTextColumn HeaderText="Local" MappingName="LocalShoppings"/>
-                <syncfusion:GridTextColumn MappingName="Planilha"/>
-                <syncfusion:GridTextColumn HeaderText="Descrição" MappingName="DescricaoProduto"/>
-                <syncfusion:GridNumericColumn  
-                    HeaderText="Quantidade" 
-                    MappingName="Qtd" 
-                    ColumnSizer="SizeToCells"
-                    DisplayBinding="{Binding Path=Qtd, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"/>
-                <syncfusion:GridNumericColumn HeaderText="Complemento adicional" MappingName="CodComplAdicional" NumberDecimalDigits="0"
-                                      ColumnSizer="SizeToHeader"/>
-                <syncfusion:GridNumericColumn HeaderText="Detalhes Complemento" MappingName="CodDetalhesCompl" NumberDecimalDigits="0"
-                                      ColumnSizer="SizeToHeader"/>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn Header="Item" DataMemberBinding="{Binding ItemMemorial}"/>
+                <telerik:GridViewDataColumn Header="Local" DataMemberBinding="{Binding LocalShoppings}"/>
+                <telerik:GridViewDataColumn Header="Planilha" DataMemberBinding="{Binding Planilha}"/>
+                <telerik:GridViewDataColumn Header="Descrição" DataMemberBinding="{Binding DescricaoProduto}"/>
+                <telerik:GridViewDataColumn Header="Quantidade" DataMemberBinding="{Binding Qtd}" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn Header="Complemento adicional" DataMemberBinding="{Binding CodComplAdicional}" DataFormatString="{}{0:F0}"/>
+                <telerik:GridViewDataColumn Header="Detalhes Complemento" DataMemberBinding="{Binding CodDetalhesCompl}" DataFormatString="{}{0:F0}"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
         <Border x:Name="loadingDetalhes" Height="60" Grid.Row="1" VerticalAlignment="Bottom" Background="Black"
             BorderBrush="Black" BorderThickness="1" Opacity="50" Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
                 <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                         AnimationType="Gear" Control.Background="Black"/>
+                <telerik:RadBusyIndicator Margin="5" VerticalAlignment="Center" Foreground="Gray" Background="Black" IsBusy="True"/>
             </StackPanel>
         </Border>
-        <syncfusion:SfDataGrid 
+        <telerik:RadGridView 
             x:Name="Exped" 
             Grid.Row="3" 
             ItemsSource="{Binding Expeds}"
             SelectedItem="{Binding Exped, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-            ShowRowHeader="True"
             RowValidated="Exped_RowValidated" 
-            AddNewRowInitiating="Exped_AddNewRowInitiating"
+            AddingNewDataItem="Exped_AddingNewDataItem"
             RowValidating="Exped_RowValidating" 
-            RecordDeleted="Exped_RecordDeleted"
-            RecordDeleting="Exped_RecordDeleting"
+            Deleting="Exped_Deleting"
             AutoGenerateColumns="False" 
-            ColumnSizer="SizeToHeader" 
-            AddNewRowPosition="Bottom"
-            AllowEditing="True"
-            AllowDeleting="True" 
-            CurrentCellValueChanged="Exped_CurrentCellValueChanged"
-            SelectionUnit="Row"
-            SelectionMode="Extended"
-            GridCopyOption="CopyData,IncludeHeaders,IncludeFormat">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridNumericColumn MappingName="QtdExpedida"     DisplayBinding="{Binding Path=QtdExpedida, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
-                <syncfusion:GridNumericColumn MappingName="VolExp"          DisplayBinding="{Binding Path=VolExp, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
-                <syncfusion:GridNumericColumn MappingName="VolTotExp"       DisplayBinding="{Binding Path=VolTotExp, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
-                <syncfusion:GridNumericColumn MappingName="Pl"              DisplayBinding="{Binding Path=Pl, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
-                <syncfusion:GridNumericColumn MappingName="Pb"              DisplayBinding="{Binding Path=Pb, Converter={StaticResource ConverterNumber}, Mode=TwoWay}"    />
-                <syncfusion:GridNumericColumn MappingName="Largura"         DisplayBinding="{Binding Path=Largura, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
-                <syncfusion:GridNumericColumn MappingName="Altura"          DisplayBinding="{Binding Path=Altura, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
-                <syncfusion:GridNumericColumn MappingName="Profundidade"    DisplayBinding="{Binding Path=Profundidade, Converter={StaticResource ConverterNumber}, Mode=TwoWay}" NumberDecimalDigits="3"    />
-                <syncfusion:GridComboBoxColumn 
+            GroupRenderMode="Flat"
+            ShowGroupPanel="False"
+            NewRowPosition="Bottom"
+            CanUserInsertRows="True"
+            CanUserDeleteRows="True"
+            IsReadOnly="False"
+            SelectionUnit="FullRow"
+            SelectionMode="Extended">
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding QtdExpedida}" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding VolExp}" DataFormatString="{}{0:N0}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding VolTotExp}" DataFormatString="{}{0:N0}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Pl}" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Pb}" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Largura}" DataFormatString="{}{0:N3}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Altura}" DataFormatString="{}{0:N3}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Profundidade}" DataFormatString="{}{0:N3}"/>
+                <telerik:GridViewComboBoxColumn 
                     x:Name="Caixas" 
-                    ItemsSource="{Binding Medidas}"
-                    IsEditable="True" 
-                    MappingName="ModeloCaixa" 
-                    SelectedValuePath="NomeCaixa" 
+                    ItemsSource="{Binding DataContext.Medidas, RelativeSource={RelativeSource AncestorType=telerik:RadGridView}}"
+                    DataMemberBinding="{Binding ModeloCaixa}" 
+                    SelectedValueMemberPath="NomeCaixa" 
                     DisplayMemberPath="NomeCaixa"/>
-                <syncfusion:GridNumericColumn MappingName="Volume" NumberDecimalDigits="0" ParsingMode="Int"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Volume}" DataFormatString="{}{0:F0}"/>
                 
-                <syncfusion:GridCheckBoxColumn
-                        AllowEditing="True"
-                        HeaderText="Virtual" 
-                        MappingName="BaiaVirtual"
-                        DisplayBinding="{Binding BaiaVirtual, Converter={StaticResource ConverterBoolen}}"
-                        ValueBinding="{Binding BaiaVirtual, Converter={StaticResource ConverterBoolen}}"/>
+                <telerik:GridViewCheckBoxColumn
+                        Header="Virtual" 
+                        DataMemberBinding="{Binding BaiaVirtual, Converter={StaticResource ConverterBoolen}}"/>
 
                 
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
         <Border x:Name="loadingExped" Height="60" Grid.Row="3" VerticalAlignment="Bottom" Background="Black"
             BorderBrush="Black" BorderThickness="1" Opacity="50" Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
                 <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                         AnimationType="Gear" Control.Background="Black"/>
+                <telerik:RadBusyIndicator Margin="5" VerticalAlignment="Center" Foreground="Gray" Background="Black" IsBusy="True"/>
             </StackPanel>
         </Border>
-        <syncfusion:SfGridSplitter FrameworkElement.HorizontalAlignment="Stretch" FrameworkElement.Width="auto" Grid.Row="2"/>
-<!--
-        <local:SearchControl
-            x:Name="searchControl" 
-            Visibility="Hidden"
-            VerticalAlignment="Top" 
-            DataGrid="{Binding ElementName=dataGrid}"
-            HorizontalAlignment="Right"/>
- -->     
+        <GridSplitter HorizontalAlignment="Stretch" Height="5" Grid.Row="2"/>
     </Grid>
-<!--
-    <interactivity:Interaction.Behaviors>
-        <local:Behaviour/>
-    </interactivity:Interaction.Behaviors>
- -->   
 </UserControl>

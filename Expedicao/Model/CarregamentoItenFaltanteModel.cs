@@ -36,6 +36,8 @@ namespace Expedicao
         //public long? Codigo { get; set; }
         //[Column("barcode")]
         //public string? Barcode { get; set; }
+        [NotMapped]
+        public string? Barcode { get; set; }
         //[Column("codvol")]
         //public string? CodVol { get; set; }
         [Column("m3_volume")]

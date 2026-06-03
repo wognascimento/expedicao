@@ -1,7 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Syncfusion.UI.Xaml.Grid;
-using Syncfusion.UI.Xaml.ScrollAxis;
-using Syncfusion.UI.Xaml.TextInputLayout;
+﻿using Dapper;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +9,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Telerik.Windows.Controls;
+using Telerik.Windows.Controls.GridView;
 
 namespace Expedicao.Views
 {
@@ -21,21 +21,10 @@ namespace Expedicao.Views
     {
 
         private ProdutoExpedidoModel ProdutoExpedido;
-        RowColumnIndex previousrowColumnIdex = new RowColumnIndex(-1, -1);
 
         public ViewExpedicaoProduto()
         {
             InitializeComponent();
-            try
-            {
-                //this.dataGrid.SearchHelper = new LocalizarHelperExt(dataGrid);
-                //this.dataGrid.SearchHelper = new SearchHelperExtNew(this.dataGrid);
-                this.Exped.SelectionController = new GridSelectionControllerExt(Exped);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         private async void UserControl_Initialized(object sender, EventArgs e)
@@ -56,18 +45,19 @@ namespace Expedicao.Views
             }
         }
 
-        private async void Aprovados_SelectionChanged(object sender, Syncfusion.UI.Xaml.Grid.SelectionChangedEventArgs e)
+        private async void Aprovados_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            AprovadoModel? aprovado = ((SfMultiColumnDropDownControl)sender).SelectedItem as AprovadoModel;
+            AprovadoModel? aprovado = aprovados.SelectedItem as AprovadoModel;
             try
             {
+                if (aprovado is null)
+                    return;
+
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
 
-                //this.dataGrid.ItemsSource = null;
                 this.loadingExped.Visibility = Visibility.Hidden;
                 this.loadingDetalhes.Visibility = Visibility.Visible;
-                //this.dataGrid.ItemsSource = await Task.Run(async () => await new ExpedicaoViewModel().GetProdutoExpedidos((int)aprovado.IdAprovado));
-                vm.ChkDetails = await Task.Run(() => vm.GetProdutoExpedidos(aprovado?.IdAprovado));
+                vm.ChkDetails = await Task.Run(() => vm.GetProdutoExpedidos(aprovado.IdAprovado));
                 this.loadingDetalhes.Visibility = Visibility.Hidden;
             }
             catch (Exception ex)
@@ -76,9 +66,8 @@ namespace Expedicao.Views
             }
         }
 
-        private async void DataGrid_SelectionChanged(object sender, GridSelectionChangedEventArgs e)
+        private async void DataGrid_SelectionChanged(object sender, SelectionChangeEventArgs e)
         {
-            //[0] = {Syncfusion.UI.Xaml.Grid.GridCellInfo}
             try
             {
 
@@ -86,11 +75,8 @@ namespace Expedicao.Views
 
                 vm.Exped = new ExpedModel();
                 loadingExped.Visibility = Visibility.Visible;
-                if (e.AddedItems.Count <= 0)
+                if (vm.ChkDetail is null)
                     return;
-
-                //ProdutoExpedido = (e.AddedItems[0] as GridRowInfo).RowData as ProdutoExpedidoModel;
-                //vm.ChkDetail.CodDetalhesCompl
 
                 Exped.ItemsSource = await Task.Run(() => vm.GetExpedsAsync(vm.ChkDetail.CodDetalhesCompl));
                 loadingExped.Visibility = Visibility.Hidden;
@@ -101,18 +87,16 @@ namespace Expedicao.Views
             }
         }
 
-        private void Exped_AddNewRowInitiating(object sender, AddNewRowInitiatingEventArgs e)
+        private void Exped_AddingNewDataItem(object sender, GridViewAddingNewEventArgs e)
         {
             ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-            ((ExpedModel)e.NewObject).CodDetalhesCompl = new long?((long)vm.ChkDetail.CodDetalhesCompl);
+            e.NewObject = new ExpedModel
+            {
+                CodDetalhesCompl = vm.ChkDetail?.CodDetalhesCompl
+            };
         }
 
-        private void Exped_RecordDeleted(object sender, RecordDeletedEventArgs e)
-        {
-
-        }
-
-        private async void Exped_RecordDeleting(object sender, RecordDeletingEventArgs e)
+        private async void Exped_Deleting(object sender, GridViewDeletingEventArgs e)
         {
 
             if (MessageBox.Show("Confirma a exclusão do item?", "Excluir", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
@@ -120,9 +104,9 @@ namespace Expedicao.Views
                 try
                 {
                     Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                    ExpedModel data = (ExpedModel)e.Items[0];
                     ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                    await Task.Run((() => vm.DeleteExpedAsync(data)));
+                    var items = e.Items.OfType<ExpedModel>().ToList();
+                    await Task.Run(() => vm.DeleteExpedsAsync(items));
                     e.Cancel = false;
                     Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
                 }
@@ -137,48 +121,25 @@ namespace Expedicao.Views
                 e.Cancel = true;
         }
 
-        private async void Exped_CurrentCellValueChanged(object sender, CurrentCellValueChangedEventArgs e)
-        {
-            SfDataGrid grid = (SfDataGrid)sender;
-            int columnindex = grid.ResolveToGridVisibleColumnIndex(e.RowColumnIndex.ColumnIndex);
-            var column = grid.Columns[columnindex];
-            if (column.GetType() == typeof(GridCheckBoxColumn) && column.MappingName == "BaiaVirtual")
-            {
-                try
-                {
-                    var rowIndex = grid.ResolveToRecordIndex(e.RowColumnIndex.RowIndex);
-                    if (rowIndex > -1) 
-                    {
-                        var record = (ExpedModel)grid.View.Records[rowIndex].Data;
-                        var value = record.BaiaVirtual;
-                        Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                        ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                        ExpedModel expedModel = await Task.Run(() => vm.AddExpedAsync(record));
-                        Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                    Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                }
-            }
-        }
-
-        private async void Exped_RowValidated(object sender, RowValidatedEventArgs e)
+        private async void Exped_RowValidated(object sender, GridViewRowValidatedEventArgs e)
         {
             try
             {
+                if (e.Row.Item is not ExpedModel data)
+                    return;
+
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 AprovadoModel? aprovado = this.aprovados.SelectedItem as AprovadoModel;
-                var grid = ((SfDataGrid)sender);
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                ExpedModel data = (ExpedModel)e.RowData;
-                data.CodVol = $"{aprovado.SiglaServ}-{data.Volume}";
+                data.CodVol = $"{aprovado?.SiglaServ}-{data.Volume}";
                 ExpedModel expedModel = await Task.Run(() => vm.AddExpedAsync(data));
-                //((ExpedModel)e.RowData).CodExped = expedModel.CodExped;
-                grid.View.Records[grid.ResolveToRecordIndex(e.RowIndex)].Data = expedModel;
-                grid.View.Refresh();
+
+                if (vm.Expeds is not null)
+                {
+                    var index = vm.Expeds.IndexOf(data);
+                    if (index >= 0)
+                        vm.Expeds[index] = expedModel;
+                }
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
@@ -189,31 +150,22 @@ namespace Expedicao.Views
             }
         }
 
-        private void Exped_RowValidating(object sender, RowValidatingEventArgs e)
+        private void Exped_RowValidating(object sender, GridViewRowValidatingEventArgs e)
         {
-            ExpedModel rowData = (ExpedModel)e.RowData;
+            if (e.Row.Item is not ExpedModel rowData)
+                return;
+
             ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
             if (!rowData.CodDetalhesCompl.HasValue)
             {
-                e.IsValid = false;
-                e.ErrorMessages.Add("QtdExpedida", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("VolExp", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("VolTotExp", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Pl", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Pb", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Largura", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Altura", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Profundidade", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("ModeloCaixa", "Erro ao selecionar a linha.");
-                e.ErrorMessages.Add("Volume", "Erro ao selecionar a linha.");
+                AplicarErroLinha(e, "Erro ao selecionar a linha.");
             }
             else
             {
                 //decimal? qtdExpedida = (decimal?)rowData.QtdExpedida;
                 if (!rowData.QtdExpedida.HasValue)
                 {
-                    e.IsValid = false;
-                    e.ErrorMessages.Add("QtdExpedida", "qtd_expedida não pode ser nulo.");
+                    AplicarErroLinha(e, "qtd_expedida não pode ser nulo.", "QtdExpedida");
                 }
                 else
                 {
@@ -222,37 +174,32 @@ namespace Expedicao.Views
                     //decimal? nullable1 = (decimal?)this.ProdutoExpedido.Qtd;
                     if (Math.Round((double)rowData.QtdExpedida, 2) > Math.Round((double)vm.ChkDetail.Qtd, 2) & rowData.QtdExpedida.HasValue & vm.ChkDetail.Qtd.HasValue)
                     {
-                        e.IsValid = false;
-                        e.ErrorMessages.Add("QtdExpedida", "qtd_expedida não pode ser maior que qtd do cheklist.");
+                        AplicarErroLinha(e, "qtd_expedida não pode ser maior que qtd do cheklist.", "QtdExpedida");
                     }
                     else
                     {
 
                         if (!rowData.VolExp.HasValue)
                         {
-                            e.IsValid = false;
-                            e.ErrorMessages.Add("VolExp", "vol_exp não pode ser nulo.");
+                            AplicarErroLinha(e, "vol_exp não pode ser nulo.", "VolExp");
                         }
                         else
                         {
                             if (!rowData.VolTotExp.HasValue)
                             {
-                                e.IsValid = false;
-                                e.ErrorMessages.Add("VolTotExp", "vol_tot_exp não pode ser nulo.");
+                                AplicarErroLinha(e, "vol_tot_exp não pode ser nulo.", "VolTotExp");
                             }
                             else
                             {
                                 if (!rowData.Pl.HasValue)
                                 {
-                                    e.IsValid = false;
-                                    e.ErrorMessages.Add("Pl", "pl não pode ser nulo.");
+                                    AplicarErroLinha(e, "pl não pode ser nulo.", "Pl");
                                 }
                                 else
                                 {
                                     if (!rowData.Pb.HasValue)
                                     {
-                                        e.IsValid = false;
-                                        e.ErrorMessages.Add("Pb", "pb não pode ser nulo.");
+                                        AplicarErroLinha(e, "pb não pode ser nulo.", "Pb");
                                     }
                                     else
                                     {
@@ -260,20 +207,17 @@ namespace Expedicao.Views
                                         {
                                             if (!rowData.Largura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Largura", "Precisa informar uma das formas de medida.");
+                                                AplicarErroLinha(e, "Precisa informar uma das formas de medida.", "Largura");
                                                 return;
                                             }
                                             if (!rowData.Altura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Altura", "Precisa informar uma das formas de medida.");
+                                                AplicarErroLinha(e, "Precisa informar uma das formas de medida.", "Altura");
                                                 return;
                                             }
                                             if (!rowData.Profundidade.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Profundidade", "Precisa informar uma das formas de medida.");
+                                                AplicarErroLinha(e, "Precisa informar uma das formas de medida.", "Profundidade");
                                                 return;
                                             }
                                         }
@@ -281,20 +225,17 @@ namespace Expedicao.Views
                                         {
                                             if (rowData.Largura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Largura", "Precisa informar apenas tipo da caixa ou as medidas.");
+                                                AplicarErroLinha(e, "Precisa informar apenas tipo da caixa ou as medidas.", "Largura");
                                                 return;
                                             }
                                             if (rowData.Altura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Altura", "Precisa informar apenas tipo da caixa ou as medidas.");
+                                                AplicarErroLinha(e, "Precisa informar apenas tipo da caixa ou as medidas.", "Altura");
                                                 return;
                                             }
                                             if (rowData.Profundidade.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Profundidade", "Precisa informar apenas tipo da caixa ou as medidas.");
+                                                AplicarErroLinha(e, "Precisa informar apenas tipo da caixa ou as medidas.", "Profundidade");
                                                 return;
                                             }
                                         }
@@ -302,28 +243,24 @@ namespace Expedicao.Views
                                         {
                                             if (!rowData.Largura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Largura", "Com tipo de caixa CX informado, precisa informar as medidas.");
+                                                AplicarErroLinha(e, "Com tipo de caixa CX informado, precisa informar as medidas.", "Largura");
                                                 return;
                                             }
                                             if (!rowData.Altura.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Altura", "Com tipo de caixa CX informado, precisa informar as medidas.");
+                                                AplicarErroLinha(e, "Com tipo de caixa CX informado, precisa informar as medidas.", "Altura");
                                                 return;
                                             }
                                             if (!rowData.Profundidade.HasValue)
                                             {
-                                                e.IsValid = false;
-                                                e.ErrorMessages.Add("Profundidade", "Com tipo de caixa CX informado, precisa informar as medidas.");
+                                                AplicarErroLinha(e, "Com tipo de caixa CX informado, precisa informar as medidas.", "Profundidade");
                                                 return;
                                             }
 
                                         }
                                         if (rowData.Volume.HasValue)
                                             return;
-                                        e.IsValid = false;
-                                        e.ErrorMessages.Add("Volume", "Informe o número do volume.");
+                                        AplicarErroLinha(e, "Informe o número do volume.", "Volume");
                                     }
                                 }
                             }
@@ -331,6 +268,16 @@ namespace Expedicao.Views
                     }
                 }
             }
+        }
+
+        private static void AplicarErroLinha(GridViewRowValidatingEventArgs e, string mensagem, string propertyName = "")
+        {
+            e.IsValid = false;
+            e.ValidationResults.Add(new GridViewCellValidationResult
+            {
+                ErrorMessage = mensagem,
+                PropertyName = propertyName
+            });
         }
 
         private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -349,14 +296,11 @@ namespace Expedicao.Views
 
         private void Localizar()
         {
-            this.dataGrid.SelectedItems.Clear();
-            this.dataGrid.SearchHelper.ClearSearch();
             var window = new Window();
             var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
             stackPanel.Margin = new Thickness(5, 5, 5, 5);
-            var inputLayout = new SfTextInputLayout();
-            inputLayout.Hint = "Localizar";
             TextBox textBox = new();
+            textBox.Margin = new Thickness(0, 0, 0, 8);
             textBox.PreviewKeyDown += (s, e) =>
             {
                 if (e.Key == Key.Enter)
@@ -364,8 +308,8 @@ namespace Expedicao.Views
                 else if (e.Key == Key.Escape)
                     window.Close();
             };
-            inputLayout.InputView = textBox;
-            stackPanel.Children.Add(inputLayout);
+            stackPanel.Children.Add(new TextBlock { Text = "Localizar", Margin = new Thickness(0, 0, 0, 4) });
+            stackPanel.Children.Add(textBox);
             FocusManager.SetFocusedElement(stackPanel, textBox);
             window.Content = stackPanel;
             window.Title = "Localizar código expedição";
@@ -382,20 +326,21 @@ namespace Expedicao.Views
 
             try
             {
-                /*
-                this.dataGrid.SearchHelper.FindNext(texto);
-                var rowIndex = this.dataGrid.SearchHelper.CurrentRowColumnIndex.RowIndex;
-                var recordIndex = this.dataGrid.ResolveToRecordIndex(rowIndex);
-                this.dataGrid.SelectedIndex = recordIndex;
-                */
+                if (DataContext is not ExpedicaoProdutoViewModel vm || vm.ChkDetails is null)
+                    return;
 
-                this.dataGrid.SearchHelper.FindNext(texto);
-                this.dataGrid.SelectionController.MoveCurrentCell(this.dataGrid.SearchHelper.CurrentRowColumnIndex);
-                var recored = this.dataGrid.SelectedItem;
-                var viewmodel = this.dataGrid.DataContext as ExpedicaoViewModel;
-                //if (previousrowColumnIdex != this.dataGrid.SearchHelper.CurrentRowColumnIndex)
-                //    viewmodel.SearchItem.Add(recored);
-                previousrowColumnIdex = this.dataGrid.SearchHelper.CurrentRowColumnIndex;
+                var item = vm.ChkDetails.FirstOrDefault(i =>
+                    Contem(i.CodDetalhesCompl?.ToString(), texto) ||
+                    Contem(i.ItemMemorial, texto) ||
+                    Contem(i.LocalShoppings, texto) ||
+                    Contem(i.Planilha, texto) ||
+                    Contem(i.DescricaoProduto, texto));
+
+                if (item is null)
+                    return;
+
+                dataGrid.SelectedItem = item;
+                dataGrid.ScrollIntoView(item);
             }
             catch (Exception ex)
             {
@@ -406,29 +351,15 @@ namespace Expedicao.Views
 
         }
 
-    }
-
-    public class SearchHelperExtNew : SearchHelper
-    {
-        public SearchHelperExtNew(SfDataGrid sfDataGrid) : base(sfDataGrid)
+        private static bool Contem(string? valor, string texto)
         {
+            return valor?.IndexOf(texto, StringComparison.OrdinalIgnoreCase) >= 0;
         }
-
-        protected override bool SearchCell(DataColumnBase column, object record, bool ApplySearchHighlightBrush)
-        {
-           if (column == null)
-               return false;
-           if (column.GridColumn.MappingName == "CodDetalhesCompl")
-               return base.SearchCell(column, record, ApplySearchHighlightBrush);
-           else
-               return false;
-        }
-        
-
     }
 
     public class ExpedicaoProdutoViewModel : INotifyPropertyChanged
     {
+        private readonly DataBase BaseSettings = DataBase.Instance;
 
         private ObservableCollection<AprovadoModel> aprovados;
         public ObservableCollection<AprovadoModel> Aprovados
@@ -473,7 +404,7 @@ namespace Expedicao.Views
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public void RaisePropertyChanged(string propName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
@@ -481,111 +412,263 @@ namespace Expedicao.Views
 
         public async Task<ObservableCollection<AprovadoModel>> GetAprovadosAsync()
         {
-            try
-            {
-                using AppDatabase db = new();
-                var data = await db.Aprovados.OrderBy(c => c.SiglaServ).ToListAsync();
-                return new ObservableCollection<AprovadoModel>(data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            using var conn = CreateConnection();
+            var data = await conn.QueryAsync<AprovadoModel>(
+                @"
+                    SELECT
+                        id_aprovado AS ""IdAprovado"",
+                        sigla AS ""Sigla"",
+                        sigla_serv AS ""SiglaServ"",
+                        nome AS ""Nome"",
+                        cidade AS ""Cidade"",
+                        tema AS ""Tema""
+                    FROM producao.t_aprovados
+                    ORDER BY sigla_serv;");
+
+            return new ObservableCollection<AprovadoModel>(data);
         }
 
         public async Task<ObservableCollection<MedidaModel>> GetMedidasAsync()
         {
-            try
-            {
-                using AppDatabase db = new();
-                var data = await db.Medidas.OrderBy((n => n.NomeCaixa)).ToListAsync();
-                return new ObservableCollection<MedidaModel>(data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            using var conn = CreateConnection();
+            var data = await conn.QueryAsync<MedidaModel>(
+                @"
+                    SELECT
+                        nomecx AS ""NomeCaixa"",
+                        alt AS ""Altura"",
+                        larg AS ""Largura"",
+                        prof AS ""Profundidade"",
+                        m3 AS ""Cubagem""
+                    FROM producao.tblmedidas
+                    ORDER BY nomecx;");
+
+            return new ObservableCollection<MedidaModel>(data);
         }
 
         public async Task<ObservableCollection<ProdutoExpedidoModel>> GetProdutoExpedidos(int? IdAprovado)
         {
-            try
-            {
-                using AppDatabase db = new();
-                var data = await db.ProdutoExpedidos
-                    .Where(n => n.IdAprovado == IdAprovado)
-                    .OrderBy(n => n.ItemMemorial)
-                    .ThenBy(n => n.DescricaoProduto)
-                    .ToListAsync();
+            using var conn = CreateConnection();
+            var data = await conn.QueryAsync<ProdutoExpedidoModel>(
+                @"
+                    SELECT
+                        coddetalhescompl AS ""CodDetalhesCompl"",
+                        id_aprovado AS ""IdAprovado"",
+                        sigla AS ""Sigla"",
+                        local_shoppings AS ""LocalShoppings"",
+                        planilha AS ""Planilha"",
+                        qtd AS ""Qtd"",
+                        descricao_produto AS ""DescricaoProduto"",
+                        codcompl AS ""CodCompl"",
+                        codcompladicional AS ""CodComplAdicional"",
+                        item_memorial AS ""ItemMemorial""
+                    FROM expedicao.qry_produto_expedido
+                    WHERE id_aprovado = @IdAprovado
+                    ORDER BY item_memorial, descricao_produto;",
+                new { IdAprovado });
 
-                return new ObservableCollection<ProdutoExpedidoModel>(data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return new ObservableCollection<ProdutoExpedidoModel>(data);
         }
 
         public async Task<ObservableCollection<ExpedModel>> GetExpedsAsync(int? CodDetalhesCompl)
         {
-            IList<ExpedModel> listAsync;
-            try
-            {
-                using AppDatabase db = new();
-                listAsync = await db.Expeds
-                    .Where(n => n.CodDetalhesCompl == CodDetalhesCompl)
-                    .OrderBy(n => n.Volume)
-                    .ToListAsync();
+            using var conn = CreateConnection();
+            var data = await conn.QueryAsync<ExpedModel>(
+                $@"
+                    SELECT {ExpedSelectColumns}
+                    FROM expedicao.t_exped
+                    WHERE coddetalhescompl = @CodDetalhesCompl
+                    ORDER BY volume;",
+                new { CodDetalhesCompl });
 
-                return new ObservableCollection<ExpedModel>(listAsync);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return new ObservableCollection<ExpedModel>(data);
         }
 
         public async Task<ExpedModel> AddExpedAsync(ExpedModel exped)
         {
+            using var conn = CreateConnection();
+            await conn.OpenAsync();
+            await using var transaction = await conn.BeginTransactionAsync();
+
             try
             {
-                using AppDatabase db = new();
-                var expedExistente = await db.Expeds.FindAsync(exped.CodExped);
-                if (expedExistente == null)
-                {
-                    var result = await db.Expeds.AddAsync(exped);
-                    await db.SaveChangesAsync();
-                    await db.Entry(result.Entity).ReloadAsync();
-                    return result.Entity;
-                }
-                else
-                {
-                    db.Entry(expedExistente).CurrentValues.SetValues(exped);
-                    await db.SaveChangesAsync();
-                    await db.Entry(expedExistente).ReloadAsync();
-                    return expedExistente;
-                }   
+                var saved = exped.CodExped.GetValueOrDefault() <= 0
+                    ? await InsertExpedAsync(conn, transaction, exped)
+                    : await UpdateExpedAsync(conn, transaction, exped);
+
+                await transaction.CommitAsync();
+                return saved;
             }
-            catch (Exception)
+            catch
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
 
         public async Task DeleteExpedAsync(ExpedModel exped)
         {
+            await DeleteExpedsAsync([exped]);
+        }
+
+        public async Task DeleteExpedsAsync(IEnumerable<ExpedModel> expeds)
+        {
+            var ids = expeds
+                .Where(e => e.CodExped.HasValue && e.CodExped.Value > 0)
+                .Select(e => e.CodExped!.Value)
+                .ToArray();
+
+            if (ids.Length == 0)
+                return;
+
+            using var conn = CreateConnection();
+            await conn.OpenAsync();
+            await using var transaction = await conn.BeginTransactionAsync();
+
             try
             {
-                using AppDatabase db = new();
-                db.Entry<ExpedModel>(exped).State = EntityState.Deleted;
-                int num = await db.SaveChangesAsync();
-                db.Entry<ExpedModel>(exped).State = EntityState.Detached;
+                await conn.ExecuteAsync(
+                    "DELETE FROM expedicao.t_exped WHERE codexped = ANY(@Ids);",
+                    new { Ids = ids },
+                    transaction);
+
+                await transaction.CommitAsync();
             }
-            catch (Exception)
+            catch
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
+
+        private NpgsqlConnection CreateConnection()
+        {
+            if (string.IsNullOrWhiteSpace(BaseSettings.ConnectionString))
+                BaseSettings.RefreshConnectionString();
+
+            return new NpgsqlConnection(BaseSettings.ConnectionString);
+        }
+
+        private static async Task<ExpedModel> InsertExpedAsync(
+            NpgsqlConnection conn,
+            NpgsqlTransaction transaction,
+            ExpedModel exped)
+        {
+            return await conn.QuerySingleAsync<ExpedModel>(
+                $@"
+                    INSERT INTO expedicao.t_exped
+                    (
+                        qtd_expedida,
+                        vol_exp,
+                        vol_tot_exp,
+                        pl,
+                        pb,
+                        largura,
+                        altura,
+                        profundidade,
+                        codvol,
+                        cadastrado_por,
+                        quando,
+                        baia_virtual,
+                        modelo_de_cx,
+                        coddetalhescompl,
+                        alterado_por,
+                        alterado_quando,
+                        inserido_por,
+                        inserido_em,
+                        operacao,
+                        volume,
+                        nf_emitida
+                    )
+                    VALUES
+                    (
+                        @QtdExpedida,
+                        @VolExp,
+                        @VolTotExp,
+                        @Pl,
+                        @Pb,
+                        @Largura,
+                        @Altura,
+                        @Profundidade,
+                        @CodVol,
+                        @CadastradoPor,
+                        @Quando,
+                        @BaiaVirtual,
+                        @ModeloCaixa,
+                        @CodDetalhesCompl,
+                        @AlteradoPor,
+                        @AlteradoQuando,
+                        @InseridoPor,
+                        @InseridoEm,
+                        @Operacao,
+                        @Volume,
+                        @nf_emitida
+                    )
+                    RETURNING {ExpedSelectColumns};",
+                exped,
+                transaction);
+        }
+
+        private static async Task<ExpedModel> UpdateExpedAsync(
+            NpgsqlConnection conn,
+            NpgsqlTransaction transaction,
+            ExpedModel exped)
+        {
+            var saved = await conn.QuerySingleOrDefaultAsync<ExpedModel>(
+                $@"
+                    UPDATE expedicao.t_exped
+                    SET
+                        qtd_expedida = @QtdExpedida,
+                        vol_exp = @VolExp,
+                        vol_tot_exp = @VolTotExp,
+                        pl = @Pl,
+                        pb = @Pb,
+                        largura = @Largura,
+                        altura = @Altura,
+                        profundidade = @Profundidade,
+                        codvol = @CodVol,
+                        cadastrado_por = @CadastradoPor,
+                        quando = @Quando,
+                        baia_virtual = @BaiaVirtual,
+                        modelo_de_cx = @ModeloCaixa,
+                        coddetalhescompl = @CodDetalhesCompl,
+                        alterado_por = @AlteradoPor,
+                        alterado_quando = @AlteradoQuando,
+                        inserido_por = @InseridoPor,
+                        inserido_em = @InseridoEm,
+                        operacao = @Operacao,
+                        volume = @Volume,
+                        nf_emitida = @nf_emitida
+                    WHERE codexped = @CodExped
+                    RETURNING {ExpedSelectColumns};",
+                exped,
+                transaction);
+
+            return saved ?? throw new InvalidOperationException("Registro de expedição não encontrado para atualização.");
+        }
+
+        private const string ExpedSelectColumns = @"
+            codexped AS ""CodExped"",
+            qtd_expedida AS ""QtdExpedida"",
+            vol_exp AS ""VolExp"",
+            vol_tot_exp AS ""VolTotExp"",
+            pl AS ""Pl"",
+            pb AS ""Pb"",
+            largura AS ""Largura"",
+            altura AS ""Altura"",
+            profundidade AS ""Profundidade"",
+            codvol AS ""CodVol"",
+            cadastrado_por AS ""CadastradoPor"",
+            quando AS ""Quando"",
+            baia_virtual AS ""BaiaVirtual"",
+            modelo_de_cx AS ""ModeloCaixa"",
+            coddetalhescompl AS ""CodDetalhesCompl"",
+            alterado_por AS ""AlteradoPor"",
+            alterado_quando AS ""AlteradoQuando"",
+            inserido_por AS ""InseridoPor"",
+            inserido_em AS ""InseridoEm"",
+            operacao AS ""Operacao"",
+            volume AS ""Volume"",
+            nf_emitida";
     }
 
 }

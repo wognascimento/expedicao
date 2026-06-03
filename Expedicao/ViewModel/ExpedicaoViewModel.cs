@@ -15,11 +15,10 @@ namespace Expedicao
 {
     public class ExpedicaoViewModel : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public void RaisePropertyChanged(string propName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
 
         }
 
@@ -316,6 +315,38 @@ namespace Expedicao
             {
                 throw;
             }
+        }
+
+        public async Task AtualizarVolumesCarregadosAsync(IEnumerable<string> barcodes, string caminhao, DateTime dataCarregamento)
+        {
+            using AppDatabase db = new();
+            var strategy = db.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await db.Database.BeginTransactionAsync();
+                try
+                {
+                    foreach (var barcode in barcodes.Where(b => !string.IsNullOrWhiteSpace(b)).Distinct())
+                    {
+                        var volume = await db.ConfCargaGerals.FirstOrDefaultAsync(x => x.Barcode == barcode)
+                            ?? throw new InvalidOperationException($"Existe código não carregado na lista enviada: {barcode}");
+
+                        volume.Caminhao = caminhao;
+                        volume.Data = dataCarregamento;
+                        volume.DataAltera = DateTime.Now.Date;
+                        volume.AlteradoPor = Environment.UserName;
+                    }
+
+                    await db.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
 
         public async Task<long> OrcamentoSequenceAsync(OrcamentoSequenceModel orcamento)

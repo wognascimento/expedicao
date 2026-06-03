@@ -1,6 +1,8 @@
-﻿using Expedicao.Model;
+using Expedicao.Model;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Specialized;
+using System.Configuration;
 
 namespace Expedicao
 {
@@ -73,7 +75,11 @@ namespace Expedicao
                 $"Application Name=SIG Expedicao <{dB.Database}>;",
                 options => { options.EnableRetryOnFailure(); }
                 );
-            optionsBuilder.EnableSensitiveDataLogging();
+            var appSettings = ConfigurationManager.GetSection("appSettings") as NameValueCollection;
+            if (bool.TryParse(appSettings?["EnableSensitiveDataLogging"], out var enableSensitiveDataLogging) && enableSensitiveDataLogging)
+            {
+                optionsBuilder.EnableSensitiveDataLogging();
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Telerik.Windows.Controls;
 
 namespace Expedicao.Views
 {
@@ -45,13 +46,13 @@ namespace Expedicao.Views
             }
         }
 
-        private async void dataGrid_RowValidated(object sender, Syncfusion.UI.Xaml.Grid.RowValidatedEventArgs e)
+        private async void dataGrid_RowValidated(object sender, GridViewRowValidatedEventArgs e)
         {
             try
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 ViewCubagemClienteZeradaViewModel vm = (ViewCubagemClienteZeradaViewModel)DataContext;
-                CubagemPrevistaClienteModel data = (CubagemPrevistaClienteModel)e.RowData;
+                CubagemPrevistaClienteModel data = (CubagemPrevistaClienteModel)e.Row.Item;
                 await Task.Run(() => vm.SaveItemAsync(data));
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
@@ -65,7 +66,7 @@ namespace Expedicao.Views
 
     public class ViewCubagemClienteZeradaViewModel : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         public void RaisePropertyChanged(string propName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));

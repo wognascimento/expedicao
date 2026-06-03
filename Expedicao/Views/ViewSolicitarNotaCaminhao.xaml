@@ -4,70 +4,52 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Expedicao.Views" 
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Loaded="UserControl_Loaded">
     
     
     <Grid>
 
-        <syncfusion:SfDataGrid 
+        <telerik:RadGridView 
             x:Name="dataGrid"    
             AutoGenerateColumns="False" 
-            ColumnSizer="SizeToHeader" 
-            AllowFiltering="True"
-            ShowRowHeader="True" 
+            IsFilteringAllowed="True"
+            ShowGroupPanel="False"
+            RowIndicatorVisibility="Visible"
+            CanUserResizeColumns="True"
+            IsReadOnly="True"
             ItemsSource="{Binding SiglasCaminhoes}"
             SelectedItem="{Binding SiglaCaminhao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
 
-            <syncfusion:SfDataGrid.RecordContextMenu>
-                <ContextMenu>
-                    <MenuItem Command="{Binding Source={x:Static Member=local:ContextMenuCommands.CriarArquivo}}"
-                              CommandParameter="{Binding}"
-                              Header="Criar Arquivo">
-                    </MenuItem>
-                </ContextMenu>
-            </syncfusion:SfDataGrid.RecordContextMenu>
+            <telerik:RadGridView.RowStyle>
+                <Style TargetType="telerik:GridViewRow">
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Command="{Binding Source={x:Static Member=local:ContextMenuCommands.CriarArquivo}}"
+                                          CommandParameter="{Binding}"
+                                          Header="Criar Arquivo"/>
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </telerik:RadGridView.RowStyle>
 
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridDateTimeColumn MappingName="data_de_expedicao" />
-                <syncfusion:GridTextColumn MappingName="est" />
-                <syncfusion:GridTextColumn MappingName="cidade" />
-                <syncfusion:GridTextColumn MappingName="sigla" />
-                <syncfusion:GridTextColumn MappingName="baia_caminhao" />
-                <syncfusion:GridTextColumn MappingName="placa_caminhao" />
-                <syncfusion:GridNumericColumn 
-                    MappingName="preco"
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
-                <syncfusion:GridNumericColumn 
-                    MappingName="volumes" 
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
-                <syncfusion:GridNumericColumn 
-                    MappingName="pl" 
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
-                <syncfusion:GridNumericColumn 
-                    MappingName="pb" 
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
-                <syncfusion:GridNumericColumn 
-                    MappingName="m3" 
-                    NumberDecimalDigits="2"
-                    NumberDecimalSeparator=","
-                    NumberGroupSizes="3" 
-                    NumberGroupSeparator="."/>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding data_de_expedicao}" Header="data_de_expedicao" DataFormatString="{}{0:dd/MM/yyyy}" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding est}" Header="est" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding cidade}" Header="cidade" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla}" Header="sigla" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding baia_caminhao}" Header="baia_caminhao" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding placa_caminhao}" Header="placa_caminhao" />
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding preco}" Header="preco" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding volumes}" Header="volumes" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding pl}" Header="pl" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding pb}" Header="pb" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding m3}" Header="m3" DataFormatString="{}{0:N2}"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
 
         
     </Grid>

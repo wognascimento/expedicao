@@ -1,9 +1,6 @@
 ﻿using CsvHelper;
-using Expedicao.DataBaseLocal;
 using Expedicao.Model;
 using Microsoft.EntityFrameworkCore;
-using Syncfusion.UI.Xaml.Grid;
-using Syncfusion.UI.Xaml.Utility;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Expedicao.Views
 {
@@ -34,14 +32,63 @@ namespace Expedicao.Views
             try
             {
                 itens.ItemsSource = await Task.Run(new ExpedicaoViewModel().GetEtiquetaVolumesAsync);
+                loadingDetalhes.IsBusy = false;
                 loadingDetalhes.Visibility = Visibility.Hidden;
+            }
+            catch (Exception ex)
+            {
+                loadingDetalhes.IsBusy = false;
+                MessageBox.Show(ex.Message);
+            }
+
+        }
+
+        private async void Print_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var item = itens.SelectedItem as EtiquetaVolumeItemModel ?? itens.CurrentItem as EtiquetaVolumeItemModel;
+                var source = ((IEnumerable)itens.Items).Cast<EtiquetaVolumeItemModel>().ToList();
+
+                if (item is null)
+                    return;
+
+                await ContextMenuCommands.PrintEtiquetaAsync(item, source);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-
         }
+
+        private async void PrintAll_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var source = ((IEnumerable)itens.Items).Cast<EtiquetaVolumeItemModel>().ToList();
+                await ContextMenuCommands.PrintAllEtiquetasAsync(source);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+    }
+
+    public class BaseCommand : ICommand
+    {
+        private readonly Action<object?> execute;
+
+        public BaseCommand(Action<object?> execute)
+        {
+            this.execute = execute;
+        }
+
+        public event EventHandler? CanExecuteChanged;
+
+        public bool CanExecute(object? parameter) => true;
+
+        public void Execute(object? parameter) => execute(parameter);
     }
 
     public static class ContextMenuCommands
@@ -100,7 +147,12 @@ namespace Expedicao.Views
 
         private async static void OnPrintClicked(object obj)
         {
+            if (obj is EtiquetaVolumeItemModel row)
+                await PrintEtiquetaAsync(row, [row]);
+        }
 
+        public static async Task PrintEtiquetaAsync(EtiquetaVolumeItemModel row, List<EtiquetaVolumeItemModel> itemsSource)
+        {
             try
             {
                 TcpClient? client = new();
@@ -109,8 +161,7 @@ namespace Expedicao.Views
 
                 //streamWriter1 = new(@"C:\TEMP\ETIQUETA.TXT");
 
-                SfDataGrid dataGrid = ((GridContextMenuInfo)obj).DataGrid;
-                await EtiquetaNormal((EtiquetaVolumeItemModel)dataGrid.CurrentItem, (List<EtiquetaVolumeItemModel>)dataGrid.ItemsSource);
+                await EtiquetaNormal(row, itemsSource);
 
                 await streamWriter1.FlushAsync();
                 await streamWriter1.DisposeAsync();
@@ -122,27 +173,29 @@ namespace Expedicao.Views
             {
                 MessageBox.Show(ex.Message);
             }
-            
         }
 
         private async static void OnPrintAllClicked(object obj)
+        {
+            if (obj is IEnumerable<EtiquetaVolumeItemModel> rows)
+                await PrintAllEtiquetasAsync(rows.ToList());
+        }
+
+        public static async Task PrintAllEtiquetasAsync(List<EtiquetaVolumeItemModel> itemsSource)
         {
             TcpClient? client = new();
             await client.ConnectAsync(IPAdress, Port);
             streamWriter1 = new StreamWriter(client.GetStream());
 
-            if (obj is not GridColumnContextMenuInfo)
-                return;
-            SfDataGrid dataGrid = ((GridContextMenuInfo)obj).DataGrid;
-            var source = dataGrid.View.Records.Select(rec => rec.Data);
-            List<EtiquetaVolumeItemModel> itemsSource = (List<EtiquetaVolumeItemModel>)dataGrid.ItemsSource;
-            var groupings = dataGrid.View.Records.GroupBy(rec => ((EtiquetaVolumeItemModel)rec.Data).Sequencia);
-            if (MessageBox.Show("Deseja imprimir " + source.Count() + " Produtos?", "Impressão de etiquetas", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
+            var groupings = itemsSource.GroupBy(rec => rec.Sequencia);
+            if (MessageBox.Show("Deseja imprimir " + itemsSource.Count + " Produtos?", "Impressão de etiquetas", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
                 return;
             foreach (var grouping in groupings)
             {
                 var item = grouping;
-                await EtiquetaNormal((EtiquetaVolumeItemModel)dataGrid.View.Records.FirstOrDefault(rec => ((EtiquetaVolumeItemModel)rec.Data).Sequencia == item.Key).Data, itemsSource);
+                var row = itemsSource.FirstOrDefault(rec => rec.Sequencia == item.Key);
+                if (row is not null)
+                    await EtiquetaNormal(row, itemsSource);
             }
 
             await streamWriter1.FlushAsync();
@@ -420,7 +473,9 @@ namespace Expedicao.Views
 
         private async static void OnCriarArquivoCaminhaoClicked(object obj)
         {
-            var record = ((GridRecordContextMenuInfo)obj).Record as CubagemSiglaCaminaoModel;
+            var record = obj as CubagemSiglaCaminaoModel;
+            if (record is null)
+                return;
             using AppDatabase db = new();
             try
             {
@@ -599,7 +654,9 @@ namespace Expedicao.Views
 
         private async static void OnCriarArquivoClienteClicked(object obj)
         {
-            var record = ((GridRecordContextMenuInfo)obj).Record as CubagemSiglaCaminaoModel; //((GridRecordContextMenuInfo)obj).Record = {Expedicao.Model.CubagemSiglaCaminaoModel}
+            var record = obj as CubagemSiglaCaminaoModel;
+            if (record is null)
+                return;
             using AppDatabase db = new();
             try
             {

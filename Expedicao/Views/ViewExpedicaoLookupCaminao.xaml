@@ -3,29 +3,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              xmlns:local="clr-namespace:Expedicao.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" 
              Loaded="UserControl_Loaded">
 
     <Grid>
-        <syncfusion:SfDataGrid x:Name="itens" AllowFiltering="True" ColumnSizer="AutoWithLastColumnFill"
-                           AutoGenerateColumns="False" AllowEditing="True" Margin="0,0,0,65">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridTextColumn MappingName="sigla" AllowEditing="False"/>
-                <syncfusion:GridNumericColumn MappingName="caminao" NumberDecimalDigits="0" AllowEditing="False"/>
-                <syncfusion:GridNumericColumn MappingName="volumes" NumberDecimalDigits="0" AllowEditing="False"/>
-                <syncfusion:GridCheckBoxColumn MappingName="selecao" AllowEditing="True"/>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
-        <Border x:Name="loadingDetalhes" Height="50" VerticalAlignment="Bottom" Background="Black"
-            BorderBrush="Black" BorderThickness="1" Opacity="50">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                         AnimationType="Gear" Control.Background="Black"/>
-            </StackPanel>
-        </Border>
+        <telerik:RadGridView
+            x:Name="itens"
+            AutoGenerateColumns="False"
+            IsFilteringAllowed="True"
+            ShowGroupPanel="False"
+            CanUserResizeColumns="True"
+            IsReadOnly="False"
+            Margin="0,0,0,65">
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla}" Header="sigla" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding caminao}" Header="caminao" DataFormatString="{}{0:N0}" IsReadOnly="True"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding volumes}" Header="volumes" DataFormatString="{}{0:N0}" IsReadOnly="True"/>
+                <telerik:GridViewCheckBoxColumn DataMemberBinding="{Binding selecao, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header="selecao"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+        <telerik:RadBusyIndicator x:Name="loadingDetalhes" Height="50" VerticalAlignment="Bottom" IsBusy="True"/>
         <Border x:Name="loadingBtn" Height="60" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
             Visibility="Hidden">
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">

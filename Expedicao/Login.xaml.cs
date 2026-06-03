@@ -1,9 +1,8 @@
-﻿using System.DirectoryServices;
 using System;
 using Telerik.Windows.Controls;
 using System.Windows;
 using System.Configuration;
-using System.Collections.Specialized;
+using System.DirectoryServices.AccountManagement;
 
 namespace Expedicao
 {
@@ -12,6 +11,8 @@ namespace Expedicao
     /// </summary>
     public partial class Login : RadWindow
     {
+        private readonly DataBase BaseSettings = DataBase.Instance;
+
         public Login()
         {
             InitializeComponent();
@@ -31,44 +32,32 @@ namespace Expedicao
             {
                 try
                 {
-                    DataBase dB = DataBase.Instance;
-                    DirectoryEntry directoryEntry = new DirectoryEntry("LDAP://cipodominio.com.br:389", txtLogin.Text, txtSenha.Password);
-                    DirectorySearcher directorySearcher = new DirectorySearcher(directoryEntry);
-                    directorySearcher.Filter = "(SAMAccountName=" + txtLogin.Text + ")";
-                    SearchResult searchResult = directorySearcher.FindOne();
-                    //if ((Int32)searchResult.Properties["userAccountControl"][0] == 512)
-                    //{
+                    using var ctx = new PrincipalContext(
+                        ContextType.Domain,
+                        "192.168.0.254",
+                        "cipodominio.com.br");
 
-                        //var appSettings = ConfigurationManager.GetSection("appSettings") as NameValueCollection;
-                        //ConfigurationManager.AppSettings["Username"] = txtLogin.Text;
-                        /*
-                        Configuration config = ConfigurationManager.OpenExeConfiguration("Producao.dll.config");
+                    if (!ctx.ValidateCredentials(txtLogin.Text, txtSenha.Password))
+                        throw new Exception("Credenciais inválidas.");
+
+                    Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    if (config.AppSettings.Settings["Username"] == null)
+                        config.AppSettings.Settings.Add("Username", txtLogin.Text);
+                    else
                         config.AppSettings.Settings["Username"].Value = txtLogin.Text;
-                        config.Save(ConfigurationSaveMode.Modified);
-                        ConfigurationManager.RefreshSection("appSettings");
-                        */
 
-                        Configuration config = ConfigurationManager.OpenExeConfiguration("Producao.dll");
+                    config.Save(ConfigurationSaveMode.Modified);
+                    ConfigurationManager.RefreshSection("appSettings");
 
-                        //config.AppSettings.SectionInformation.ConfigSource = "app.config";
+                    BaseSettings.Username = txtLogin.Text;
+                    BaseSettings.RefreshConnectionString();
 
-                        config.AppSettings.Settings["Username"].Value = txtLogin.Text;
-                        config.Save(ConfigurationSaveMode.Modified);
-
-                        ConfigurationManager.RefreshSection("appSettings");
-                        dB.ConnectionString = $"Host={dB.Host};Database={dB.Database};Username={txtLogin.Text};Password={dB.Password}";
-
-                        this.DialogResult = true;
-                        this.Close();
-                    //}
-                    //else
-                    //{
-                    //    MessageBox.Show("ERRO: Usuário/Senha Inválido!");
-                    //}
+                    this.DialogResult = true;
+                    this.Close();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Usuário não encontrado!");
+                    MessageBox.Show($"Falha na autenticação: {ex.Message}");
                 }
             }
         }

@@ -1,13 +1,10 @@
-﻿using CsvHelper;
-using Expedicao.DataBaseLocal;
+using CsvHelper;
 using Expedicao.Model;
-using Microsoft.EntityFrameworkCore;
-using Syncfusion.XlsIO;
+using ClosedXML.Excel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -34,6 +31,9 @@ namespace Expedicao.Views
         int index;
         DateTime DataCarregamento = new DateTime();
         DataBase BaseSettings = DataBase.Instance;
+        private readonly List<RomaneioModel> _romaneios = [];
+        private readonly List<CarregamentoItenFaltanteModel> _itensFaltantes = [];
+        private readonly HashSet<string> _barcodesCarregados = new(StringComparer.OrdinalIgnoreCase);
 
         public ViewExpedicaoColetaDados()
         {
@@ -53,17 +53,69 @@ namespace Expedicao.Views
             
         }
 
-        private async void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
+        private void AtualizarResumo()
+        {
+            var siglas = ObterSiglasSelecionadas();
+            txtSigla.Content = string.Join("; ", siglas);
+            txtPlaca.Content = ObterPlacaSelecionada();
+            txtConferente.Content = ObterConferenteSelecionado();
+            txtVolumes.Content = ObterItensPendentes().Count;
+        }
+
+        private List<string> ObterSiglasSelecionadas()
+        {
+            return _romaneios
+                .Select(r => r.shopping_destino)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct()
+                .ToList()!;
+        }
+
+        private string ObterPlacaSelecionada()
+        {
+            return _romaneios
+                .Select(r => r.placa_carroceria)
+                .FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? string.Empty;
+        }
+
+        private string ObterConferenteSelecionado()
+        {
+            return _romaneios
+                .Select(r => r.nome_conferente)
+                .FirstOrDefault(c => !string.IsNullOrWhiteSpace(c)) ?? string.Empty;
+        }
+
+        private List<CarregamentoItenFaltanteModel> ObterItensPendentes()
+        {
+            return _itensFaltantes
+                .Where(i => string.IsNullOrWhiteSpace(i.Barcode) || !_barcodesCarregados.Contains(i.Barcode))
+                .ToList();
+        }
+
+        private void AtualizarGridItens()
+        {
+            var pendentes = ObterItensPendentes();
+            itens.ItemsSource = pendentes;
+            txtVolumes.Content = pendentes.Count;
+        }
+
+        private void LimparCarregamento()
+        {
+            _romaneios.Clear();
+            _itensFaltantes.Clear();
+            _barcodesCarregados.Clear();
+            DataCarregamento = new DateTime();
+            itens.ItemsSource = null;
+            AtualizarResumo();
+        }
+
+        private void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
             string recieved_data = port.ReadExisting();
-            if (await Task.Run(async () => await new ViewModelLocal().GetVolume(recieved_data)))
+            if (_itensFaltantes.Any(i => string.Equals(i.Barcode, recieved_data, StringComparison.OrdinalIgnoreCase)))
             {
-                await Task.Run(async () => await new ViewModelLocal().GetAddItemCarregado(recieved_data));
-                await Task.Run(async () => await new ViewModelLocal().GetRemoveItemFaltante(recieved_data));
-                IList itensFaltantes = await Task.Run(async () => await new ViewModelLocal().Getaitens());
-                int volumesFaltantes = await Task.Run(async () => await new ViewModelLocal().GetVolumes());
-                Dispatcher.Invoke((Action)(() => itens.ItemsSource = itensFaltantes));
-                Dispatcher.Invoke((Action)(() => txtVolumes.Content = volumesFaltantes));
+                _barcodesCarregados.Add(recieved_data);
+                Dispatcher.Invoke((Action)AtualizarGridItens);
                 new SoundPlayer(@"sound\success.wav").Play();
             }
             else
@@ -77,12 +129,8 @@ namespace Expedicao.Views
         {
             try
             {
-                var dados = await Task.Run(async () => await new ViewModelLocal().Getaitens());
-                txtSigla.Content = string.Join("; ", await Task.Run(async () => await new ViewModelLocal().GetRomaneios()));
-                txtPlaca.Content = await new ViewModelLocal().GetPlaca();
-                txtConferente.Content = await new ViewModelLocal().GetConferente();
-                itens.ItemsSource = dados;
-                txtVolumes.Content = dados.Count; //await Task.Run(async () => await new ViewModelLocal().GetVolumes());
+                AtualizarGridItens();
+                AtualizarResumo();
                 loading.Visibility = Visibility.Hidden;
                 //port.Open();
             }
@@ -94,12 +142,9 @@ namespace Expedicao.Views
 
         private async void RibbonButton_Click(object sender, RoutedEventArgs e)
         {
-            if ((await Task.Run(async () => await new ViewModelLocal().ItemCarregadosAsync())).Count == 0)
+            if (_barcodesCarregados.Count == 0)
             {
-                await Task.Run(async () => await new ViewModelLocal().GetRemoveAllItemFaltante());
-                await Task.Run(async () => await new ViewModelLocal().GetRemoveAllItemCarregado());
-                await Task.Run((async () => await new ViewModelLocal().GetRemoveAllIRomaneios()));
-                itens.ItemsSource = await Task.Run(async () => await new ViewModelLocal().Getaitens());
+                LimparCarregamento();
                 Window window = new();
                 window.Title = "EXPEDIÇÃO ROMANEIOS ";
                 window.Content = new ViewExpedicaoRomaneios("CARREGAMENTO");
@@ -108,23 +153,13 @@ namespace Expedicao.Views
                 window.ResizeMode = ResizeMode.NoResize;
                 window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 window.ShowDialog();
-                foreach (RomaneioModel romaneio in ((ViewExpedicaoRomaneios)window.Content).Romaneios)
-                    await new ViewModelLocal().GetAdicionarRomaneio(new Romaneio()
-                    {
-                        id_aprovado = 0,
-                        placa = romaneio.placa_carroceria,
-                        sigla = romaneio.shopping_destino,
-                        conferente = romaneio.nome_conferente,
-                        data = (DateTime)romaneio.data_carregamento
-                    });
-                Label label = txtSigla;
-                label.Content = string.Join("; ", await new ViewModelLocal().GetRomaneios());
-                label = txtPlaca;
-                label.Content = await new ViewModelLocal().GetPlaca();
-                label = txtConferente;
-                label.Content = await new ViewModelLocal().GetConferente();
-
-                this.DataCarregamento =  await new ViewModelLocal().GetDataCarregamento();
+                _romaneios.AddRange(((ViewExpedicaoRomaneios)window.Content).Romaneios);
+                this.DataCarregamento = _romaneios
+                    .Where(r => r.data_carregamento.HasValue)
+                    .OrderBy(r => r.data_carregamento)
+                    .Select(r => r.data_carregamento!.Value)
+                    .FirstOrDefault();
+                AtualizarResumo();
             }
             else
             {
@@ -134,9 +169,16 @@ namespace Expedicao.Views
 
         private async void RibbonButton_Click_1(object sender, RoutedEventArgs e)
         {
+            var siglas = ObterSiglasSelecionadas();
+            if (siglas.Count == 0)
+            {
+                MessageBox.Show("Selecione um romaneio antes de buscar os itens.", "Lookup Itens", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             Window window = new();
             window.Title = "EXPEDIÇÃO CAMINHÕES ";
-            window.Content = new ViewExpedicaoLookupCaminao();
+            window.Content = new ViewExpedicaoLookupCaminao(siglas);
             window.Height = 300.0;
             window.Width = 450.0;
             window.ResizeMode = ResizeMode.NoResize;
@@ -144,10 +186,11 @@ namespace Expedicao.Views
             window.ShowDialog();
             try
             {
-                var dados = await Task.Run(async () => await new ViewModelLocal().Getaitens());
                 loading.Visibility = Visibility.Visible;
-                itens.ItemsSource = dados;
-                txtVolumes.Content = dados.Count; //await Task.Run(async () => await new ViewModelLocal().GetVolumes());
+                _itensFaltantes.Clear();
+                _itensFaltantes.AddRange(((ViewExpedicaoLookupCaminao)window.Content).ItensFaltantes);
+                _barcodesCarregados.Clear();
+                AtualizarGridItens();
                 loading.Visibility = Visibility.Hidden;
             }
             catch (Exception ex)
@@ -161,20 +204,18 @@ namespace Expedicao.Views
             try
             {
                 loading.Visibility = Visibility.Visible;
-                Romaneio romaneio = new Romaneio();
-                romaneio.conferente = await new ViewModelLocal().GetConferente();
-                romaneio.data = await new ViewModelLocal().GetDataCarregamento();
-                romaneio.placa = await new ViewModelLocal().GetPlaca();
+                var conferente = ObterConferenteSelecionado();
+                var placa = ObterPlacaSelecionada();
 
-                foreach (ItemCarregado itemCarregado in await Task.Run(async () => await new ViewModelLocal().ItemCarregadosAsync()))
+                foreach (var barcode in _barcodesCarregados)
                 {
                     ConfCargaGeralModel conf = new ConfCargaGeralModel()
                     {
-                        Barcode = itemCarregado.barcode,
+                        Barcode = barcode,
                         DocaOrigem = "JACAREÍ",
-                        Data = romaneio.data,
-                        Resp = romaneio.conferente,
-                        Caminhao = romaneio.placa
+                        Data = DataCarregamento,
+                        Resp = conferente,
+                        Caminhao = placa
                     };
                     await Task.Run(async () => await new ExpedicaoViewModel().GetAddVolumeCarregado(conf));
                 }
@@ -192,9 +233,7 @@ namespace Expedicao.Views
             {
                 loading.Visibility = Visibility.Visible;
 
-                List<string> siglas = await Task.Run(async () => await new ViewModelLocal().GetRomaneios());
-                //IAsyncEnumerable<string> siglas = (IAsyncEnumerable<string>)await Task.Run(async () => await new ViewModelLocal().GetRomaneios());
-
+                List<string> siglas = ObterSiglasSelecionadas();
                 foreach (var sigla in siglas)
                 {
                     List<string> arr = new List<string>() { sigla };
@@ -207,7 +246,7 @@ namespace Expedicao.Views
                 }
 
 
-                IList dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosSemParemetroAsync(await Task.Run(async () => await new ViewModelLocal().GetRomaneios())));
+                IList dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosSemParemetroAsync(siglas));
                 if (dados.Count > 0)
                 {
                     MessageBox.Show(
@@ -232,19 +271,11 @@ namespace Expedicao.Views
                     await Task.Run(() => SendMailAsync(NExportado));
 
 
-                    await Task.Run(() => new ViewModelLocal().GetRemoveAllItemFaltante());
-                    await Task.Run(() => new ViewModelLocal().GetRemoveAllItemCarregado());
-                    await Task.Run(() => new ViewModelLocal().GetRemoveAllIRomaneios());
-
-                    //itens.ItemsSource = await Task.Run(() => new ViewModelLocal().Getaitens());
+                    LimparCarregamento();
    
 
                     loading.Visibility = Visibility.Hidden;
                     MessageBox.Show("Email enviado para o fiscal");
-                    txtSigla.Content = null;
-                    txtPlaca.Content = null;
-                    txtConferente.Content = null;
-                    txtVolumes.Content = 0;
                 }
             }
             catch (Exception ex)
@@ -256,15 +287,9 @@ namespace Expedicao.Views
 
         private async Task GetProdutosSemParemetrokAsync(IList reports)
         {
-            using ExcelEngine excelEngine = new ExcelEngine();
-            IApplication excel = excelEngine.Excel;
-            excel.DefaultVersion = (ExcelVersion)3;
-            IWorkbook iworkbook = excel.Workbooks.Create(1);
-            iworkbook.Worksheets[0].ImportData(reports, 1, 1, true);
-            iworkbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\ProdutoSemParametro.xlsx");
-            iworkbook.Close();
-            excelEngine.Dispose();
-            Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\ProdutoSemParametro.xlsx")
+            var caminho = Path.Combine(BaseSettings.CaminhoSistema, "Impressos", "ProdutoSemParametro.xlsx");
+            ExportarListaParaExcel(reports, caminho, "Produtos");
+            Process.Start(new ProcessStartInfo(caminho)
             {
                 UseShellExecute = true
             });
@@ -289,7 +314,7 @@ namespace Expedicao.Views
         {
             try
             {
-                var siglas = await Task.Run(() =>  new ViewModelLocal().GetRomaneios());
+                var siglas = ObterSiglasSelecionadas();
                 var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
                 int tamanhoDoPedaco = 30;
                 int arquivo = 1;
@@ -471,84 +496,78 @@ namespace Expedicao.Views
         {
             try
             {
-                //Dispatcher.Invoke(() => txtPlaca.Content.ToString());
+                var siglas = ObterSiglasSelecionadas();
+                var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
 
-                IApplication excel = new ExcelEngine().Excel;
-                excel.DefaultVersion = ExcelVersion.Xlsx;
-                IWorkbook workbook = excel.Workbooks.Create(1);
-                IWorksheet worksheet = workbook.Worksheets[0];
+                using StreamWriter sw = new("ORCAMEN2.FSI");
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("ITENS");
+                worksheet.Cell(1, 1).Value = "ITEM";
+                worksheet.Cell(1, 2).Value = "CODIGO PRODUTO";
+                worksheet.Cell(1, 3).Value = "DESCRIÇÃO";
+                worksheet.Cell(1, 4).Value = "QUANTIDADE";
+                worksheet.Cell(1, 5).Value = "VALOR UNITÁRIO";
+                worksheet.Cell(1, 6).Value = "UNIDADE";
+                worksheet.Range("A1:F1").Style.Font.Bold = true;
 
-                worksheet.Range["A1"].Text = "ITEM";
-                worksheet.Range["B1"].Text = "CODIGO PRODUTO";
-                worksheet.Range["C1"].Text = "DESCRIÇÃO";
-                worksheet.Range["D1"].Text = "QUANTIDADE";
-                worksheet.Range["E1"].Text = "VALOR UNITÁRIO";
-                worksheet.Range["F1"].Text = "UNIDADE";
-
-                var siglas = await Task.Run(() => new ViewModelLocal().GetRomaneios());
-                var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));  //await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, "");
-                StreamWriter sw = new StreamWriter("ORCAMEN2.FSI");
-                int item = 0;
-                for (int i = 0; i < itens.Count; ++i)
+                var item = 0;
+                foreach (var registro in itens)
                 {
-                    ++item;
-                    decimal valorFormatado = (decimal)(itens[i].Custo * 1000);
+                    item++;
                     await sw.WriteLineAsync(
-                        /*01*/"F220" +
-                        /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
-                        /*03*/Convert.ToString(item).PadRight(14) +
-                        /*04*/Convert.ToString(itens[i].CodComplAdicional).PadRight(30) +
-                        /*05*/Convert.ToString(RemoverAcentos(itens[i].DescricaoFiscal)).PadRight(60) +
-                        /*06*/Convert.ToString("N").PadRight(1) +
-                        /*07*/Convert.ToString("").PadRight(60) +
-                        /*08*/Convert.ToString("").PadRight(60) +
-                        /*09*/Convert.ToString("").PadRight(60) +
-                        /*10*/Convert.ToString("").PadRight(60) +
-                        /*11*/Convert.ToString("").PadRight(60) +
-                        /*12*/Convert.ToString("").PadRight(60) +
-                        /*13*/Convert.ToString("").PadRight(60) +
-                        /*14*/Convert.ToString("").PadRight(60) +
-                        /*15*/Convert.ToString("").PadRight(60) +
-                        /*16*/string.Format("{0:000000000000.00}", itens[i].Qtd).Replace(",", null).Replace(".", null) +
-                        /*17*/Convert.ToString(itens[i].Unidade).PadRight(3) +
-                        /*18*/string.Format("{0:000000000000.00}", itens[i].Custo).Replace(",", null).Replace(".", null) +
-                        /*19*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*20*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*21*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*22*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*23*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*24*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*25*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*26*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*27*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*28*/Convert.ToString("").PadRight(60) +
-                        /*29*/Convert.ToString("").PadRight(60) +
-                        /*30*/Convert.ToString("").PadRight(60) +
-                        /*31*/Convert.ToString("").PadRight(60) +
-                        /*32*/Convert.ToString("").PadRight(60) +
-                        /*33*/Convert.ToString("").PadRight(60) +
-                        /*34*/string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
-                        /*35*/Convert.ToString("A").PadRight(1));
+                        "F220" +
+                        Convert.ToString(codigo).PadLeft(6, '0') +
+                        Convert.ToString(item).PadRight(14) +
+                        Convert.ToString(registro.CodComplAdicional).PadRight(30) +
+                        Convert.ToString(RemoverAcentos(registro.DescricaoFiscal)).PadRight(60) +
+                        Convert.ToString("N").PadRight(1) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        string.Format("{0:000000000000.00}", registro.Qtd).Replace(",", null).Replace(".", null) +
+                        Convert.ToString(registro.Unidade).PadRight(3) +
+                        string.Format("{0:000000000000.00}", registro.Custo).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        Convert.ToString("").PadRight(60) +
+                        string.Format("{0:000000000000.00}", 0).Replace(",", null).Replace(".", null) +
+                        Convert.ToString("A").PadRight(1));
 
-                    worksheet.Range[@$"A{item+1}"].Number = item;
-                    worksheet.Range[@$"B{item+1}"].Number =  Convert.ToDouble(itens[i].CodComplAdicional);
-                    worksheet.Range[@$"C{item+1}"].Text = itens[i].DescricaoFiscal;
-                    worksheet.Range[@$"D{item+1}"].Number = Convert.ToDouble(itens[i].Qtd);
-                    worksheet.Range[@$"E{item+1}"].Number = Convert.ToDouble(itens[i].Custo);
-                    worksheet.Range[@$"F{item+1}"].Text = itens[i].Unidade;
+                    var row = item + 1;
+                    worksheet.Cell(row, 1).Value = item;
+                    worksheet.Cell(row, 2).Value = Convert.ToDouble(registro.CodComplAdicional);
+                    worksheet.Cell(row, 3).Value = registro.DescricaoFiscal;
+                    worksheet.Cell(row, 4).Value = Convert.ToDouble(registro.Qtd);
+                    worksheet.Cell(row, 5).Value = Convert.ToDouble(registro.Custo);
+                    worksheet.Cell(row, 6).Value = registro.Unidade;
                 }
-                sw.Close();
 
+                worksheet.Columns().AdjustToContents();
                 workbook.SaveAs("ITENS.xlsx");
 
                 var volumes = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
-                
                 foreach (var volume in volumes)
                 {
                     await Task.Run(() => new ExpedicaoViewModel().GetVolumeCarregado(volume.codexped));
-                    //GetVolumeCarregado
                 }
-                
             }
             catch (Exception ex)
             {
@@ -562,366 +581,46 @@ namespace Expedicao.Views
 
         private async Task GetInformacoesNF()
         {
-            IApplication excel = new ExcelEngine().Excel;
-            excel.DefaultVersion = ExcelVersion.Xlsx;
-            IWorkbook workbook = excel.Workbooks.Create(1);
-            IWorksheet worksheet = workbook.Worksheets[0];
-            worksheet.IsGridLinesVisible = false;
-            this.index = 0;
-            List<ResumoNotaModel> resumoNotaModelList = await Task.Run(async () => await new ExpedicaoViewModel().GetInformasoesNfAsync(await Task.Run(async () => await new ViewModelLocal().GetRomaneios()), Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
-            worksheet.Range["A1"].Text = "INFORMAÇOES COMPLEMENTARES NF SHOPPING";
-            for (int index = 0; index < resumoNotaModelList.Count; ++index)
+            var resumoNotaModelList = await Task.Run(async () => await new ExpedicaoViewModel().GetInformasoesNfAsync(ObterSiglasSelecionadas(), Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Informacoes");
+            var row = 1;
+
+            foreach (var resumo in resumoNotaModelList)
             {
-                this.index = this.index + index + 1;
-                worksheet.Range["A" + this.index.ToString()].Text = "INFORMAÇOES COMPLEMENTARES NF SHOPPING";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Font.Bold = true;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.HorizontalAlignment = (ExcelHAlign)2;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.VerticalAlignment = (ExcelVAlign)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                this.index += 2;
-                worksheet.Range["A" + this.index.ToString()].Text = "Sigla";
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Shopp;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].Merge();
-                worksheet.Range["D" + this.index.ToString()].Text = resumoNotaModelList[index].Nome;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "Caminhão";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Caminhao;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":C" + this.index.ToString()].Merge();
-                worksheet.Range["D" + this.index.ToString()].Text = "Data Scanner";
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["D" + this.index.ToString() + ":E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString()].Text = resumoNotaModelList[index].Data.Value.ToShortDateString();
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "Transpor.";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].NomeTransportadora;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-               ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "CNPJ";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Cnpj;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].Merge();
-                worksheet.Range["E" + this.index.ToString()].Text = "IE";
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString()].Text = resumoNotaModelList[index].Ie;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "Endereço";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Endereco;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "Bairro";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Bairro;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].Merge();
-                worksheet.Range["E" + this.index.ToString()].Text = "Cidade";
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString()].Text = resumoNotaModelList[index].Cidade;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["A" + this.index.ToString()].Text = "CEP";
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["A" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString()].Text = resumoNotaModelList[index].Cep;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["B" + this.index.ToString() + ":D" + this.index.ToString()].Merge();
-                worksheet.Range["E" + this.index.ToString()].Text = "UF";
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString()].Text = resumoNotaModelList[index].Uf;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["F" + this.index.ToString() + ":G" + this.index.ToString()].Merge();
-                ++this.index;
-                worksheet.Range["F" + this.index.ToString()].Text = "Volumes";
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].Merge();
-                worksheet.Range["G" + this.index.ToString()].Number = (double)resumoNotaModelList[index].volumes;
-                worksheet.Range["G" + this.index.ToString()].NumberFormat = "#,##0.00";
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                ++this.index;
-                worksheet.Range["F" + this.index.ToString()].Text = "Peso Liquido";
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].Merge();
-                worksheet.Range["G" + this.index.ToString()].Number = (double)resumoNotaModelList[index].Liquido;
-                worksheet.Range["G" + this.index.ToString()].NumberFormat = "#,##0.00";
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                ++this.index;
-                worksheet.Range["F" + this.index.ToString()].Text = "Peso Bruto";
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].Merge();
-                worksheet.Range["G" + this.index.ToString()].Number = (double)resumoNotaModelList[index].Bruto;
-                worksheet.Range["G" + this.index.ToString()].NumberFormat = "#,##0.00";
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                ++this.index;
-                worksheet.Range["F" + this.index.ToString()].Text = "Preço";
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
-                worksheet.Range["E" + this.index.ToString() + ":F" + this.index.ToString()].Merge();
-                worksheet.Range["G" + this.index.ToString()].Number = (double)resumoNotaModelList[index].Preco;
-                worksheet.Range["G" + this.index.ToString()].NumberFormat = "#,##0.00";
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].LineStyle = (ExcelLineStyle)1;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)8].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)9].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)7].Color = (ExcelKnownColors)0;
-                worksheet.Range["G" + this.index.ToString()].CellStyle.Borders[(ExcelBordersIndex)10].Color = (ExcelKnownColors)0;
+                worksheet.Range(row, 1, row, 7).Merge().Value = "INFORMAÇÕES COMPLEMENTARES NF SHOPPING";
+                worksheet.Range(row, 1, row, 7).Style.Font.Bold = true;
+                worksheet.Range(row, 1, row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                worksheet.Range(row, 1, row, 7).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                row++;
+
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Shopping", resumo.Shopp);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Nome", resumo.Nome);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Caminhão", resumo.Caminhao);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Data", resumo.Data);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Transportadora", resumo.NomeTransportadora);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "CNPJ", resumo.Cnpj);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "IE", resumo.Ie);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Endereço", resumo.Endereco);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Bairro", resumo.Bairro);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Cidade", resumo.Cidade);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "CEP", resumo.Cep);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "UF", resumo.Uf);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Volumes", resumo.volumes);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Peso Liquido", resumo.Liquido);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Peso Bruto", resumo.Bruto);
+                AdicionarLinhaInformacaoNf(worksheet, ref row, "Preço", resumo.Preco);
+                row++;
             }
+
+            worksheet.Columns().AdjustToContents();
             workbook.SaveAs("Informacoes_Complementares.xlsx");
         }
+
         private async Task<int> GetProdutosNaoExportadosMaticAsync()
         {
-            /*
-            IWorkbook workbook;
-            IWorksheet worksheet;
-            using (ExcelEngine excelEngine = new ExcelEngine())
-            {
-                var dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(await Task.Run(async () => await new ViewModelLocal().GetRomaneios())));
-                
-                IApplication excel = excelEngine.Excel;
-                excel.DefaultVersion = ExcelVersion.Xlsx;
-                workbook = excel.Workbooks.Create(1);
-                worksheet = workbook.Worksheets[0];
-                worksheet.ImportData(dados, 1, 1, true);
-                workbook.SaveAs("ProdutosNaoExportadosMatic.xlsx");
-                workbook.Close();
-                excelEngine.Dispose();
-                
-                return dados.Count;
-            }
-            */
 
-            var dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(await Task.Run(async () => await new ViewModelLocal().GetRomaneios())));
+            var dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(ObterSiglasSelecionadas()));
 
             var nomePasta = "NF";
             var nomeArquivo = "Produtos.csv";
@@ -979,110 +678,58 @@ namespace Expedicao.Views
             ViewExpedicaoColetaDados expedicaoColetaDados1 = this;
             try
             {
-                ViewExpedicaoColetaDados expedicaoColetaDados = expedicaoColetaDados1;
-                IWorkbook workbook;
-                IWorksheet worksheet;
-                IStyle headerStyle;
-                IStyle bodyStyle;
-                using (ExcelEngine excelEngine = new ExcelEngine())
+                if (txtSigla.Content.ToString()?.Split(';', StringSplitOptions.None).Length > 1)
                 {
-                    IApplication excel = excelEngine.Excel;
-                    excel.DefaultVersion = ExcelVersion.Xlsx;
-                    workbook = excel.Workbooks.Create(1);
-                    worksheet = workbook.Worksheets[0];
-                    if (txtSigla.Content.ToString()?.Split(';', StringSplitOptions.None).Length > 1)
-                    {
-                        MessageBox.Show("Seleciona uma sigla por vez para gerar o packing-list", "Ação Abortada", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                        return;
-                    }
-                    //AprovadoModel aprovado = await Task.Run<AprovadoModel>(new Func<Task<AprovadoModel>>(expedicaoColetaDados1.\u003CButtonAdv_Click\u003Eb__17_0));
-                    string sigla = Dispatcher.Invoke(() => txtSigla.Content.ToString().Split(";")[0]);
-                    AprovadoModel aprovado = await Task.Run(async () => await new AprovadoViewModel().GetAprovadoAsync(sigla));
-
-                    worksheet.Range["A1"].Text = aprovado.SiglaServ + " - " + aprovado.Nome;
-                    worksheet.Range["A1"].CellStyle.Font.Size = 15.0;
-                    worksheet.Range["A1"].CellStyle.Font.Bold = true;
-                    worksheet.Range["A1:E1"].Merge();
-                    worksheet.Range["F1"].Text = "CAMINHÃO";
-                    worksheet.Range["F1"].CellStyle.Font.Size = 15.0;
-                    worksheet.Range["F1"].CellStyle.Font.Bold = true;
-                    worksheet.Range["F1"].CellStyle.HorizontalAlignment = ExcelHAlign.HAlignRight; //(ExcelHAlign)3;
-                    worksheet.Range["G1"].Text = (string)expedicaoColetaDados1.txtPlaca.Content;
-                    worksheet.Range["G1"].CellStyle.Font.Size = 15.0;
-                    worksheet.Range["G1"].CellStyle.Font.Bold = true;
-                    worksheet.Range["G1:H1"].Merge();
-                    worksheet.Range["A2"].Text = "COD";
-                    worksheet.Range["B2"].Text = "local Shoppings";
-                    worksheet.Range["C2"].Text = "Nome Caixa";
-                    worksheet.Range["D2"].Text = "QTD";
-                    worksheet.Range["E2"].Text = "Planilha";
-                    worksheet.Range["F2"].Text = "Descrição";
-                    worksheet.Range["G2"].Text = "Liquido";
-                    worksheet.Range["H2"].Text = "Bruto";
-                    worksheet.Range["I2"].Text = "Controlado";
-                    workbook.SetPaletteColor(8, Color.FromArgb((int)byte.MaxValue, 174, 33));
-                    headerStyle = workbook.Styles.Add("HeaderStyle");
-                    headerStyle.BeginUpdate();
-                    headerStyle.Color = Color.FromArgb((int)byte.MaxValue, 174, 33);
-                    headerStyle.Font.Bold = true;
-                    headerStyle.Borders[ExcelBordersIndex.EdgeLeft].LineStyle = ExcelLineStyle.Thin;
-                    headerStyle.Borders[ExcelBordersIndex.EdgeRight].LineStyle = ExcelLineStyle.Thin;
-                    headerStyle.Borders[ExcelBordersIndex.EdgeTop].LineStyle = ExcelLineStyle.Thin;
-                    headerStyle.Borders[ExcelBordersIndex.EdgeBottom].LineStyle = ExcelLineStyle.Thin;
-                    headerStyle.EndUpdate();
-                    workbook.SetPaletteColor(9, Color.FromArgb(239, 243, 247));
-                    bodyStyle = workbook.Styles.Add("BodyStyle");
-                    bodyStyle.BeginUpdate();
-                    bodyStyle.Borders[ExcelBordersIndex.EdgeLeft].LineStyle = ExcelLineStyle.Thin;
-                    bodyStyle.Borders[ExcelBordersIndex.EdgeRight].LineStyle = ExcelLineStyle.Thin;
-                    bodyStyle.Borders[ExcelBordersIndex.EdgeTop].LineStyle = ExcelLineStyle.Thin;
-                    bodyStyle.Borders[ExcelBordersIndex.EdgeBottom].LineStyle = ExcelLineStyle.Thin;
-                    bodyStyle.WrapText = true;
-                    bodyStyle.EndUpdate();
-
-                    IList list = await Task.Run(async () => await new ExpedicaoViewModel().GetPacklistCarregCaminhaoAsync(aprovado.SiglaServ, Dispatcher.Invoke(()=>txtPlaca.Content.ToString()), this.DataCarregamento));
-                    IRange range = worksheet.Range;
-
-                    //DefaultInterpolatedStringHandler interpolatedStringHandler = new DefaultInterpolatedStringHandler(4, 1);
-                    //interpolatedStringHandler.AppendLiteral("A3:H");
-                    //interpolatedStringHandler.AppendFormatted<int>(list.Count + 2);
-                    //string stringAndClear = interpolatedStringHandler.ToStringAndClear();
-
-                    range[$"A3:I{list.Count + 2}"].CellStyle = bodyStyle;
-                    worksheet.Rows[1].CellStyle = headerStyle;
-                    worksheet.ImportData(list, 3, 1, false);
-                    worksheet.PageSetup.PrintTitleColumns = "$A:$I";
-                    worksheet.PageSetup.PrintTitleRows = "$1:$2";
-                    worksheet.AutofitColumn(1);
-                    worksheet.SetColumnWidth(2, 30.0);
-                    worksheet.AutofitColumn(3);
-                    worksheet.AutofitColumn(4);
-                    worksheet.AutofitColumn(5);
-                    worksheet.SetColumnWidth(6, 60.0);
-                    worksheet.PageSetup.Orientation = ExcelPageOrientation.Landscape;
-                    worksheet.PageSetup.LeftMargin = 0.0;
-                    worksheet.PageSetup.RightMargin = 0.0;
-                    worksheet.PageSetup.TopMargin = 0.0;
-                    worksheet.PageSetup.BottomMargin = 0.5;
-                    worksheet.PageSetup.RightFooter = "&P";
-                    workbook.SaveAs(@$"{BaseSettings.CaminhoSistema}\Impressos\PACKING-LIST-SHOPPING.xlsx");
-                    workbook.Close();
-                    excelEngine.Dispose();
-                    Process.Start(new ProcessStartInfo(@$"{BaseSettings.CaminhoSistema}\Impressos\PACKING-LIST-SHOPPING.xlsx")
-                    {
-                        UseShellExecute = true
-                    });
+                    MessageBox.Show("Seleciona uma sigla por vez para gerar o packing-list", "Ação Abortada", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                    return;
                 }
+
+                string sigla = Dispatcher.Invoke(() => txtSigla.Content.ToString().Split(";")[0]);
+                AprovadoModel aprovado = await Task.Run(async () => await new AprovadoViewModel().GetAprovadoAsync(sigla));
+                IList list = await Task.Run(async () => await new ExpedicaoViewModel().GetPacklistCarregCaminhaoAsync(aprovado.SiglaServ, Dispatcher.Invoke(() => txtPlaca.Content.ToString()), DataCarregamento));
+
+                var caminho = Path.Combine(BaseSettings.CaminhoSistema, "Impressos", "PACKING-LIST-SHOPPING.xlsx");
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Packing List");
+                worksheet.Cell(1, 1).Value = aprovado.SiglaServ + " - " + aprovado.Nome;
+                worksheet.Range("A1:E1").Merge();
+                worksheet.Cell(1, 6).Value = "CAMINHÃO";
+                worksheet.Cell(1, 7).Value = Convert.ToString(txtPlaca.Content);
+                worksheet.Range("G1:H1").Merge();
+                worksheet.Range("A1:H1").Style.Font.Bold = true;
+                worksheet.Range("A1:H1").Style.Font.FontSize = 15;
+
+                var headers = new[] { "COD", "local Shoppings", "Nome Caixa", "QTD", "Planilha", "Descrição", "Liquido", "Bruto", "Controlado" };
+                for (var i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cell(2, i + 1).Value = headers[i];
+                }
+
+                InserirDados(worksheet, list, 3, false);
+                var usedRange = worksheet.Range(2, 1, Math.Max(list.Count + 2, 2), 9);
+                usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                worksheet.Range("A2:I2").Style.Fill.BackgroundColor = XLColor.FromArgb(255, 174, 33);
+                worksheet.Range("A2:I2").Style.Font.Bold = true;
+                worksheet.Columns().AdjustToContents();
+                worksheet.Column(2).Width = 30;
+                worksheet.Column(6).Width = 60;
+                worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+                worksheet.PageSetup.Margins.Left = 0;
+                worksheet.PageSetup.Margins.Right = 0;
+                worksheet.PageSetup.Margins.Top = 0;
+                worksheet.PageSetup.Margins.Bottom = 0.5;
+                workbook.SaveAs(caminho);
+
+                Process.Start(new ProcessStartInfo(caminho)
+                {
+                    UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {
-                int num = (int)MessageBox.Show(ex.Message);
+                _ = MessageBox.Show(ex.Message);
             }
-        }
-
-        private void itens_ItemsSourceChanged(object sender, Syncfusion.UI.Xaml.Grid.GridItemsSourceChangedEventArgs e)
-        {
-
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
@@ -1097,8 +744,6 @@ namespace Expedicao.Views
         {
             Microsoft.Win32.OpenFileDialog dialog = new();
 
-            //ConfCargaGerals
-            using AppDatabase db = new();
             try
             {
                 dialog = new Microsoft.Win32.OpenFileDialog
@@ -1111,54 +756,20 @@ namespace Expedicao.Views
 
                 string filename = dialog.FileName;
 
-                using ExcelEngine excelEngine = new();
-                IApplication application = excelEngine.Excel;
-                application.DefaultVersion = ExcelVersion.Xlsx;
-                IWorkbook workbook = application.Workbooks.OpenReadOnly(filename);
-                IWorksheet worksheet = workbook.Worksheets[0];
-
                 if (result == true)
                 {
-                    List<BarcodeModel> dadosExcel = worksheet.ExportData<BarcodeModel>(1, 1, 5000, 1);
-                    var volumes = dadosExcel.Where(x => x.barcode != null).ToList();
+                    var volumes = LerBarcodesDoExcel(filename);
 
                     if(txtPlaca.Content.ToString().Length == 0)
                         throw new InvalidOperationException("Precisa selecionar o romaneio");
 
-                    var strategy = db.Database.CreateExecutionStrategy();
-                     await strategy.ExecuteAsync(async () => 
-                     {
-                         using var transaction = db.Database.BeginTransaction();
-                         try
-                         {
-                             foreach (var volume in volumes)
-                             {
-                                 var vol = await db.ConfCargaGerals.FirstOrDefaultAsync(x=> x.Barcode == volume.barcode) ?? throw new InvalidOperationException("Existe código não carregado na lista enviada");
-                                 vol.Caminhao = txtPlaca.Content.ToString();
-                                 vol.Data = this.DataCarregamento;
-                                 vol.DataAltera = DateTime.Now.Date;
-                                 vol.AlteradoPor = Environment.UserName;
-                                 db.ConfCargaGerals.Update(vol);
-                                 await db.SaveChangesAsync();  
-                             }
-                             transaction.Commit();
-                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                             MessageBox.Show("volumes enviados alterado conforme Romaneio selecionado", "Operação Concluída");
-                         }
-                         catch (DbUpdateException ex)
-                         {
-                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                             transaction.Rollback();
-                             MessageBox.Show(ex?.InnerException?.Message, "Operação Cancelada");
-                         }
-                         catch(Exception ex)
-                         {
-                             Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                             transaction.Rollback();
-                             MessageBox.Show(ex?.Message, "Operação Cancelada");
-                         }
+                    await new ExpedicaoViewModel().AtualizarVolumesCarregadosAsync(
+                        volumes.Select(v => v.barcode),
+                        txtPlaca.Content.ToString(),
+                        this.DataCarregamento);
 
-                     });
+                    Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                    MessageBox.Show("volumes enviados alterado conforme Romaneio selecionado", "Operação Concluída");
                 }
             }
             catch (Exception ex)
@@ -1167,5 +778,70 @@ namespace Expedicao.Views
                 MessageBox.Show(ex.Message, "Operação Cancelada");
             }
         }
+        private static void ExportarListaParaExcel(IEnumerable dados, string caminho, string worksheetName)
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add(worksheetName);
+            InserirDados(worksheet, dados, 1, true);
+            worksheet.Columns().AdjustToContents();
+            Directory.CreateDirectory(Path.GetDirectoryName(caminho)!);
+            workbook.SaveAs(caminho);
+        }
+
+        private static void InserirDados(IXLWorksheet worksheet, IEnumerable dados, int linhaInicial, bool incluirCabecalho)
+        {
+            var lista = dados.Cast<object>().ToList();
+            if (lista.Count == 0)
+            {
+                return;
+            }
+
+            var propriedades = lista[0].GetType().GetProperties();
+            var linha = linhaInicial;
+            if (incluirCabecalho)
+            {
+                for (var coluna = 0; coluna < propriedades.Length; coluna++)
+                {
+                    worksheet.Cell(linha, coluna + 1).Value = propriedades[coluna].Name;
+                }
+                worksheet.Range(linha, 1, linha, propriedades.Length).Style.Font.Bold = true;
+                linha++;
+            }
+
+            foreach (var item in lista)
+            {
+                for (var coluna = 0; coluna < propriedades.Length; coluna++)
+                {
+                    worksheet.Cell(linha, coluna + 1).Value = XLCellValue.FromObject(propriedades[coluna].GetValue(item));
+                }
+                linha++;
+            }
+        }
+
+        private static void AdicionarLinhaInformacaoNf(IXLWorksheet worksheet, ref int row, string label, object? valor)
+        {
+            worksheet.Range(row, 1, row, 2).Merge().Value = label;
+            worksheet.Range(row, 3, row, 7).Merge().Value = valor?.ToString() ?? string.Empty;
+            worksheet.Range(row, 1, row, 7).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            worksheet.Range(row, 1, row, 7).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            worksheet.Range(row, 1, row, 2).Style.Font.Bold = true;
+            row++;
+        }
+
+        private static List<BarcodeModel> LerBarcodesDoExcel(string filename)
+        {
+            using var workbook = new XLWorkbook(filename);
+            var worksheet = workbook.Worksheets.First();
+            return worksheet.Column(1)
+                .CellsUsed()
+                .Select(c => c.GetString())
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => new BarcodeModel { barcode = v })
+                .ToList();
+        }
     }
 }
+
+
+
+

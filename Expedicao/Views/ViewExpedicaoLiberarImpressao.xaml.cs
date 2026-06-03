@@ -1,19 +1,8 @@
-﻿using Syncfusion.UI.Xaml.Grid;
-using Syncfusion.UI.Xaml.Grid.Helpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Telerik.Windows.Controls;
 
 namespace Expedicao.Views
 {
@@ -31,27 +20,29 @@ namespace Expedicao.Views
         {
             try
             {
-                itens.ItemsSource = (object)await Task.Run(async () => await new ExpedicaoViewModel().GetLiberarImpressaosAsync());
-                loadingDetalhes.Visibility = Visibility.Hidden;
+                itens.ItemsSource = await Task.Run(async () => await new ExpedicaoViewModel().GetLiberarImpressaosAsync());
+                loadingDetalhes.IsBusy = false;
             }
             catch (Exception ex)
             {
+                loadingDetalhes.IsBusy = false;
                 MessageBox.Show(ex.Message);
             }
         }
 
-        private async void itens_CurrentCellValueChanged(object sender, CurrentCellValueChangedEventArgs e)
+        private async void itens_CellEditEnded(object sender, GridViewCellEditEndedEventArgs e)
         {
             try
             {
-                LiberarImpressaoModel? liberarImpressao = e.Record as LiberarImpressaoModel;
-                CaixaModel caixaModel = await Task.Run(async () => await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao));
+                if (e.Cell?.Column is not GridViewCheckBoxColumn || e.Cell.DataContext is not LiberarImpressaoModel liberarImpressao)
+                    return;
+
+                await Task.Run(async () => await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao));
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-            this.itens.UpdateDataRow(e.RowColumnIndex.RowIndex);
         }
     }
 }

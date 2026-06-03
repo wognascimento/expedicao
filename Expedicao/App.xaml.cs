@@ -1,11 +1,15 @@
-﻿using BibliotecasSIG;
+using BibliotecasSIG;
+using Expedicao.Localization;
 using System;
+using System.Globalization;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Markup;
+using Telerik.Windows.Controls;
 
 namespace Expedicao
 {
@@ -15,20 +19,21 @@ namespace Expedicao
     public partial class App : Application
     {
 
-        private const string UPDATE_URL = "http://192.168.0.49/downloads/expedicao/version.json";
         private readonly string CURRENT_VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private readonly DataBase BaseSettings = DataBase.Instance;
 
         public App()
         {
-            //Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MjM5MkAzMjM0MkUzMTJFMzlZRnNmeEdKa0haRGU0S0MyZUR3b05vcDJFNURBbnFRTi9STUVidExydWswPQ==");
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MTU4NUAzMjM3MkUzMTJFMzluT08wbzRnYm4zUlFDOVRzWVpYbUtuSEl0aUhTZmNMYjQxekhrV0NVRnlzPQ==");
+            BaseSettings.LoadFromConfiguration();
+            var culture = new CultureInfo("pt-BR");
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
-            DataBase BaseSettings = DataBase.Instance;
-            BaseSettings.Database = DateTime.Now.Year.ToString();
-            BaseSettings.Host = "192.168.0.23";
-            BaseSettings.Username = Environment.UserName;
-            BaseSettings.Password = "123mudar";
-            BaseSettings.ConnectionString = $"Host={BaseSettings.Host};Database={BaseSettings.Database};Username={BaseSettings.Username};Password={BaseSettings.Password}";
+            LocalizationManager.Manager = new SigTelerikLocalizationManager();
+            StyleManager.ApplicationTheme = new Windows11Theme();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -52,7 +57,10 @@ namespace Expedicao
         {
             try
             {
-                var updateChecker = new UpdateChecker(UPDATE_URL, CURRENT_VERSION);
+                if (string.IsNullOrWhiteSpace(BaseSettings.UpdateInfoUrl))
+                    return;
+
+                var updateChecker = new UpdateChecker(BaseSettings.UpdateInfoUrl, CURRENT_VERSION);
                 var updateInfo = await updateChecker.CheckForUpdatesAsync();
 
                 var updateInfoJson = JsonSerializer.Serialize<UpdateInfo>(updateInfo);

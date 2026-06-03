@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+             xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
              xmlns:local="clr-namespace:Expedicao.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" 
@@ -16,99 +16,85 @@
             <RowDefinition/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <syncfusion:ToolBarAdv GripperVisibility="Hidden" OverflowButtonVisibility="Hidden" Band="1">
-            <syncfusion:ButtonAdv 
-                Click="RibbonButton_Click" 
-                SizeMode="Large" 
-                LargeIcon="/icon/icons8-caminhao-interestadual-32.png"
-                SmallIcon="/icon/icons8-caminhao-interestadual-32.png" 
-                IconWidth="32" 
-                IconHeight="32"
-                Content="Carregar Romaneio" 
-                Label="Carregar Romaneio"/>
+        <ToolBar Grid.Row="0">
+            <telerik:RadButton Click="RibbonButton_Click" Padding="6,3">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/icon/icons8-caminhao-interestadual-32.png" Width="24" Height="24" Margin="0,0,4,0"/>
+                    <TextBlock Text="Carregar Romaneio"/>
+                </StackPanel>
+            </telerik:RadButton>
             <Separator/>
-            <syncfusion:ButtonAdv 
-                Click="RibbonButton_Click_1" 
-                SizeMode="Large" 
-                LargeIcon="/icon/icons8-alimentacao-de-papel-32.png"
-                SmallIcon="/icon/icons8-alimentacao-de-papel-32.png" 
-                IconWidth="32" 
-                IconHeight="32"
-                Content="Lookup Itens" 
-                Label="Lookup Itens"/>
+            <telerik:RadButton Click="RibbonButton_Click_1" Padding="6,3">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/icon/icons8-alimentacao-de-papel-32.png" Width="24" Height="24" Margin="0,0,4,0"/>
+                    <TextBlock Text="Lookup Itens"/>
+                </StackPanel>
+            </telerik:RadButton>
             <Separator/>
-            <syncfusion:ButtonAdv 
-                Click="RibbonButton_Click_2" 
-                SizeMode="Large" 
-                LargeIcon="/icon/icons8-enviar-documento-32.png"    
-                SmallIcon="/icon/icons8-enviar-documento-32.png" 
-                IconWidth="32" 
-                IconHeight="32"    
-                Content="Enviar Itens Carregados" 
-                Label="Enviar Itens Carregados"/>
+            <telerik:RadButton Click="RibbonButton_Click_2" Padding="6,3">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/icon/icons8-enviar-documento-32.png" Width="24" Height="24" Margin="0,0,4,0"/>
+                    <TextBlock Text="Enviar Itens Carregados"/>
+                </StackPanel>
+            </telerik:RadButton>
             <Separator/>
-            <syncfusion:ButtonAdv 
-                Click="RibbonButton_Click_3" 
-                SizeMode="Large"      
-                LargeIcon="/icon/icons8-enviar-documento-por-e-mail-32.png"          
-                SmallIcon="/icon/icons8-enviar-documento-por-e-mail-32.png" 
-                IconWidth="32" 
-                IconHeight="32"     
-                Content="Solicitar Nota Fiscal" 
-                Label="Solicitar Nota Fiscal"/>
+            <telerik:RadButton Click="RibbonButton_Click_3" Padding="6,3">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/icon/icons8-enviar-documento-por-e-mail-32.png" Width="24" Height="24" Margin="0,0,4,0"/>
+                    <TextBlock Text="Solicitar Nota Fiscal"/>
+                </StackPanel>
+            </telerik:RadButton>
             <Separator/>
-            <syncfusion:ButtonAdv 
-                Click="ButtonAdv_Click" 
-                SizeMode="Large" 
-                LargeIcon="/icon/checklist.png"      
-                SmallIcon="/icon/checklist.png" 
-                IconWidth="32" 
-                IconHeight="32" 
-                Content="Pack List"         
-                Label="Pack List"/>
+            <telerik:RadButton Click="ButtonAdv_Click" Padding="6,3">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/icon/checklist.png" Width="24" Height="24" Margin="0,0,4,0"/>
+                    <TextBlock Text="Pack List"/>
+                </StackPanel>
+            </telerik:RadButton>
             <Separator/>
-            <syncfusion:ButtonAdv 
-                Click="AlterarDados_Click" 
-                LargeIcon="{x:Null}"      
-                SmallIcon="{x:Null}" 
-                Content="Alterar Volumes"         
-                Label="Alterar Volumes" 
-                Width="60"/>
-        </syncfusion:ToolBarAdv>
-        <syncfusion:SfDataGrid ItemsSourceChanged="itens_ItemsSourceChanged" x:Name="itens" Grid.Row="2"
-                           ColumnSizer="AutoWithLastColumnFill" AllowFiltering="True" AutoGenerateColumns="False">
-            <syncfusion:SfDataGrid.Columns>
-                <syncfusion:GridTextColumn MappingName="planilha"/>
-                <syncfusion:GridTextColumn MappingName="descricao_completa"/>
-                <syncfusion:GridTextColumn MappingName="unidade"/>
-                <syncfusion:GridNumericColumn MappingName="qtd_expedida"/>
-                <syncfusion:GridTextColumn MappingName="nome_caixa"/>
-                <syncfusion:GridTextColumn MappingName="setor"/>
-                <syncfusion:GridTextColumn MappingName="barcode"/>
-                <syncfusion:GridNumericColumn MappingName="m3_volume"/>
-                <syncfusion:GridTextColumn MappingName="item_memorial"/>
-                <syncfusion:GridTextColumn MappingName="baia_caminhao"/>
-                <syncfusion:GridTextColumn MappingName="endereco" ColumnSizer="SizeToCells"/>
-            </syncfusion:SfDataGrid.Columns>
-        </syncfusion:SfDataGrid>
-        <Grid x:Name="gCaminhoes" Row="2" Visibility="Hidden" HorizontalAlignment="Center" Width="600"
+            <telerik:RadButton Click="AlterarDados_Click" Padding="6,3" Content="Alterar Volumes"/>
+        </ToolBar>
+        <telerik:RadGridView x:Name="itens" Grid.Row="2"
+                             AutoGenerateColumns="False"
+                             IsFilteringAllowed="True"
+                             ShowGroupPanel="False"
+                             CanUserResizeColumns="True"
+                             IsReadOnly="True">
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Planilha}" Header="planilha"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding DescricaoCompleta}" Header="descricao_completa"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Unidade}" Header="unidade"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding QtdExpedida}" Header="qtd_expedida" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding NomeCaixa}" Header="nome_caixa"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Barcode}" Header="barcode"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding M3Volume}" Header="m3_volume" DataFormatString="{}{0:N2}"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding ItemMemorial}" Header="item_memorial"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding BaiaCaminhao}" Header="baia_caminhao"/>
+                <telerik:GridViewDataColumn DataMemberBinding="{Binding Endereco}" Header="endereco"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+        <Grid x:Name="gCaminhoes" Grid.Row="2" Visibility="Hidden" HorizontalAlignment="Center" Width="600"
           VerticalAlignment="Center" Height="450">
-            <syncfusion:SfDataGrid x:Name="caminoes" AllowFiltering="True" ColumnSizer="AutoWithLastColumnFill"
-                             AutoGenerateColumns="False" AllowEditing="True">
-                <syncfusion:SfDataGrid.Columns>
-                    <syncfusion:GridTextColumn MappingName="sigla" AllowEditing="True"/>
-                    <syncfusion:GridNumericColumn MappingName="caminao" NumberDecimalDigits="0"/>
-                    <syncfusion:GridNumericColumn MappingName="volumes" NumberDecimalDigits="0"/>
-                    <syncfusion:GridCheckBoxColumn MappingName="selecao"/>
-                </syncfusion:SfDataGrid.Columns>
-            </syncfusion:SfDataGrid>
+            <telerik:RadGridView x:Name="caminoes"
+                                 AutoGenerateColumns="False"
+                                 IsFilteringAllowed="True"
+                                 ShowGroupPanel="False"
+                                 CanUserResizeColumns="True"
+                                 IsReadOnly="False">
+                <telerik:RadGridView.Columns>
+                    <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla}" Header="sigla"/>
+                    <telerik:GridViewDataColumn DataMemberBinding="{Binding caminao}" Header="caminao" DataFormatString="{}{0:N0}"/>
+                    <telerik:GridViewDataColumn DataMemberBinding="{Binding volumes}" Header="volumes" DataFormatString="{}{0:N0}"/>
+                    <telerik:GridViewCheckBoxColumn DataMemberBinding="{Binding selecao}" Header="selecao"/>
+                </telerik:RadGridView.Columns>
+            </telerik:RadGridView>
             <Border x:Name="loadingCaminhoes" Height="60" VerticalAlignment="Bottom" Background="Black"
               BorderBrush="Black" BorderThickness="1" Opacity="50">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                    <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                    <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                           AnimationType="Gear" Control.Background="Black"/>
-                </StackPanel>
+                <telerik:RadBusyIndicator Margin="5"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"
+                                          Foreground="Gray"
+                                          IsBusy="True"/>
             </Border>
             <Border x:Name="BtDownload" Height="60" VerticalAlignment="Bottom" BorderThickness="1" Opacity="50"
               Visibility="Hidden">
@@ -132,11 +118,11 @@
         </StatusBar>
         <Border x:Name="loading" Height="60" Grid.Row="2" VerticalAlignment="Bottom" Background="Black"
             BorderBrush="Black" BorderThickness="1" Opacity="50">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-                <TextBlock Margin="5" VerticalAlignment="Center" FontSize="16" Foreground="White"/>
-                <syncfusion:SfBusyIndicator FrameworkElement.Margin="5" FrameworkElement.VerticalAlignment="Center" Control.Foreground="Gray"
-                         AnimationType="Gear" Control.Background="Black"/>
-            </StackPanel>
+            <telerik:RadBusyIndicator Margin="5"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Center"
+                                      Foreground="Gray"
+                                      IsBusy="True"/>
         </Border>
     </Grid>
 
