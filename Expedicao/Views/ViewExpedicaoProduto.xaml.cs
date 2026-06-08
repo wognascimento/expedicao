@@ -78,7 +78,7 @@ namespace Expedicao.Views
                 if (vm.ChkDetail is null)
                     return;
 
-                Exped.ItemsSource = await Task.Run(() => vm.GetExpedsAsync(vm.ChkDetail.CodDetalhesCompl));
+                vm.Expeds = await Task.Run(() => vm.GetExpedsAsync(vm.ChkDetail.CodDetalhesCompl));
                 loadingExped.Visibility = Visibility.Hidden;
             }
             catch (Exception ex)
@@ -133,12 +133,13 @@ namespace Expedicao.Views
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
                 data.CodVol = $"{aprovado?.SiglaServ}-{data.Volume}";
                 ExpedModel expedModel = await Task.Run(() => vm.AddExpedAsync(data));
+                AtualizarLinhaExped(data, expedModel);
 
                 if (vm.Expeds is not null)
                 {
                     var index = vm.Expeds.IndexOf(data);
                     if (index >= 0)
-                        vm.Expeds[index] = expedModel;
+                        vm.Expeds[index] = data;
                 }
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
@@ -148,6 +149,72 @@ namespace Expedicao.Views
                 MessageBox.Show(ex.Message);
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
+        }
+
+        private void Exped_CellEditEnded(object sender, GridViewCellEditEndedEventArgs e)
+        {
+            if (e.Cell?.DataContext is not ExpedModel data)
+                return;
+
+            if (!TemMedidasInformadas(data))
+                return;
+
+            if (!string.IsNullOrWhiteSpace(data.ModeloCaixa) &&
+                !string.Equals(data.ModeloCaixa, "CX", StringComparison.OrdinalIgnoreCase))
+            {
+                data.ModeloCaixa = null;
+                Exped.Rebind();
+            }
+        }
+
+        private void Exped_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter && e.Key != Key.Return)
+                return;
+
+            e.Handled = true;
+
+            if (Keyboard.FocusedElement is UIElement focusedElement)
+            {
+                var direction = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)
+                    ? System.Windows.Input.FocusNavigationDirection.Previous
+                    : System.Windows.Input.FocusNavigationDirection.Next;
+
+                focusedElement.MoveFocus(new TraversalRequest(direction));
+            }
+        }
+
+        private static void AtualizarLinhaExped(ExpedModel destino, ExpedModel origem)
+        {
+            destino.CodExped = origem.CodExped;
+            destino.QtdExpedida = origem.QtdExpedida;
+            destino.VolExp = origem.VolExp;
+            destino.VolTotExp = origem.VolTotExp;
+            destino.Pl = origem.Pl;
+            destino.Pb = origem.Pb;
+            destino.Largura = origem.Largura;
+            destino.Altura = origem.Altura;
+            destino.Profundidade = origem.Profundidade;
+            destino.CodVol = origem.CodVol;
+            destino.CadastradoPor = origem.CadastradoPor;
+            destino.Quando = origem.Quando;
+            destino.BaiaVirtual = origem.BaiaVirtual;
+            destino.ModeloCaixa = origem.ModeloCaixa;
+            destino.CodDetalhesCompl = origem.CodDetalhesCompl;
+            destino.AlteradoPor = origem.AlteradoPor;
+            destino.AlteradoQuando = origem.AlteradoQuando;
+            destino.InseridoPor = origem.InseridoPor;
+            destino.InseridoEm = origem.InseridoEm;
+            destino.Operacao = origem.Operacao;
+            destino.Volume = origem.Volume;
+            destino.nf_emitida = origem.nf_emitida;
+        }
+
+        private static bool TemMedidasInformadas(ExpedModel data)
+        {
+            return data.Largura.HasValue &&
+                   data.Altura.HasValue &&
+                   data.Profundidade.HasValue;
         }
 
         private void Exped_RowValidating(object sender, GridViewRowValidatingEventArgs e)
@@ -221,8 +288,13 @@ namespace Expedicao.Views
                                                 return;
                                             }
                                         }
-                                        if (rowData.ModeloCaixa != null && rowData.ModeloCaixa != "CX")
+                                        if (!string.IsNullOrWhiteSpace(rowData.ModeloCaixa) && rowData.ModeloCaixa != "CX")
                                         {
+                                            if (TemMedidasInformadas(rowData))
+                                            {
+                                                AplicarErroLinha(e, "Quando informar largura, altura e profundidade, só pode selecionar o modelo de caixa CX.", "ModeloCaixa");
+                                                return;
+                                            }
                                             if (rowData.Largura.HasValue)
                                             {
                                                 AplicarErroLinha(e, "Precisa informar apenas tipo da caixa ou as medidas.", "Largura");
