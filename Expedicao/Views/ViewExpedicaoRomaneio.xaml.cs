@@ -117,6 +117,7 @@ namespace Expedicao.Views
         private void btnNovo_Click(object sender, RoutedEventArgs e)
         {
             Limpar();
+            btnGravar.IsEnabled = true;
         }
 
         private async void btnGravar_Click(object sender, RoutedEventArgs e)
@@ -126,44 +127,61 @@ namespace Expedicao.Views
             try
             {
                 RomaneioViewModel vm = (RomaneioViewModel)DataContext;
+                var romaneiosSalvos = new List<RomaneioModel>();
+                var novoRomaneio = vm.Romaneio == null || !vm.Romaneio.cod_romaneiro.HasValue || vm.Romaneio.cod_romaneiro.Value <= 0;
                 //if (this.Romaneio == null)
                 //{
                 foreach (AprovadoModel selectedItem in shopping_destino.SelectedItems)
                 {
-                        RomaneioModel Romaneio = new RomaneioModel();
-                        Romaneio.cod_romaneiro = vm.Romaneio?.cod_romaneiro;
-                        Romaneio.operacao = operacao.SelectedItem?.ToString();
-                        Romaneio.data_carregamento = data_carregamento.SelectedDate!.Value;
-                        Romaneio.hora_chegada = hora_chegada.SelectedTime!.Value;
-                        Romaneio.shopping_destino = selectedItem.SiglaServ;
-                        Romaneio.numero_caminhao = ToLong(numero_caminhao.Value);
-                        Romaneio.local_carregamento = local_carregamento.Text;
-                        Romaneio.codtransportadora = (codtransportadora.SelectedItem as TranportadoraModel).CodTransportadora;
-                        Romaneio.nome_motorista = nome_motorista.Text;
-                        Romaneio.numero_cnh = numero_cnh.Text;
-                        Romaneio.telefone_motorista = telefone_motorista.Text;
-                        Romaneio.condicao_caminhao = condicao_caminhao.SelectedItem?.ToString();
-                        Romaneio.placa_caminhao = placa_caminhao.Text;
-                        Romaneio.placa_cidade = placa_cidade.Text;
-                        Romaneio.placa_estado = placa_estado.Text;
-                        Romaneio.placa_carroceria = placa_carroceria.Text;
-                        Romaneio.placa_carroceria_cidade = placa_carroceria_cidade.Text;
-                        Romaneio.placa_carroceria_estado = placa_carroceria_estado.Text;
-                        Romaneio.bau_altura = ToDouble(bau_altura.Value);
-                        Romaneio.bau_largura = ToDouble(bau_largura.Value);
-                        Romaneio.bau_profundidade = ToDouble(bau_profundidade.Value);
-                        Romaneio.m3_carregado = ToDouble(m3_carregado.Value);
-                        Romaneio.bau_soba = ToDouble(bau_soba.Value);
-                        Romaneio.m3_portaria = ToDouble(m3_portaria.Value);
-                        Romaneio.nome_conferente = nome_conferente.Text;
-                        Romaneio.num_lacres = num_lacres.Text;
-                        Romaneio.numero_container = numero_container.Text;
-                        Romaneio.data_hora_liberacao = dateSaida.SelectedDate;
-                        RomaneioModel romaneioModel = await vm.SaveAsync(Romaneio);
+                    RomaneioModel Romaneio = new()
+                    {
+                        cod_romaneiro = vm.Romaneio?.cod_romaneiro,
+                        operacao = operacao.SelectedItem?.ToString(),
+                        data_carregamento = data_carregamento.SelectedDate!.Value,
+                        hora_chegada = hora_chegada.SelectedTime!.Value,
+                        shopping_destino = selectedItem.SiglaServ,
+                        numero_caminhao = ToLong(numero_caminhao.Value),
+                        local_carregamento = local_carregamento.Text,
+                        codtransportadora = (codtransportadora.SelectedItem as TranportadoraModel).CodTransportadora,
+                        nome_motorista = nome_motorista.Text,
+                        numero_cnh = numero_cnh.Text,
+                        telefone_motorista = telefone_motorista.Text,
+                        condicao_caminhao = condicao_caminhao.SelectedItem?.ToString(),
+                        placa_caminhao = placa_caminhao.Text,
+                        placa_cidade = placa_cidade.Text,
+                        placa_estado = placa_estado.Text,
+                        placa_carroceria = placa_carroceria.Text,
+                        placa_carroceria_cidade = placa_carroceria_cidade.Text,
+                        placa_carroceria_estado = placa_carroceria_estado.Text,
+                        bau_altura = ToDouble(bau_altura.Value),
+                        bau_largura = ToDouble(bau_largura.Value),
+                        bau_profundidade = ToDouble(bau_profundidade.Value),
+                        m3_carregado = ToDouble(m3_carregado.Value),
+                        bau_soba = ToDouble(bau_soba.Value),
+                        m3_portaria = ToDouble(m3_portaria.Value),
+                        nome_conferente = nome_conferente.Text,
+                        num_lacres = num_lacres.Text,
+                        numero_container = numero_container.Text,
+                        data_hora_liberacao = dateSaida.SelectedDate
+                    };
+                    RomaneioModel romaneioModel = await vm.SaveAsync(Romaneio);
+                    romaneiosSalvos.Add(romaneioModel);
                 }
                 //}
-                MessageBox.Show("Romaneio salvo com sucesso...", "Romaneio", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                Limpar();
+                if (romaneiosSalvos.Count == 1)
+                {
+                    vm.Romaneio = romaneiosSalvos[0];
+                    this.cod_romaneiro.Value = romaneiosSalvos[0].cod_romaneiro;
+                    MessageBox.Show($"Romaneio {romaneiosSalvos[0].cod_romaneiro} salvo com sucesso.", "Romaneio", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                }
+                else
+                {
+                    var codigos = string.Join(", ", romaneiosSalvos.Select(r => r.cod_romaneiro));
+                    MessageBox.Show($"Romaneios salvos com sucesso: {codigos}", "Romaneio", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                }
+
+                if (novoRomaneio)
+                    btnGravar.IsEnabled = false;
             }
             catch (Exception ex)
             {
@@ -173,6 +191,9 @@ namespace Expedicao.Views
 
         private void Limpar()
         {
+            if (DataContext is RomaneioViewModel vm)
+                vm.Romaneio = null;
+
             this.operacao.SelectedValue = null;
             this.operacao.IsDropDownOpen = true;
             this.cod_romaneiro.Value = 0;
@@ -458,7 +479,10 @@ namespace Expedicao.Views
             */
 
             using var conn = new NpgsqlConnection(BaseSettings.ConnectionString);
-            var sqlSelect = @"SELECT * FROM expedicao.t_romaneio WHERE cod_romaneiro = @cod_romaneiro";
+            var sqlSelect = $@"
+                SELECT {RomaneioSelectColumns}
+                FROM expedicao.t_romaneio
+                WHERE cod_romaneiro = @cod_romaneiro";
             var existente = await conn.QueryFirstOrDefaultAsync<RomaneioModel?>(sqlSelect, new { model.cod_romaneiro });
             if (existente == null)
             {
@@ -650,5 +674,45 @@ namespace Expedicao.Views
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
+
+        private const string RomaneioSelectColumns = @"
+            cod_romaneiro,
+            data_carregamento::timestamp AS data_carregamento,
+            hora_chegada,
+            codtransportadora,
+            nome_motorista,
+            placa_caminhao,
+            placa_cidade,
+            placa_estado,
+            placa_carroceria,
+            placa_carroceria_cidade,
+            placa_carroceria_estado,
+            numero_container,
+            bau_altura,
+            bau_largura,
+            bau_profundidade,
+            m3_carregado,
+            bau_soba,
+            condicao_caminhao,
+            inicio_carregamento,
+            termino_carregamento,
+            numero_caminhao,
+            shopping_destino,
+            local_carregamento,
+            num_lacres,
+            nome_conferente,
+            numero_cnh,
+            telefone_motorista,
+            m3_portaria,
+            operacao,
+            conferente_descarregamento,
+            lacre_chegada,
+            hora_inicio_descarregamento,
+            hora_termino_descarregamento,
+            data_inicio_descarregamento::timestamp AS data_inicio_descarregamento,
+            data_termino_descarregamento::timestamp AS data_termino_descarregamento,
+            data_saida_caminhao::timestamp AS data_saida_caminhao,
+            hora_saida_caminhao,
+            data_hora_liberacao";
     }
 }

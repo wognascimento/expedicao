@@ -182,7 +182,7 @@
             </StackPanel>
 
             <StackPanel Grid.Row="12" Grid.Column="0" Orientation="Horizontal">
-                <telerik:RadButton Click="btnNovo_Click" x:Name="btnNovo" Content="NOVO" Width="90"/>
+                <telerik:RadButton Click="btnNovo_Click" x:Name="btnNovo" Content="LIMPAR" Width="90"/>
                 <telerik:RadButton Click="btnGravar_Click" x:Name="btnGravar" Content="GRAVAR" Width="90" Margin="10,0,0,0"/>
             </StackPanel>
         </Grid>
