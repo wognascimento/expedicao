@@ -36,7 +36,7 @@ namespace Expedicao.Views
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 ViewCubagemClienteZeradaViewModel vm = (ViewCubagemClienteZeradaViewModel)DataContext;
-                vm.Cubagens = await Task.Run(vm.GetItensAsync);
+                vm.Cubagens = await vm.GetItensAsync();
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
             catch (Exception ex)
@@ -53,7 +53,7 @@ namespace Expedicao.Views
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 ViewCubagemClienteZeradaViewModel vm = (ViewCubagemClienteZeradaViewModel)DataContext;
                 CubagemPrevistaClienteModel data = (CubagemPrevistaClienteModel)e.Row.Item;
-                await Task.Run(() => vm.SaveItemAsync(data));
+                await vm.SaveItemAsync(data);
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
             catch (Exception ex)

@@ -20,7 +20,7 @@ namespace Expedicao.Views
         {
             try
             {
-                itens.ItemsSource = await Task.Run(async () => await new ExpedicaoViewModel().GetLiberarImpressaosAsync());
+                itens.ItemsSource = await new ExpedicaoViewModel().GetLiberarImpressaosAsync();
                 loadingDetalhes.IsBusy = false;
             }
             catch (Exception ex)
@@ -37,7 +37,7 @@ namespace Expedicao.Views
                 if (e.Cell?.Column is not GridViewCheckBoxColumn || e.Cell.DataContext is not LiberarImpressaoModel liberarImpressao)
                     return;
 
-                await Task.Run(async () => await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao));
+                await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao);
             }
             catch (Exception ex)
             {

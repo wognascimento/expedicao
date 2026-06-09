@@ -31,7 +31,7 @@ namespace Expedicao.Views
         {
             try
             {
-                itens.ItemsSource = await Task.Run(new ExpedicaoViewModel().GetEtiquetaVolumesAsync);
+                itens.ItemsSource = await new ExpedicaoViewModel().GetEtiquetaVolumesAsync();
                 loadingDetalhes.IsBusy = false;
                 loadingDetalhes.Visibility = Visibility.Hidden;
             }
@@ -366,7 +366,7 @@ namespace Expedicao.Views
                     NomeCaixa = row.CodVol,
                     Impresso = true
                 };
-                CaixaModel caixaModel = await Task.Run(async () => await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao));
+                CaixaModel caixaModel = await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao);
                 //client = null;
 
             

@@ -86,8 +86,8 @@ public partial class ViewExpedicaoExcel : UserControl
     {
         try
         {
-            await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Hidden));
-            await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = true));
+            btnExcel.Visibility = Visibility.Hidden;
+            sfBusyIndicatorExcel.IsBusy = true;
 
             object dados = new();
 
@@ -128,8 +128,8 @@ public partial class ViewExpedicaoExcel : UserControl
                 workbook.SaveAs(arquivo);
             }
 
-            await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Visible));
-            await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = false));
+            btnExcel.Visibility = Visibility.Visible;
+            sfBusyIndicatorExcel.IsBusy = false;
 
             Process.Start(new ProcessStartInfo(arquivo)
             {
@@ -138,8 +138,8 @@ public partial class ViewExpedicaoExcel : UserControl
         }
         catch (Exception ex)
         {
-            await Task.Run(() => Dispatcher.Invoke(() => btnExcel.Visibility = Visibility.Visible));
-            await Task.Run(() => Dispatcher.Invoke(() => sfBusyIndicatorExcel.IsBusy = false));
+            btnExcel.Visibility = Visibility.Visible;
+            sfBusyIndicatorExcel.IsBusy = false;
             MessageBox.Show(ex.Message);
         }
         

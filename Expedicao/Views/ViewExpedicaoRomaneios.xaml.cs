@@ -34,7 +34,7 @@ namespace Expedicao.Views
             try
             {
                 RomaneioViewModel vm = (RomaneioViewModel)DataContext;
-                vm.Romaneios = await Task.Run(vm.GetRomaneiosAsync);
+                vm.Romaneios = await vm.GetRomaneiosAsync();
                 loadingDetalhes.IsBusy = false;
                 loadingDetalhes.Visibility = Visibility.Hidden;
 

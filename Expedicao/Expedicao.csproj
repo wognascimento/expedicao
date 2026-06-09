@@ -7,7 +7,7 @@
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>icon\logo-roxo.ico</ApplicationIcon>
-		<AssemblyVersion>2.0.0.1</AssemblyVersion>
+		<AssemblyVersion>2.0.0.2</AssemblyVersion>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 

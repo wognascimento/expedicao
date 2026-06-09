@@ -74,6 +74,7 @@
             CellEditEnded="Exped_CellEditEnded"
             Deleting="Exped_Deleting"
             PreviewKeyDown="Exped_PreviewKeyDown"
+            PreviewMouseRightButtonDown="Exped_PreviewMouseRightButtonDown"
             AutoGenerateColumns="False" 
             GroupRenderMode="Flat"
             ShowGroupPanel="False"
@@ -81,8 +82,16 @@
             CanUserInsertRows="True"
             CanUserDeleteRows="True"
             IsReadOnly="False"
-            SelectionUnit="FullRow"
-            SelectionMode="Extended">
+            SelectionUnit="Mixed"
+            SelectionMode="Extended"
+            ClipboardCopyMode="Cells"
+            ClipboardPasteMode="Cells, InsertNewRows">
+            <telerik:RadGridView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copiar linha" Click="Exped_CopyRow_Click"/>
+                    <MenuItem Header="Colar" Click="Exped_Paste_Click"/>
+                </ContextMenu>
+            </telerik:RadGridView.ContextMenu>
             <telerik:RadGridView.Columns>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding QtdExpedida}" DataFormatString="{}{0:N2}"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding VolExp}" DataFormatString="{}{0:N0}"/>
@@ -91,9 +100,10 @@
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding Pb}" DataFormatString="{}{0:N2}"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding Largura}" DataFormatString="{}{0:N3}"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding Altura}" DataFormatString="{}{0:N3}"/>
-                <telerik:GridViewDataColumn DataMemberBinding="{Binding Profundidade}" DataFormatString="{}{0:N3}"/>
+                <telerik:GridViewDataColumn UniqueName="Profundidade" DataMemberBinding="{Binding Profundidade}" DataFormatString="{}{0:N3}"/>
                 <telerik:GridViewComboBoxColumn 
                     x:Name="Caixas" 
+                    UniqueName="ModeloCaixa"
                     ItemsSource="{Binding DataContext.Medidas, RelativeSource={RelativeSource AncestorType=telerik:RadGridView}}"
                     DataMemberBinding="{Binding ModeloCaixa}" 
                     SelectedValueMemberPath="NomeCaixa" 

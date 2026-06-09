@@ -4,11 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Telerik.Windows.Controls;
 using Telerik.Windows.Controls.GridView;
 
@@ -21,6 +24,7 @@ namespace Expedicao.Views
     {
 
         private ProdutoExpedidoModel ProdutoExpedido;
+        private bool _salvandoColagem;
 
         public ViewExpedicaoProduto()
         {
@@ -34,8 +38,8 @@ namespace Expedicao.Views
                 DataContext = new ExpedicaoProdutoViewModel();
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                vm.Aprovados = await Task.Run(vm.GetAprovadosAsync);
-                vm.Medidas = await Task.Run(vm.GetMedidasAsync);
+                vm.Aprovados = await vm.GetAprovadosAsync();
+                vm.Medidas = await vm.GetMedidasAsync();
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
             }
             catch (Exception ex)
@@ -57,7 +61,10 @@ namespace Expedicao.Views
 
                 this.loadingExped.Visibility = Visibility.Hidden;
                 this.loadingDetalhes.Visibility = Visibility.Visible;
-                vm.ChkDetails = await Task.Run(() => vm.GetProdutoExpedidos(aprovado.IdAprovado));
+                vm.ChkDetails = await vm.GetProdutoExpedidos(aprovado.IdAprovado);
+                dataGrid.FilterDescriptors.Clear();
+                Exped.FilterDescriptors.Clear();
+                vm.Expeds = [];
                 this.loadingDetalhes.Visibility = Visibility.Hidden;
             }
             catch (Exception ex)
@@ -78,7 +85,7 @@ namespace Expedicao.Views
                 if (vm.ChkDetail is null)
                     return;
 
-                vm.Expeds = await Task.Run(() => vm.GetExpedsAsync(vm.ChkDetail.CodDetalhesCompl));
+                vm.Expeds = await vm.GetExpedsAsync(vm.ChkDetail.CodDetalhesCompl);
                 loadingExped.Visibility = Visibility.Hidden;
             }
             catch (Exception ex)
@@ -96,6 +103,70 @@ namespace Expedicao.Views
             };
         }
 
+        private void Exped_CopyRow_Click(object sender, RoutedEventArgs e)
+        {
+            CopiarLinhasExped();
+        }
+
+        private async void Exped_Paste_Click(object sender, RoutedEventArgs e)
+        {
+            await ColarLinhasExpedAsync();
+        }
+
+        private void Exped_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var row = FindParent<GridViewRow>(e.OriginalSource as DependencyObject);
+            if (row?.Item is not ExpedModel item)
+                return;
+
+            Exped.SelectedItem = item;
+            Exped.CurrentItem = item;
+            row.IsSelected = true;
+        }
+
+        private async Task ColarLinhasExpedAsync()
+        {
+            if (_salvandoColagem)
+                return;
+
+            try
+            {
+                _salvandoColagem = true;
+                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
+
+                ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
+                if (vm.Expeds is null)
+                    return;
+
+                var linhasNovas = ObterLinhasExpedDoClipboard(vm);
+                if (linhasNovas.Count == 0)
+                    return;
+
+                foreach (var linha in linhasNovas)
+                {
+                    linha.CodDetalhesCompl ??= vm.ChkDetail?.CodDetalhesCompl;
+                    PrepararLinhaParaSalvar(linha);
+
+                    if (!LinhaValidaParaSalvar(linha, out var mensagem))
+                        throw new InvalidOperationException(mensagem);
+
+                    var salvo = await vm.AddExpedAsync(linha);
+                    vm.Expeds.Add(salvo);
+                }
+
+                Exped.Rebind();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Colar expedição", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _salvandoColagem = false;
+                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+            }
+        }
+
         private async void Exped_Deleting(object sender, GridViewDeletingEventArgs e)
         {
 
@@ -106,7 +177,7 @@ namespace Expedicao.Views
                     Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                     ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
                     var items = e.Items.OfType<ExpedModel>().ToList();
-                    await Task.Run(() => vm.DeleteExpedsAsync(items));
+                    await vm.DeleteExpedsAsync(items);
                     e.Cancel = false;
                     Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
                 }
@@ -131,8 +202,9 @@ namespace Expedicao.Views
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 AprovadoModel? aprovado = this.aprovados.SelectedItem as AprovadoModel;
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                data.CodVol = $"{aprovado?.SiglaServ}-{data.Volume}";
-                ExpedModel expedModel = await Task.Run(() => vm.AddExpedAsync(data));
+                var novaLinha = !data.CodExped.HasValue || data.CodExped.Value <= 0;
+                PrepararLinhaParaSalvar(data);
+                ExpedModel expedModel = await vm.AddExpedAsync(data);
                 AtualizarLinhaExped(data, expedModel);
 
                 if (vm.Expeds is not null)
@@ -143,6 +215,9 @@ namespace Expedicao.Views
                 }
 
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+
+                if (novaLinha && !_salvandoColagem)
+                    PosicionarParaNovaLinhaExped();
             }
             catch (Exception ex)
             {
@@ -167,12 +242,235 @@ namespace Expedicao.Views
             }
         }
 
+        private void PosicionarParaNovaLinhaExped()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Exped.Focus();
+                Exped.CurrentColumn = Exped.Columns.OfType<GridViewDataColumn>().FirstOrDefault();
+                Exped.BeginInsert();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void CopiarLinhasExped()
+        {
+            var linhas = Exped.SelectedItems.OfType<ExpedModel>().ToList();
+            if (linhas.Count == 0 && Exped.CurrentItem is ExpedModel item)
+                linhas.Add(item);
+
+            if (linhas.Count == 0)
+                return;
+
+            var texto = new StringBuilder();
+            foreach (var linha in linhas)
+            {
+                texto.AppendLine(string.Join('\t',
+                    FormatarClipboard(linha.QtdExpedida),
+                    FormatarClipboard(linha.VolExp),
+                    FormatarClipboard(linha.VolTotExp),
+                    FormatarClipboard(linha.Pl),
+                    FormatarClipboard(linha.Pb),
+                    FormatarClipboard(linha.Largura),
+                    FormatarClipboard(linha.Altura),
+                    FormatarClipboard(linha.Profundidade),
+                    linha.ModeloCaixa ?? string.Empty,
+                    FormatarClipboard(linha.Volume),
+                    linha.BaiaVirtual ?? string.Empty));
+            }
+
+            Clipboard.SetText(texto.ToString().TrimEnd());
+        }
+
+        private List<ExpedModel> ObterLinhasExpedDoClipboard(ExpedicaoProdutoViewModel vm)
+        {
+            if (!Clipboard.ContainsText())
+                return [];
+
+            var linhas = Clipboard.GetText()
+                .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Split('\t'))
+                .Where(colunas => colunas.Length >= 8)
+                .ToList();
+
+            var ultimoVolume = vm.Expeds?
+                .Where(e => e.Volume.HasValue)
+                .Select(e => e.Volume!.Value)
+                .DefaultIfEmpty(0)
+                .Max() ?? 0;
+
+            var resultado = new List<ExpedModel>();
+            foreach (var colunas in linhas)
+            {
+                resultado.Add(new ExpedModel
+                {
+                    CodDetalhesCompl = vm.ChkDetail?.CodDetalhesCompl,
+                    QtdExpedida = ConverterDouble(colunas.ElementAtOrDefault(0)),
+                    VolExp = ConverterInt(colunas.ElementAtOrDefault(1)),
+                    VolTotExp = ConverterInt(colunas.ElementAtOrDefault(2)),
+                    Pl = ConverterDouble(colunas.ElementAtOrDefault(3)),
+                    Pb = ConverterDouble(colunas.ElementAtOrDefault(4)),
+                    Largura = ConverterDouble(colunas.ElementAtOrDefault(5)),
+                    Altura = ConverterDouble(colunas.ElementAtOrDefault(6)),
+                    Profundidade = ConverterDouble(colunas.ElementAtOrDefault(7)),
+                    ModeloCaixa = NormalizarTexto(colunas.ElementAtOrDefault(8)),
+                    Volume = ++ultimoVolume,
+                    BaiaVirtual = NormalizarTexto(colunas.ElementAtOrDefault(10))
+                });
+            }
+
+            return resultado;
+        }
+
+        private void PrepararLinhaParaSalvar(ExpedModel data)
+        {
+            AprovadoModel? aprovado = aprovados.SelectedItem as AprovadoModel;
+            data.CodVol = $"{aprovado?.SiglaServ}-{data.Volume}";
+        }
+
+        private static string FormatarClipboard(double? valor)
+        {
+            return valor?.ToString("0.###", CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+
+        private static string FormatarClipboard(int? valor)
+        {
+            return valor?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+
+        private static double? ConverterDouble(string? texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+                return null;
+
+            texto = texto.Trim();
+            var culturas = new[]
+            {
+                CultureInfo.CurrentCulture,
+                CultureInfo.GetCultureInfo("pt-BR"),
+                CultureInfo.InvariantCulture
+            };
+
+            foreach (var cultura in culturas)
+            {
+                if (double.TryParse(texto, NumberStyles.Number, cultura, out var valor))
+                    return valor;
+            }
+
+            return null;
+        }
+
+        private static int? ConverterInt(string? texto)
+        {
+            var valor = ConverterDouble(texto);
+            return valor.HasValue ? Convert.ToInt32(valor.Value) : null;
+        }
+
+        private static string? NormalizarTexto(string? texto)
+        {
+            return string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+        }
+
+        private bool LinhaValidaParaSalvar(ExpedModel rowData, out string mensagem)
+        {
+            mensagem = string.Empty;
+
+            ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
+            if (!rowData.CodDetalhesCompl.HasValue)
+                return Falha("Erro ao selecionar a linha.", out mensagem);
+
+            if (!rowData.QtdExpedida.HasValue)
+                return Falha("qtd_expedida não pode ser nulo.", out mensagem);
+
+            if (vm.ChkDetail?.Qtd.HasValue == true &&
+                Math.Round((double)rowData.QtdExpedida, 2) > Math.Round((double)vm.ChkDetail.Qtd, 2))
+                return Falha("qtd_expedida não pode ser maior que qtd do cheklist.", out mensagem);
+
+            if (!rowData.VolExp.HasValue)
+                return Falha("vol_exp não pode ser nulo.", out mensagem);
+
+            if (!rowData.VolTotExp.HasValue)
+                return Falha("vol_tot_exp não pode ser nulo.", out mensagem);
+
+            if (!rowData.Pl.HasValue)
+                return Falha("pl não pode ser nulo.", out mensagem);
+
+            if (!rowData.Pb.HasValue)
+                return Falha("pb não pode ser nulo.", out mensagem);
+
+            if (rowData.ModeloCaixa == null)
+            {
+                if (!rowData.Largura.HasValue || !rowData.Altura.HasValue || !rowData.Profundidade.HasValue)
+                    return Falha("Precisa informar uma das formas de medida.", out mensagem);
+            }
+
+            if (!string.IsNullOrWhiteSpace(rowData.ModeloCaixa) && rowData.ModeloCaixa != "CX")
+            {
+                if (TemMedidasInformadas(rowData))
+                    return Falha("Quando informar largura, altura e profundidade, só pode selecionar o modelo de caixa CX.", out mensagem);
+
+                if (rowData.Largura.HasValue || rowData.Altura.HasValue || rowData.Profundidade.HasValue)
+                    return Falha("Precisa informar apenas tipo da caixa ou as medidas.", out mensagem);
+            }
+
+            if (rowData.ModeloCaixa == "CX" &&
+                (!rowData.Largura.HasValue || !rowData.Altura.HasValue || !rowData.Profundidade.HasValue))
+                return Falha("Com tipo de caixa CX informado, precisa informar as medidas.", out mensagem);
+
+            if (!rowData.Volume.HasValue)
+                return Falha("Informe o número do volume.", out mensagem);
+
+            return true;
+        }
+
+        private static bool Falha(string texto, out string mensagem)
+        {
+            mensagem = texto;
+            return false;
+        }
+
+        private static T? FindParent<T>(DependencyObject? child)
+            where T : DependencyObject
+        {
+            while (child != null)
+            {
+                if (child is T parent)
+                    return parent;
+
+                child = VisualTreeHelper.GetParent(child);
+            }
+
+            return null;
+        }
+
         private void Exped_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.C)
+            {
+                CopiarLinhasExped();
+                e.Handled = true;
+                return;
+            }
+
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.V)
+            {
+                _ = ColarLinhasExpedAsync();
+                e.Handled = true;
+                return;
+            }
+
             if (e.Key != Key.Enter && e.Key != Key.Return)
                 return;
 
             e.Handled = true;
+
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) &&
+                Exped.CurrentColumn?.UniqueName == "Profundidade")
+            {
+                Exped.CurrentColumn = Caixas;
+                Exped.Focus();
+                Exped.BeginEdit();
+                return;
+            }
 
             if (Keyboard.FocusedElement is UIElement focusedElement)
             {

@@ -32,7 +32,7 @@ namespace Expedicao.Views
         {
             try
             {
-                itens.ItemsSource = await Task.Run(async () => await new ExpedicaoViewModel().GetCaminhoesAsync(_siglas));
+                itens.ItemsSource = await new ExpedicaoViewModel().GetCaminhoesAsync(_siglas);
                 loadingDetalhes.IsBusy = false;
                 loadingDetalhes.Visibility = Visibility.Hidden;
                 loadingBtn.Visibility = Visibility.Visible;
@@ -56,7 +56,7 @@ namespace Expedicao.Views
                 {
                     if ((bool)item.selecao)
                     {
-                        var faltantes = await Task.Run(async () => await new ExpedicaoViewModel().GetItensFaltanteAsync(item.sigla, item.caminao));
+                        var faltantes = await new ExpedicaoViewModel().GetItensFaltanteAsync(item.sigla, item.caminao);
                         ItensFaltantes.AddRange(faltantes);
                     }
                 }

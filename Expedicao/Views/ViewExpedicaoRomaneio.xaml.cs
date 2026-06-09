@@ -43,8 +43,8 @@ namespace Expedicao.Views
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
 
                 RomaneioViewModel vm = (RomaneioViewModel)DataContext;
-                vm.Aprovados = await Task.Run(vm.GetAprovados);
-                vm.Tranportadoras = await Task.Run(vm.GetTransportadoras);
+                vm.Aprovados = await vm.GetAprovados();
+                vm.Tranportadoras = await vm.GetTransportadoras();
     
                 if (vm.Romaneio == null)
                 {

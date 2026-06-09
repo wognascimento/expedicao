@@ -217,7 +217,7 @@ namespace Expedicao.Views
                         Resp = conferente,
                         Caminhao = placa
                     };
-                    await Task.Run(async () => await new ExpedicaoViewModel().GetAddVolumeCarregado(conf));
+                    await new ExpedicaoViewModel().GetAddVolumeCarregado(conf);
                 }
                 this.loading.Visibility = Visibility.Hidden;
             }
@@ -237,7 +237,7 @@ namespace Expedicao.Views
                 foreach (var sigla in siglas)
                 {
                     List<string> arr = new List<string>() { sigla };
-                    var itens = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(arr, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+                    var itens = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(arr, txtPlaca.Content.ToString());
                     if (itens.Count == 0)
                     {
                         MessageBox.Show($"Não há itens carregados para o romaneio selecionado, por este motivo o e-mail não será enviado.", "Itens carregados", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -246,7 +246,7 @@ namespace Expedicao.Views
                 }
 
 
-                IList dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosSemParemetroAsync(siglas));
+                IList dados = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosSemParemetroAsync(siglas);
                 if (dados.Count > 0)
                 {
                     MessageBox.Show(
@@ -255,20 +255,18 @@ namespace Expedicao.Views
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
 
-                    await Task.Run(() => GetProdutosSemParemetrokAsync(dados));
+                    await GetProdutosSemParemetrokAsync(dados);
                     loading.Visibility = Visibility.Hidden;
                 }
                 else
                 {
 
-                    await Task.Run(() => GetInformacoesNF());
-                    var NExportado =  await Task.Run(GetProdutosNaoExportadosMaticAsync);
-                    long codigo = await Task.Run(() => new ExpedicaoViewModel().OrcamentoSequenceAsync(new OrcamentoSequenceModel { Cliente = "CARREGAMNETO" }));
-                    await Task.Run(() => CriarOrcamento1TaskAsync(codigo));
-                    await Task.Run(() => CriarOrcamento2TaskAsync(codigo));
-                    //await Task.Run(CriarOrcamentokAsync);
-
-                    await Task.Run(() => SendMailAsync(NExportado));
+                    await GetInformacoesNF();
+                    var NExportado =  await GetProdutosNaoExportadosMaticAsync();
+                    long codigo = await new ExpedicaoViewModel().OrcamentoSequenceAsync(new OrcamentoSequenceModel { Cliente = "CARREGAMNETO" });
+                    await CriarOrcamento1TaskAsync(codigo);
+                    await CriarOrcamento2TaskAsync(codigo);
+                    await SendMailAsync(NExportado);
 
 
                     LimparCarregamento();
@@ -315,7 +313,7 @@ namespace Expedicao.Views
             try
             {
                 var siglas = ObterSiglasSelecionadas();
-                var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+                var itens = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, txtPlaca.Content.ToString());
                 int tamanhoDoPedaco = 30;
                 int arquivo = 1;
                 
@@ -332,7 +330,7 @@ namespace Expedicao.Views
 
                 foreach (var pedaco in pedacos)
                 {
-                    long codigo = await Task.Run(async () => await new ExpedicaoViewModel().OrcamentoSequenceAsync(new OrcamentoSequenceModel { Cliente = "CARREGAMNETO" }));
+                    long codigo = await new ExpedicaoViewModel().OrcamentoSequenceAsync(new OrcamentoSequenceModel { Cliente = "CARREGAMNETO" });
                     Directory.CreateDirectory(@$"C:\Temp\NF\ORCAMENTO-{codigo}");
                     StreamWriter sw = new(@$"C:\Temp\NF\ORCAMENTO-{codigo}\ORCAMEN1.FSI");
                     await sw.WriteLineAsync(
@@ -497,7 +495,7 @@ namespace Expedicao.Views
             try
             {
                 var siglas = ObterSiglasSelecionadas();
-                var itens = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+                var itens = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, txtPlaca.Content.ToString());
 
                 using StreamWriter sw = new("ORCAMEN2.FSI");
                 using var workbook = new XLWorkbook();
@@ -563,10 +561,10 @@ namespace Expedicao.Views
                 worksheet.Columns().AdjustToContents();
                 workbook.SaveAs("ITENS.xlsx");
 
-                var volumes = await Task.Run(() => new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+                var volumes = await new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, txtPlaca.Content.ToString());
                 foreach (var volume in volumes)
                 {
-                    await Task.Run(() => new ExpedicaoViewModel().GetVolumeCarregado(volume.codexped));
+                    await new ExpedicaoViewModel().GetVolumeCarregado(volume.codexped);
                 }
             }
             catch (Exception ex)
@@ -581,7 +579,7 @@ namespace Expedicao.Views
 
         private async Task GetInformacoesNF()
         {
-            var resumoNotaModelList = await Task.Run(async () => await new ExpedicaoViewModel().GetInformasoesNfAsync(ObterSiglasSelecionadas(), Dispatcher.Invoke(() => txtPlaca.Content.ToString())));
+            var resumoNotaModelList = await new ExpedicaoViewModel().GetInformasoesNfAsync(ObterSiglasSelecionadas(), txtPlaca.Content.ToString());
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Informacoes");
             var row = 1;
@@ -620,7 +618,7 @@ namespace Expedicao.Views
         private async Task<int> GetProdutosNaoExportadosMaticAsync()
         {
 
-            var dados = await Task.Run(async () => await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(ObterSiglasSelecionadas()));
+            var dados = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosNaoExportadoMaticAsync(ObterSiglasSelecionadas());
 
             var nomePasta = "NF";
             var nomeArquivo = "Produtos.csv";
@@ -643,8 +641,8 @@ namespace Expedicao.Views
 
         private async Task SendMailAsync(int prodNExport)
         {
-            string sigla = Dispatcher.Invoke(() => txtSigla.Content.ToString().Split(";")[0]);
-            AprovadoModel aprovadoModel = await Task.Run(() => new AprovadoViewModel().GetAprovadoAsync(sigla));
+            string sigla = txtSigla.Content.ToString().Split(";")[0];
+            AprovadoModel aprovadoModel = await new AprovadoViewModel().GetAprovadoAsync(sigla);
             using MailMessage emailMessage = new();
             emailMessage.From = new MailAddress("envio_relatorio@cipolatti.com.br");
             //emailMessage.To.Add(new MailAddress("wesley_oliveira@cipolatti.com.br"));
@@ -655,7 +653,7 @@ namespace Expedicao.Views
             emailMessage.CC.Add(new MailAddress("helpdesk@cipolatti.com.br"));
             
             emailMessage.Subject = "Solicitação Nota Fisca Shopping";
-            emailMessage.Body = "Em anexo arquivos para emissão da nota fiscal para o cliente " + aprovadoModel.Nome + " - " + aprovadoModel.Sigla + ", caminhão: " + Dispatcher.Invoke(() => txtPlaca.Content.ToString());
+            emailMessage.Body = "Em anexo arquivos para emissão da nota fiscal para o cliente " + aprovadoModel.Nome + " - " + aprovadoModel.Sigla + ", caminhão: " + txtPlaca.Content.ToString();
             emailMessage.Priority = MailPriority.High;// 2;
             Attachment attachment = new("ITENS.xlsx");
             Attachment attachment1 = new("ORCAMEN1.FSI");
@@ -684,9 +682,9 @@ namespace Expedicao.Views
                     return;
                 }
 
-                string sigla = Dispatcher.Invoke(() => txtSigla.Content.ToString().Split(";")[0]);
-                AprovadoModel aprovado = await Task.Run(async () => await new AprovadoViewModel().GetAprovadoAsync(sigla));
-                IList list = await Task.Run(async () => await new ExpedicaoViewModel().GetPacklistCarregCaminhaoAsync(aprovado.SiglaServ, Dispatcher.Invoke(() => txtPlaca.Content.ToString()), DataCarregamento));
+                string sigla = txtSigla.Content.ToString().Split(";")[0];
+                AprovadoModel aprovado = await new AprovadoViewModel().GetAprovadoAsync(sigla);
+                IList list = await new ExpedicaoViewModel().GetPacklistCarregCaminhaoAsync(aprovado.SiglaServ, txtPlaca.Content.ToString(), DataCarregamento);
 
                 var caminho = Path.Combine(BaseSettings.CaminhoSistema, "Impressos", "PACKING-LIST-SHOPPING.xlsx");
                 using var workbook = new XLWorkbook();
