@@ -30,11 +30,11 @@ namespace Expedicao.Views
             }
         }
 
-        private async void itens_CellEditEnded(object sender, GridViewCellEditEndedEventArgs e)
+        private async void ImpressoCheckBox_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (e.Cell?.Column is not GridViewCheckBoxColumn || e.Cell.DataContext is not LiberarImpressaoModel liberarImpressao)
+                if (sender is not CheckBox { DataContext: LiberarImpressaoModel liberarImpressao })
                     return;
 
                 await new ExpedicaoViewModel().LiberarImpresaoAsync(liberarImpressao);

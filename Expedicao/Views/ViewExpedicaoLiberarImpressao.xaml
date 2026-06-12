@@ -17,13 +17,23 @@
                 ShowGroupPanel="False"
                 CanUserResizeColumns="True"
                 IsReadOnly="False"
-                CellEditEnded="itens_CellEditEnded"
                 ItemsSource="{Binding CaixaCollection}">
                 <telerik:RadGridView.Columns>
                     <telerik:GridViewDataColumn DataMemberBinding="{Binding Sigla}" Header="Sigla" IsReadOnly="True"/>
                     <telerik:GridViewDataColumn DataMemberBinding="{Binding Planilha}" Header="Planilha" IsReadOnly="True"/>
                     <telerik:GridViewDataColumn DataMemberBinding="{Binding NomeCaixa}" Header="NomeCaixa" IsReadOnly="True"/>
-                    <telerik:GridViewCheckBoxColumn DataMemberBinding="{Binding Impresso, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header="Impresso"/>
+                    <telerik:GridViewDataColumn Header="Impresso" IsReadOnly="True">
+                        <telerik:GridViewDataColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsThreeState="False"
+                                    IsChecked="{Binding Impresso, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Click="ImpressoCheckBox_Click"/>
+                            </DataTemplate>
+                        </telerik:GridViewDataColumn.CellTemplate>
+                    </telerik:GridViewDataColumn>
                 </telerik:RadGridView.Columns>
             </telerik:RadGridView>
         </telerik:RadBusyIndicator>

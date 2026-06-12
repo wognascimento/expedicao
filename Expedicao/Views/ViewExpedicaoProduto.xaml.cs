@@ -199,6 +199,12 @@ namespace Expedicao.Views
                 if (e.Row.Item is not ExpedModel data)
                     return;
 
+                if (LinhaNovaVazia(data))
+                {
+                    RemoverLinhaNovaVazia(data);
+                    return;
+                }
+
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
                 AprovadoModel? aprovado = this.aprovados.SelectedItem as AprovadoModel;
                 ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
@@ -515,9 +521,40 @@ namespace Expedicao.Views
                    data.Profundidade.HasValue;
         }
 
+        private static bool LinhaNovaVazia(ExpedModel data)
+        {
+            return data.CodExped.GetValueOrDefault() <= 0 &&
+                   !data.QtdExpedida.HasValue &&
+                   !data.VolExp.HasValue &&
+                   !data.VolTotExp.HasValue &&
+                   !data.Pl.HasValue &&
+                   !data.Pb.HasValue &&
+                   !data.Largura.HasValue &&
+                   !data.Altura.HasValue &&
+                   !data.Profundidade.HasValue &&
+                   string.IsNullOrWhiteSpace(data.ModeloCaixa) &&
+                   !data.Volume.HasValue &&
+                   string.IsNullOrWhiteSpace(data.BaiaVirtual);
+        }
+
+        private void RemoverLinhaNovaVazia(ExpedModel data)
+        {
+            if (DataContext is not ExpedicaoProdutoViewModel vm || vm.Expeds is null)
+                return;
+
+            if (vm.Expeds.Contains(data))
+            {
+                vm.Expeds.Remove(data);
+                Exped.Rebind();
+            }
+        }
+
         private void Exped_RowValidating(object sender, GridViewRowValidatingEventArgs e)
         {
             if (e.Row.Item is not ExpedModel rowData)
+                return;
+
+            if (LinhaNovaVazia(rowData))
                 return;
 
             ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
