@@ -30,10 +30,20 @@ namespace Expedicao
         public MainWindow()
         {
             InitializeComponent();
-            StyleManager.ApplicationTheme = new Windows11Theme();
 
             txtUsername.Text = dB.Username;
             txtDataBase.Text = dB.Database;
+        }
+
+        private async void OnAtualizarSistemaClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
+        {
+            await ((App)Application.Current).CheckForUpdatesAsync(true);
+        }
+
+        private void OnSobreSistemaClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
+        {
+            var version = ((App)Application.Current).CurrentVersion;
+            MessageBox.Show($"Sistema Integrado de Gerenciamento - Expedição\n\nVersão atual: {version}", "Sobre o sistema", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 		
         private async void OnLoaded(object sender, RoutedEventArgs e)

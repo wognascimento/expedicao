@@ -21,6 +21,7 @@ namespace Expedicao
 
         private readonly string CURRENT_VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         private readonly DataBase BaseSettings = DataBase.Instance;
+        public string CurrentVersion => CURRENT_VERSION;
 
         public App()
         {
@@ -33,7 +34,7 @@ namespace Expedicao
                 new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
             LocalizationManager.Manager = new SigTelerikLocalizationManager();
-            StyleManager.ApplicationTheme = new Windows11Theme();
+            StyleManager.ApplicationTheme = new FluentTheme();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -53,7 +54,7 @@ namespace Expedicao
             // Verificação de atualização em segundo plano
             await CheckForUpdatesAsync();
         }
-        private async Task CheckForUpdatesAsync()
+        public async Task CheckForUpdatesAsync(bool showUpToDate = false)
         {
             try
             {
@@ -64,6 +65,13 @@ namespace Expedicao
                 var updateInfo = await updateChecker.CheckForUpdatesAsync();
 
                 var updateInfoJson = JsonSerializer.Serialize<UpdateInfo>(updateInfo);
+
+                if (updateInfo == null)
+                {
+                    if (showUpToDate)
+                        MessageBox.Show($"O sistema já está atualizado.\n\nVersão atual: {CURRENT_VERSION}", "Atualização do sistema", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
 
                 if (updateInfo != null)
                 {
