@@ -34,7 +34,7 @@ namespace Expedicao
                 new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
             LocalizationManager.Manager = new SigTelerikLocalizationManager();
-            StyleManager.ApplicationTheme = new FluentTheme();
+            StyleManager.ApplicationTheme = new Office2016Theme();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
