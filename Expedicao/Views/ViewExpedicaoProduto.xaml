@@ -78,7 +78,7 @@
             AutoGenerateColumns="False" 
             GroupRenderMode="Flat"
             ShowGroupPanel="False"
-            NewRowPosition="Bottom"
+            NewRowPosition="Top"
             CanUserInsertRows="True"
             CanUserDeleteRows="True"
             IsReadOnly="False"

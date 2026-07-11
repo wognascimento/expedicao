@@ -157,7 +157,7 @@ namespace Expedicao.Views
             {
                 TcpClient? client = new();
                 await client.ConnectAsync(IPAdress, Port);
-                streamWriter1 = new StreamWriter(client.GetStream());
+                streamWriter1 = new StreamWriter(client.GetStream(), new UTF8Encoding(false));
 
                 //streamWriter1 = new(@"C:\TEMP\ETIQUETA.TXT");
 
@@ -185,7 +185,7 @@ namespace Expedicao.Views
         {
             TcpClient? client = new();
             await client.ConnectAsync(IPAdress, Port);
-            streamWriter1 = new StreamWriter(client.GetStream());
+            streamWriter1 = new StreamWriter(client.GetStream(), new UTF8Encoding(false));
 
             var groupings = itemsSource.GroupBy(rec => rec.Sequencia);
             if (MessageBox.Show("Deseja imprimir " + itemsSource.Count + " Produtos?", "Impressão de etiquetas", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
@@ -321,14 +321,14 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"^FO16,117^GB86,31,31^FS");
                 streamWriter1.WriteLine($@"^FT16,141^A0N,25,24^FR^FH\^FD{DateTime.Now:dd/MM/yy}^FS");
                 streamWriter1.WriteLine($@"^FO150,21^GB500,102,102^FS");
-                streamWriter1.WriteLine($@"^FT150,102^A0N,60,55^FB510,1,0,C^FR^FH\^FD{row.Sigla}^FS");
+                streamWriter1.WriteLine($@"^FT150,102^A0N,60,55^FB510,1,0,C^FR^FH\^FD{ZplField(row.Sigla)}^FS");
                 streamWriter1.WriteLine($@"^FT255,457^BQN,3,10");
                 string volume = $@"{row.Sigla}|{row.Volume}"; //volume.PadRight(35);
-                streamWriter1.WriteLine($@"^FH\^FDQA,{volume,-35}^FS");
+                streamWriter1.WriteLine($@"^FH\^FDQA,{ZplField(volume),-35}^FS");
                 streamWriter1.WriteLine($@"^FT28,182^A0N,18,16^FB90,1,0,C^FH\^FDCAMINHÃO^FS");
-                streamWriter1.WriteLine($@"^FT53,254^A0N,73,72^FB35,1,0,C^FH\^FD{row.BaiaCaminhao}^FS");
+                streamWriter1.WriteLine($@"^FT53,254^A0N,73,72^FB35,1,0,C^FH\^FD{ZplField(row.BaiaCaminhao)}^FS");
                 streamWriter1.WriteLine($@"^FT183,509^AAN,36,20^FB409,1,0,C^FH\^FDLOCAL DO SHOPPING^FS");
-                streamWriter1.WriteLine($@"^FT9,636^A0N,56,33^FB778,2,0,C^FH\^FD{row.LocalShoppings}^FS");
+                streamWriter1.WriteLine($@"^FT9,636^A0N,56,33^FB778,2,0,C^FH\^FD{ZplField(row.LocalShoppings)}^FS");
                 streamWriter1.WriteLine($@"^FT108,1047^AAN,18,10^FB181,1,0,C^FH\^FDCONTROLE EXPED.^FS");
                 streamWriter1.WriteLine($@"^FO41,1057^GB312,98,98^FS");
                 streamWriter1.WriteLine($@"^FT41,1135^A0N,78,108^FB312,1,0,C^FR^FH\^FD{row.Volume}^FS");
@@ -336,10 +336,10 @@ namespace Expedicao.Views
                 streamWriter1.WriteLine($@"^FT553,1051^AAN,18,10^FB73,1,0,C^FH\^FDVOLUME^FS");
                 streamWriter1.WriteLine($@"^FT379,1140^A0N,85,110^FB417,1,0,C^FH\^FD{row.VolExp} / {row.VolTotExp}^FS");
                 streamWriter1.WriteLine($@"^FO609,951^GB162,85,85^FS");
-                streamWriter1.WriteLine($@"^FT609,1019^A0N,68,67^FB162,1,0,C^FR^FH\^FD{row.ItemMemorial}^FS");
+                streamWriter1.WriteLine($@"^FT609,1019^A0N,68,67^FB162,1,0,C^FR^FH\^FD{ZplField(row.ItemMemorial)}^FS");
                 streamWriter1.WriteLine($@"^FT73,944^AAN,18,10^FB37,1,0,C^FH\^FDDET^FS");
                 streamWriter1.WriteLine($@"^FT132,674^AAN,36,25^FB511,1,0,C^FH\^FDDESCRIÇÃO PRODUTO^FS");
-                streamWriter1.WriteLine($@"^FT10,915^A0N,56,33^FB778,4,0,C^FH\^FD{row.Descricao}^FS");
+                streamWriter1.WriteLine($@"^FT10,915^A0N,56,33^FB778,4,0,C^FH\^FD{ZplField(row.Descricao)}^FS");
                 streamWriter1.WriteLine($@"^FT10,1019^A0N,68,67^FB160,1,0,C^FH\^FD{row.CodDetalhesCompl}^FS");
                 streamWriter1.WriteLine($@"^FT302,944^AAN,18,10^FB121,1,0,C^FH\^FDQUANTIDADE^FS");
                 streamWriter1.WriteLine($@"^FT279,1019^A0N,68,84^FB164,1,0,C^FH\^FD{row.QtdExpedida}^FS");
@@ -375,6 +375,29 @@ namespace Expedicao.Views
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private static string ZplField(object? value)
+        {
+            if (value is null)
+                return string.Empty;
+
+            var text = Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
+            var builder = new StringBuilder(text.Length);
+
+            foreach (var rune in text.EnumerateRunes())
+            {
+                if (rune.Value is >= 32 and <= 126 && rune.Value is not '^' and not '~' and not '\\')
+                {
+                    builder.Append((char)rune.Value);
+                    continue;
+                }
+
+                foreach (var b in Encoding.UTF8.GetBytes(rune.ToString()))
+                    builder.Append('\\').Append(b.ToString("X2", CultureInfo.InvariantCulture));
+            }
+
+            return builder.ToString();
         }
 
         private static void EtiquetaAnexo(
