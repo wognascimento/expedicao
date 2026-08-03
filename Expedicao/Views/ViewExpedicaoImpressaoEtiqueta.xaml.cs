@@ -93,7 +93,7 @@ namespace Expedicao.Views
 
     public static class ContextMenuCommands
     {
-        private const string IPAdress = "192.168.0.98"; //http://192.168.0.191/
+        private const string IPAdress = "192.168.0.191"; //http://192.168.0.191/
         private const int Port = 9100;
         private static BaseCommand? print;
         private static BaseCommand? printAll;
