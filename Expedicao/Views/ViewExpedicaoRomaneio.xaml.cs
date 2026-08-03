@@ -678,7 +678,7 @@ namespace Expedicao.Views
         private const string RomaneioSelectColumns = @"
             cod_romaneiro,
             data_carregamento::timestamp AS data_carregamento,
-            hora_chegada,
+            (hora_chegada - time '00:00') AS hora_chegada,
             codtransportadora,
             nome_motorista,
             placa_caminhao,
@@ -694,8 +694,8 @@ namespace Expedicao.Views
             m3_carregado,
             bau_soba,
             condicao_caminhao,
-            inicio_carregamento,
-            termino_carregamento,
+            (inicio_carregamento - time '00:00') AS inicio_carregamento,
+            (termino_carregamento - time '00:00') AS termino_carregamento,
             numero_caminhao,
             shopping_destino,
             local_carregamento,
@@ -707,12 +707,12 @@ namespace Expedicao.Views
             operacao,
             conferente_descarregamento,
             lacre_chegada,
-            hora_inicio_descarregamento,
-            hora_termino_descarregamento,
+            (hora_inicio_descarregamento - time '00:00') AS hora_inicio_descarregamento,
+            (hora_termino_descarregamento - time '00:00') AS hora_termino_descarregamento,
             data_inicio_descarregamento::timestamp AS data_inicio_descarregamento,
             data_termino_descarregamento::timestamp AS data_termino_descarregamento,
             data_saida_caminhao::timestamp AS data_saida_caminhao,
-            hora_saida_caminhao,
+            (hora_saida_caminhao - time '00:00') AS hora_saida_caminhao,
             data_hora_liberacao";
     }
 }
