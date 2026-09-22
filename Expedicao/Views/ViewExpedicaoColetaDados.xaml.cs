@@ -1,5 +1,6 @@
 using CsvHelper;
 using Expedicao.Model;
+using Expedicao.Utils;
 using ClosedXML.Excel;
 using System;
 using System.Collections;
@@ -506,7 +507,6 @@ namespace Expedicao.Views
                 worksheet.Cell(1, 4).Value = "QUANTIDADE";
                 worksheet.Cell(1, 5).Value = "VALOR UNITÁRIO";
                 worksheet.Cell(1, 6).Value = "UNIDADE";
-                worksheet.Range("A1:F1").Style.Font.Bold = true;
 
                 var item = 0;
                 foreach (var registro in itens)
@@ -558,7 +558,6 @@ namespace Expedicao.Views
                     worksheet.Cell(row, 6).Value = registro.Unidade;
                 }
 
-                worksheet.Columns().AdjustToContents();
                 workbook.SaveAs("ITENS.xlsx");
 
                 var volumes = await new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, txtPlaca.Content.ToString());
@@ -586,10 +585,7 @@ namespace Expedicao.Views
 
             foreach (var resumo in resumoNotaModelList)
             {
-                worksheet.Range(row, 1, row, 7).Merge().Value = "INFORMAÇÕES COMPLEMENTARES NF SHOPPING";
-                worksheet.Range(row, 1, row, 7).Style.Font.Bold = true;
-                worksheet.Range(row, 1, row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                worksheet.Range(row, 1, row, 7).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                worksheet.Cell(row, 1).Value = "INFORMAÇÕES COMPLEMENTARES NF SHOPPING";
                 row++;
 
                 AdicionarLinhaInformacaoNf(worksheet, ref row, "Shopping", resumo.Shopp);
@@ -611,7 +607,6 @@ namespace Expedicao.Views
                 row++;
             }
 
-            worksheet.Columns().AdjustToContents();
             workbook.SaveAs("Informacoes_Complementares.xlsx");
         }
 
@@ -690,12 +685,8 @@ namespace Expedicao.Views
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Packing List");
                 worksheet.Cell(1, 1).Value = aprovado.SiglaServ + " - " + aprovado.Nome;
-                worksheet.Range("A1:E1").Merge();
                 worksheet.Cell(1, 6).Value = "CAMINHÃO";
                 worksheet.Cell(1, 7).Value = Convert.ToString(txtPlaca.Content);
-                worksheet.Range("G1:H1").Merge();
-                worksheet.Range("A1:H1").Style.Font.Bold = true;
-                worksheet.Range("A1:H1").Style.Font.FontSize = 15;
 
                 var headers = new[] { "COD", "local Shoppings", "Nome Caixa", "QTD", "Planilha", "Descrição", "Liquido", "Bruto", "Controlado" };
                 for (var i = 0; i < headers.Length; i++)
@@ -703,20 +694,7 @@ namespace Expedicao.Views
                     worksheet.Cell(2, i + 1).Value = headers[i];
                 }
 
-                InserirDados(worksheet, list, 3, false);
-                var usedRange = worksheet.Range(2, 1, Math.Max(list.Count + 2, 2), 9);
-                usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                worksheet.Range("A2:I2").Style.Fill.BackgroundColor = XLColor.FromArgb(255, 174, 33);
-                worksheet.Range("A2:I2").Style.Font.Bold = true;
-                worksheet.Columns().AdjustToContents();
-                worksheet.Column(2).Width = 30;
-                worksheet.Column(6).Width = 60;
-                worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape;
-                worksheet.PageSetup.Margins.Left = 0;
-                worksheet.PageSetup.Margins.Right = 0;
-                worksheet.PageSetup.Margins.Top = 0;
-                worksheet.PageSetup.Margins.Bottom = 0.5;
+                ExcelExportHelper.WritePlainData(worksheet, list, 3, false);
                 workbook.SaveAs(caminho);
 
                 Process.Start(new ProcessStartInfo(caminho)
@@ -780,49 +758,15 @@ namespace Expedicao.Views
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add(worksheetName);
-            InserirDados(worksheet, dados, 1, true);
-            worksheet.Columns().AdjustToContents();
+            ExcelExportHelper.WritePlainData(worksheet, dados);
             Directory.CreateDirectory(Path.GetDirectoryName(caminho)!);
             workbook.SaveAs(caminho);
         }
 
-        private static void InserirDados(IXLWorksheet worksheet, IEnumerable dados, int linhaInicial, bool incluirCabecalho)
-        {
-            var lista = dados.Cast<object>().ToList();
-            if (lista.Count == 0)
-            {
-                return;
-            }
-
-            var propriedades = lista[0].GetType().GetProperties();
-            var linha = linhaInicial;
-            if (incluirCabecalho)
-            {
-                for (var coluna = 0; coluna < propriedades.Length; coluna++)
-                {
-                    worksheet.Cell(linha, coluna + 1).Value = propriedades[coluna].Name;
-                }
-                worksheet.Range(linha, 1, linha, propriedades.Length).Style.Font.Bold = true;
-                linha++;
-            }
-
-            foreach (var item in lista)
-            {
-                for (var coluna = 0; coluna < propriedades.Length; coluna++)
-                {
-                    worksheet.Cell(linha, coluna + 1).Value = XLCellValue.FromObject(propriedades[coluna].GetValue(item));
-                }
-                linha++;
-            }
-        }
-
         private static void AdicionarLinhaInformacaoNf(IXLWorksheet worksheet, ref int row, string label, object? valor)
         {
-            worksheet.Range(row, 1, row, 2).Merge().Value = label;
-            worksheet.Range(row, 3, row, 7).Merge().Value = valor?.ToString() ?? string.Empty;
-            worksheet.Range(row, 1, row, 7).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-            worksheet.Range(row, 1, row, 7).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            worksheet.Range(row, 1, row, 2).Style.Font.Bold = true;
+            worksheet.Cell(row, 1).Value = label;
+            worksheet.Cell(row, 2).Value = valor is null ? string.Empty : XLCellValue.FromObject(valor);
             row++;
         }
 

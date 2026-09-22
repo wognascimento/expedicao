@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using Expedicao.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -83,9 +84,7 @@ namespace Expedicao.Views
                 using (var workbook = new XLWorkbook())
                 {
                     var worksheet = workbook.Worksheets.Add("Romaneios");
-                    var table = worksheet.Cell(1, 1).InsertTable(vm.Romaneios, "Romaneios", true);
-                    table.Theme = XLTableTheme.TableStyleMedium2;
-                    worksheet.Columns().AdjustToContents();
+                    ExcelExportHelper.WritePlainData(worksheet, vm.Romaneios);
                     workbook.SaveAs(outputPath);
                 }
 

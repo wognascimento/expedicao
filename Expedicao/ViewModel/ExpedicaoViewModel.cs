@@ -458,7 +458,7 @@ namespace Expedicao
                         CATEGORIA = "",
                         CEST = "",
                         CFOP = "",
-                        CODIGODEBENEFICIOFISCAL = "",
+                        CODIGODEBENEFICIOFISCAL = "SP070090",
                         COMISSAODEVENDA = "",
                         CUSTO = "",
                         ESTOQUECOMPRA = "",

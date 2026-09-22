@@ -1,5 +1,6 @@
 using CsvHelper;
 using Expedicao.Views;
+using Expedicao.Utils;
 using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using System;
@@ -160,19 +161,7 @@ namespace Expedicao
         }
         private async void OnSaldoGeralShoppingClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.SaldoGeralShoppings.OrderBy(s => s.sigla).ToListAsync(), "saldo_geral_shopping.xlsx", worksheet =>
-            {
-                var lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
-                if (lastRow <= 1)
-                {
-                    return;
-                }
-
-                var range = worksheet.Range($"A2:K{lastRow}");
-                range.AddConditionalFormat().WhenIsTrue("$I2 >= 1").Fill.SetBackgroundColor(XLColor.FromArgb(83, 255, 161));
-                range.AddConditionalFormat().WhenIsTrue("$I2 > 0.5").Fill.SetBackgroundColor(XLColor.FromArgb(29, 158, 255));
-                range.AddConditionalFormat().WhenIsTrue("$I2 < 0.5").Fill.SetBackgroundColor(XLColor.White);
-            });
+            await ExportarConsultaAsync(async db => await db.SaldoGeralShoppings.OrderBy(s => s.sigla).ToListAsync(), "saldo_geral_shopping.xlsx");
         }
         private async void OnProdutosExpedidoDataClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
@@ -206,7 +195,7 @@ namespace Expedicao
         {
             await ExportarConsultaAsync(async db => await db.ControleVirtuals.ToListAsync(), "expedicao_virtual.xlsx");
         }
-        private async Task ExportarConsultaAsync<T>(Func<AppDatabase, Task<List<T>>> carregarDados, string nomeArquivo, Action<IXLWorksheet>? configurar = null)
+        private async Task ExportarConsultaAsync<T>(Func<AppDatabase, Task<List<T>>> carregarDados, string nomeArquivo)
         {
             try
             {
@@ -219,15 +208,13 @@ namespace Expedicao
                 var worksheet = workbook.Worksheets.Add("Dados");
                 if (dados.Count > 0)
                 {
-                    worksheet.Cell(1, 1).InsertTable(dados);
+                    ExcelExportHelper.WritePlainData(worksheet, dados);
                 }
                 else
                 {
                     worksheet.Cell(1, 1).Value = "Sem dados";
                 }
 
-                worksheet.Columns().AdjustToContents();
-                configurar?.Invoke(worksheet);
                 Directory.CreateDirectory(Path.GetDirectoryName(caminho)!);
                 workbook.SaveAs(caminho);
 

@@ -4,7 +4,7 @@
         xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
         Title="SISTEMA INTEGRADO DE GERENCIAMENTO - EXPEDIÇÃO"
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
-        Height="350" Width="525">
+        Height="350" Width="600">
 
     <Grid>
         <Grid.RowDefinitions>

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Expedicao.Model;
+using Expedicao.Utils;
 using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using System;
@@ -10,7 +11,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -123,8 +123,7 @@ public partial class ViewExpedicaoExcel : UserControl
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add(Consulta);
-                ExportarDados(worksheet, (IEnumerable)dados);
-                worksheet.Columns().AdjustToContents();
+                ExcelExportHelper.WritePlainData(worksheet, (IEnumerable)dados);
                 workbook.SaveAs(arquivo);
             }
 
@@ -143,33 +142,6 @@ public partial class ViewExpedicaoExcel : UserControl
             MessageBox.Show(ex.Message);
         }
         
-    }
-
-    private static void ExportarDados(IXLWorksheet worksheet, IEnumerable dados)
-    {
-        var linhas = dados.Cast<object>().ToList();
-        if (linhas.Count == 0)
-            return;
-
-        PropertyInfo[] propriedades = linhas[0].GetType()
-            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-            .Where(p => p.GetIndexParameters().Length == 0)
-            .ToArray();
-
-        for (int coluna = 0; coluna < propriedades.Length; coluna++)
-        {
-            worksheet.Cell(1, coluna + 1).Value = propriedades[coluna].Name;
-            worksheet.Cell(1, coluna + 1).Style.Font.Bold = true;
-        }
-
-        for (int linha = 0; linha < linhas.Count; linha++)
-        {
-            for (int coluna = 0; coluna < propriedades.Length; coluna++)
-            {
-                var valor = propriedades[coluna].GetValue(linhas[linha]);
-                worksheet.Cell(linha + 2, coluna + 1).Value = valor is null ? string.Empty : XLCellValue.FromObject(valor);
-            }
-        }
     }
 
 }
