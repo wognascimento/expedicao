@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao.Model
 {
-    [Keyless]
     [Table("qry_pre_conferencia_itens_shopp", Schema = "expedicao")]
     public class PreConferenciaItemShoppModel
     {

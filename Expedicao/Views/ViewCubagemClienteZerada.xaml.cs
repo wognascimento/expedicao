@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -46,21 +45,11 @@ namespace Expedicao.Views
             }
         }
 
-        private async void dataGrid_RowValidated(object sender, GridViewRowValidatedEventArgs e)
+        private void dataGrid_RowValidating(object sender, GridViewRowValidatingEventArgs e)
         {
-            try
-            {
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                ViewCubagemClienteZeradaViewModel vm = (ViewCubagemClienteZeradaViewModel)DataContext;
-                CubagemPrevistaClienteModel data = (CubagemPrevistaClienteModel)e.Row.Item;
-                await vm.SaveItemAsync(data);
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-            }
-            catch (Exception ex)
-            {
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                MessageBox.Show(ex.Message);
-            }
+            if (e.Row.Item is not CubagemPrevistaClienteModel data) return;
+            var vm = (ViewCubagemClienteZeradaViewModel)DataContext;
+            ValidatedGridSave.Save(sender, e, () => vm.SaveItemAsync(data));
         }
     }
 
@@ -90,8 +79,8 @@ namespace Expedicao.Views
         {
             try
             {
-                using AppDatabase db = new();
-                var data = await db.CubagemPrevistaClientes.Where(c => c.cubagem == 0).ToListAsync();
+                using DapperDatabase db = new();
+                var data = await db.ReadAsync<CubagemPrevistaClienteModel>("\"cubagem\" = 0");
                 return new ObservableCollection<CubagemPrevistaClienteModel>(data);
             }
             catch (Exception)
@@ -104,9 +93,8 @@ namespace Expedicao.Views
         {
             try
             {
-                using AppDatabase db = new();
-                await db.CubagemPrevistaClientes.SingleUpdateAsync(cubagem);
-                await db.SaveChangesAsync();
+                using DapperDatabase db = new();
+                await db.UpdateAsync(cubagem, nameof(CubagemPrevistaClienteModel.cubagem));
                 return cubagem;
             }
             catch (Exception)

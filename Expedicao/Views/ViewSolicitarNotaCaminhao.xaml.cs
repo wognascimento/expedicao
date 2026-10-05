@@ -1,5 +1,4 @@
-﻿using Expedicao.Model;
-using Microsoft.EntityFrameworkCore;
+using Expedicao.Model;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -67,11 +66,11 @@ namespace Expedicao.Views
         {
             try
             {
-                using AppDatabase db = new();
-                //var data = await db.CubagemSiglaCaminhoes.OrderBy(c => c.data_de_expedicao).ThenBy(c => c.sigla).ThenBy(c => c.baia_caminhao) .ToListAsync();
+                using DapperDatabase db = new();
+                //var data = (await db.ReadAsync<CubagemSiglaCaminaoModel>()).OrderBy(c => c.data_de_expedicao).ThenBy(c => c.sigla).ThenBy(c => c.baia_caminhao) .ToList();
                 //return new ObservableCollection<CubagemSiglaCaminaoModel>(data);
 
-                var query = await db.CubagemSiglaCaminhoes
+                var query = (await db.ReadAsync<CubagemSiglaCaminaoModel>())
                     //.AsEnumerable() // Transforma em IEnumerable para acessar possíveis funcionalidades não suportadas por SQL (caso necessário)
                     .GroupBy(x => new { x.data_de_expedicao, x.sigla, x.baia_caminhao })
                     .Select(g => new CubagemSiglaCaminaoModel
@@ -88,7 +87,7 @@ namespace Expedicao.Views
                     .OrderBy(x => x.data_de_expedicao)
                     .ThenBy(x => x.sigla)
                     .ThenBy(x => x.baia_caminhao)
-                    .ToListAsync();
+                    .ToList();
                 return new ObservableCollection<CubagemSiglaCaminaoModel>(query);
             }
             catch (Exception)

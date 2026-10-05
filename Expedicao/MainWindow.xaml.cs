@@ -1,7 +1,6 @@
 using CsvHelper;
 using Expedicao.Views;
 using Expedicao.Utils;
-using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using System;
 using System.Collections;
@@ -153,54 +152,54 @@ namespace Expedicao
 
         private async void OnExpedClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.QryExpeds.ToListAsync(), "exped.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<QryExpedModel>()).ToList(), "exped.xlsx");
         }
         private async void OnCaixasEnderecadasClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CaixasEnderecadas.ToListAsync(), "caixas_enderecadas.xlsx");
+            await ExportarConsultaAsync(db => db.ReadAsync<CaixasEnderecadasModel>(), "caixas_enderecadas.xlsx");
         }
         private async void OnSaldoGeralShoppingClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.SaldoGeralShoppings.OrderBy(s => s.sigla).ToListAsync(), "saldo_geral_shopping.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<SaldoGeralShoppingModel>()).OrderBy(s => s.sigla).ToList(), "saldo_geral_shopping.xlsx");
         }
         private async void OnProdutosExpedidoDataClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.produtosBaiadosData.ToListAsync(), "produtos_expedidos_data.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<ProdutosBaiadosGeralTotalDataModel>()).ToList(), "produtos_expedidos_data.xlsx");
         }
         private async void OnCubagemDiaClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CubagemDias.ToListAsync(), "cubagem_dia.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<CubagemDiaModel>()).ToList(), "cubagem_dia.xlsx");
         }
         private async void OnCubagemSemanaAnosClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CubagemSemanaAnos.ToListAsync(), "cubagem_ano_atual_ano_anterior.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<CubagemSemanaAnoAnteriorAtualModel>()).ToList(), "cubagem_ano_atual_ano_anterior.xlsx");
         }
         private async void OnCubagemPrevistaClienteClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CubagemPrevistaClientes.ToListAsync(), "cubagem_prevista_cliente.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<CubagemPrevistaClienteModel>()).ToList(), "cubagem_prevista_cliente.xlsx");
         }
         private async void OnCubagemFracionadaCaminao(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CubagemEnderecadas.ToListAsync(), "cubagem_fracionada_caminhao.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<CubagemEnderecada>()).ToList(), "cubagem_fracionada_caminhao.xlsx");
         }
         private async void OnCubagemEfetivaClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.CubagemEnderecadas.ToListAsync(), "cubagem_efetiva.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<CubagemEnderecada>()).ToList(), "cubagem_efetiva.xlsx");
         }
         private async void OnPendenciaExpedicaoClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.PendenciaExpedicaos.ToListAsync(), "pendencias_expedicao.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<PendenciaExpedicaoModel>()).ToList(), "pendencias_expedicao.xlsx");
         }
         private async void OnExpedicaoVirtualClick(object sender, Telerik.Windows.RadRoutedEventArgs e)
         {
-            await ExportarConsultaAsync(async db => await db.ControleVirtuals.ToListAsync(), "expedicao_virtual.xlsx");
+            await ExportarConsultaAsync(async db => (await db.ReadAsync<ControleVirtualModel>()).ToList(), "expedicao_virtual.xlsx");
         }
-        private async Task ExportarConsultaAsync<T>(Func<AppDatabase, Task<List<T>>> carregarDados, string nomeArquivo)
+        private async Task ExportarConsultaAsync<T>(Func<DapperDatabase, Task<List<T>>> carregarDados, string nomeArquivo)
         {
             try
             {
                 Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                using AppDatabase db = new();
+                using DapperDatabase db = new();
                 var dados = await carregarDados(db);
                 var caminho = Path.Combine(BaseSettings.CaminhoSistema, "Impressos", nomeArquivo);
 
@@ -296,8 +295,8 @@ namespace Expedicao
             IList listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItemCaminhaos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItemCaminhaoModel>())
                     .GroupBy(x => new
                     {
                         x.CodComplAdicional,
@@ -354,9 +353,9 @@ namespace Expedicao
                         CODENQUADRAMENTOIPI = "999",
                         OPERACAOFATORCONVERSAO = ""
                     })
-                    .ToListAsync();
+                    .ToList();
 
-                var produtos = await db.CarregamentoItemCaminhaos.OrderBy(x => x.DescricaoFiscal).ToListAsync();
+                var produtos = (await db.ReadAsync<CarregamentoItemCaminhaoModel>()).OrderBy(x => x.DescricaoFiscal).ToList();
 
                 var nomePasta = "NF";
                 var nomeArquivo = "Produtos.csv";
@@ -482,6 +481,3 @@ namespace Expedicao
         }
     }
 }
-
-
-

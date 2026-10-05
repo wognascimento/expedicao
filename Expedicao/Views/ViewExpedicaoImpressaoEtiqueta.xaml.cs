@@ -1,6 +1,5 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Expedicao.Model;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -476,10 +475,10 @@ namespace Expedicao.Views
             var record = obj as CubagemSiglaCaminaoModel;
             if (record is null)
                 return;
-            using AppDatabase db = new();
+            using DapperDatabase db = new();
             try
             {
-                var itens = await db.ItensCaminhoes.Where(w => w.sigla == record.sigla && w.baia_caminhao == record.baia_caminhao).ToListAsync();
+                var itens = (await db.ReadAsync<ItemCaminhaoModel>("\"sigla\" = @sigla", new { record.sigla })).Where(w => w.sigla == record.sigla && w.baia_caminhao == record.baia_caminhao).ToList();
                 var itensSemparametros = itens.Where(w => w.custo is null || w.custo == 0 || w.peso is null || w.peso == 0).ToList();
 
                 if(itensSemparametros.Count > 0)
@@ -495,8 +494,7 @@ namespace Expedicao.Views
                 }
 
                 var sequencia = new OrcamentoSequenceModel { Cliente = record.sigla };
-                db.OrcamentoSequences.Add(sequencia);
-                await db.SaveChangesAsync();
+                await db.InsertAsync(sequencia);
                 long num2 = sequencia.NumeroOrcamento.Value;
 
                 StreamWriter sw1 = new(@"C:\TEMP\ORCAMEN1.FSI");
@@ -657,10 +655,10 @@ namespace Expedicao.Views
             var record = obj as CubagemSiglaCaminaoModel;
             if (record is null)
                 return;
-            using AppDatabase db = new();
+            using DapperDatabase db = new();
             try
             {
-                var itens = db.ItensCaminhoes
+                var itens = (await db.ReadAsync<ItemCaminhaoModel>("\"sigla\" = @sigla", new { record.sigla }))
                     .AsEnumerable()
                     .Where(w => w.sigla == record.sigla)
                     .GroupBy(x => new { x.sigla, x.codcompladicional, x.descricaofiscal, x.unidade, x.ncm, x.custo, x.peso, x.exportado_folhamatic })
@@ -695,8 +693,7 @@ namespace Expedicao.Views
                 }
 
                 var sequencia = new OrcamentoSequenceModel { Cliente = record.sigla };
-                db.OrcamentoSequences.Add(sequencia);
-                await db.SaveChangesAsync();
+                await db.InsertAsync(sequencia);
                 long num2 = sequencia.NumeroOrcamento.Value;
 
                 StreamWriter sw1 = new(@"C:\TEMP\ORCAMEN1.FSI");

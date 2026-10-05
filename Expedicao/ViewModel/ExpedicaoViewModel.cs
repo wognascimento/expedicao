@@ -1,6 +1,5 @@
-﻿using Expedicao.Model;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Expedicao.Model;
+using Dapper;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -40,12 +39,12 @@ namespace Expedicao
             IList<ProdutoExpedidoModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.ProdutoExpedidos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<ProdutoExpedidoModel>("\"IdAprovado\" = @IdAprovado", new { IdAprovado }))
                     .Where(n => n.IdAprovado == IdAprovado)
                     .OrderBy(n => n.ItemMemorial)
                     .ThenBy(n => n.DescricaoProduto)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -59,11 +58,11 @@ namespace Expedicao
             IList<ExpedModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.Expeds
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<ExpedModel>("\"CodDetalhesCompl\" = @CodDetalhesCompl", new { CodDetalhesCompl }))
                     .Where(n => n.CodDetalhesCompl == CodDetalhesCompl)
                     .OrderBy(n => n.Volume)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -74,35 +73,12 @@ namespace Expedicao
 
         public async Task<ExpedModel> AddExpedAsync(ExpedModel exped)
         {
-            ExpedModel expedModel;
-            try
-            {
-                using AppDatabase db = new();
-                db.Entry<ExpedModel>(exped).State = !exped.CodExped.HasValue ? EntityState.Added : EntityState.Modified;
-                int num = await db.SaveChangesAsync();
-                long? codExped = exped.CodExped;
-                expedModel = exped;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return expedModel;
+            return await new Views.ExpedicaoProdutoViewModel().AddExpedAsync(exped);
         }
 
         public async Task DeleteExpedAsync(ExpedModel exped)
         {
-            try
-            {
-                using AppDatabase db = new();
-                db.Entry<ExpedModel>(exped).State = EntityState.Deleted;
-                int num = await db.SaveChangesAsync();
-                db.Entry<ExpedModel>(exped).State = EntityState.Detached;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            await new Views.ExpedicaoProdutoViewModel().DeleteExpedAsync(exped);
         }
 
         public async Task<IList<EtiquetaVolumeItemModel>> GetEtiquetaVolumesAsync()
@@ -110,11 +86,11 @@ namespace Expedicao
             IList<EtiquetaVolumeItemModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.EtiquetaVolumes
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<EtiquetaVolumeItemModel>())
                     .OrderBy(n => n.Sigla)
                     .ThenBy(n => n.Sequencia)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -128,13 +104,13 @@ namespace Expedicao
             IList<LiberarImpressaoModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.LiberarImpressaos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<LiberarImpressaoModel>("\"Impresso\" = TRUE"))
                     .Where(n => n.Impresso == true)
                     .OrderBy(n => n.Sigla)
                     .ThenBy(n => n.Planilha)
                     .ThenBy(n => n.NomeCaixa)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -146,22 +122,11 @@ namespace Expedicao
         public async Task<CaixaModel> LiberarImpresaoAsync(
           LiberarImpressaoModel liberarImpressao)
         {
-            CaixaModel caixaModel;
-            try
-            {
-                using AppDatabase db = new();
-                CaixaModel caixa = db.Caixas
-                    .First(c => c.NomeCaixa == liberarImpressao.NomeCaixa);
-                caixa.Impresso = Convert.ToInt32(liberarImpressao.Impresso).ToString();
-                db.Caixas.Update(caixa);
-                int num = await db.SaveChangesAsync();
-                caixaModel = caixa;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return caixaModel;
+            using var db = new DapperDatabase();
+            var caixa = (await db.ReadAsync<CaixaModel>("\"NomeCaixa\" = @nome", new { nome = liberarImpressao.NomeCaixa })).First();
+            caixa.Impresso = Convert.ToInt32(liberarImpressao.Impresso).ToString();
+            await db.UpdateAsync(caixa, nameof(CaixaModel.Impresso));
+            return caixa;
         }
 
         public async Task<List<CaminaoModel>> GetCaminhoesAsync(List<string> siglas)
@@ -169,9 +134,9 @@ namespace Expedicao
             List<CaminaoModel> caminhoesAsync;
             try
             {
-                using AppDatabase db = new();
+                using DapperDatabase db = new();
                 List<CaminaoModel> list = new();
-                var source = db.CarregamentoItenFaltantes
+                var source = (await db.ReadAsync<CarregamentoItenFaltanteModel>("\"Sigla\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
                     .Where(x => siglas.Contains(x.Sigla))
                     .OrderBy(x => x.BaiaCaminhao)
                     .GroupBy(x => new
@@ -188,7 +153,7 @@ namespace Expedicao
                     });
 
 
-                foreach (var data in await source.ToListAsync())
+                foreach (var data in source.ToList())
                     list.Add(new CaminaoModel()
                     {
                         sigla = data.sigla,
@@ -212,10 +177,10 @@ namespace Expedicao
             IList<CarregamentoItenFaltanteModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItenFaltantes
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItenFaltanteModel>("\"Sigla\" = @sigla", new { sigla }))
                     .Where(s => s.Sigla == sigla && s.BaiaCaminhao == caminhao)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -229,16 +194,16 @@ namespace Expedicao
             IList<CarregamentoItenFaltanteModel> listAsync;
             try
             {
-                using AppDatabase db = new();
+                using DapperDatabase db = new();
                 /*
-                listAsync = await db.CarregamentoItenFaltantes
+                listAsync = (await db.ReadAsync<CarregamentoItenFaltanteModel>("\"Sigla\" = @sigla", new { sigla }))
                     .Where(s => s.Sigla == sigla)
-                    .ToListAsync();
+                    .ToList();
                 */
 
-                listAsync = await (from f in db.CarregamentoItenFaltantes
+                listAsync = (from f in (await db.ReadAsync<CarregamentoItenFaltanteModel>("\"Sigla\" = @sigla", new { sigla }))
                              where f.Sigla == sigla
-                             select f).ToListAsync();
+                             select f).ToList();
 
             }
             catch (Exception)
@@ -253,10 +218,10 @@ namespace Expedicao
             IList<PreConferenciaItemFaltanteModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.PreConferenciaItemFaltantes
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<PreConferenciaItemFaltanteModel>("\"sigla\" = @sigla", new { sigla }))
                     .Where(s => s.sigla == sigla)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -270,10 +235,10 @@ namespace Expedicao
             IList<PreConferenciaItemShoppModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.PreConferenciaItemShopps
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<PreConferenciaItemShoppModel>("\"sigla\" = @sigla", new { sigla }))
                     .Where(s => s.sigla == sigla)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -288,10 +253,10 @@ namespace Expedicao
             IList<CarregamentoItenShoppModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItenShopps
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItenShoppModel>("\"Sigla\" = @sigla", new { sigla }))
                     .Where(s => s.Sigla == sigla)
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -302,68 +267,34 @@ namespace Expedicao
 
         public async Task GetAddVolumeCarregado(ConfCargaGeralModel model)
         {
-            try
-            {
-                using AppDatabase db = new();
-                if (await db.ConfCargaGerals.FirstOrDefaultAsync(c => c.Barcode == model.Barcode) == null)
-                {
-                    EntityEntry entityEntry = await db.ConfCargaGerals.AddAsync(model);
-                }
-                int num = await db.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            if (string.IsNullOrWhiteSpace(model.Barcode)) throw new InvalidOperationException("Informe o codigo de barras.");
+            using var db = new DapperDatabase();
+            await db.Connection.ExecuteAsync(@"INSERT INTO expedicao.t_conf_carga_geral
+                (barcode, doca_origem, data, shopp, resp, caminhao, entradasistema, alterado_por, data_altera, inserido_por, inserido_em)
+                VALUES (@Barcode, @DocaOrigem, @Data, @Shopp, @Resp, @Caminhao, @EntradaSistema, @AlteradoPor, @DataAltera, @InseridoPor, @InseridoEm)
+                ON CONFLICT (barcode) DO NOTHING", model);
         }
 
         public async Task AtualizarVolumesCarregadosAsync(IEnumerable<string> barcodes, string caminhao, DateTime dataCarregamento)
         {
-            using AppDatabase db = new();
-            var strategy = db.Database.CreateExecutionStrategy();
-
-            await strategy.ExecuteAsync(async () =>
+            using var db = new DapperDatabase();
+            await db.Connection.OpenAsync();
+            using var transaction = await db.Connection.BeginTransactionAsync();
+            foreach (var barcode in barcodes.Where(b => !string.IsNullOrWhiteSpace(b)).Distinct())
             {
-                using var transaction = await db.Database.BeginTransactionAsync();
-                try
-                {
-                    foreach (var barcode in barcodes.Where(b => !string.IsNullOrWhiteSpace(b)).Distinct())
-                    {
-                        var volume = await db.ConfCargaGerals.FirstOrDefaultAsync(x => x.Barcode == barcode)
-                            ?? throw new InvalidOperationException($"Existe código não carregado na lista enviada: {barcode}");
-
-                        volume.Caminhao = caminhao;
-                        volume.Data = dataCarregamento;
-                        volume.DataAltera = DateTime.Now.Date;
-                        volume.AlteradoPor = Environment.UserName;
-                    }
-
-                    await db.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-            });
+                var count = await db.Connection.ExecuteAsync(@"UPDATE expedicao.t_conf_carga_geral
+                    SET caminhao = @caminhao, data = @dataCarregamento, data_altera = @alteradoEm, alterado_por = @usuario
+                    WHERE barcode = @barcode", new { caminhao, dataCarregamento, barcode, alteradoEm = DateTime.Now.Date, usuario = Environment.UserName }, transaction);
+                if (count != 1) throw new InvalidOperationException($"Existe codigo nao carregado na lista enviada: {barcode}");
+            }
+            await transaction.CommitAsync();
         }
 
         public async Task<long> OrcamentoSequenceAsync(OrcamentoSequenceModel orcamento)
         {
-            long num1;
-            try
-            {
-                using AppDatabase db = new();
-                db.OrcamentoSequences.Add(orcamento);
-                int num2 = await db.SaveChangesAsync();
-                num1 = orcamento.NumeroOrcamento.Value;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return num1;
+            using var db = new DapperDatabase();
+            await db.InsertAsync(orcamento);
+            return orcamento.NumeroOrcamento!.Value;
         }
 
         public async Task<IList> GetCarregamentoItemCaminhaosSemParemetroAsync(
@@ -372,8 +303,8 @@ namespace Expedicao
             IList listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItemCaminhaos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItemCaminhaoModel>("\"SiglaServ\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
                     .Where(x => siglas.Contains(x.SiglaServ) && (x.Custo == (double?)0.0 || x.Custo == new double?()) || x.Peso == new double?())
                     .GroupBy(x => new
                     {
@@ -391,7 +322,7 @@ namespace Expedicao
                         x.Key.Unidade,
                         Custo = x.Sum(t => t.Custo),
                         Peso = x.Sum(t => t.Peso)
-                    }).ToListAsync();
+                    }).ToList();
             }
             catch (Exception)
             {
@@ -418,8 +349,8 @@ namespace Expedicao
             IList listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItemCaminhaos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItemCaminhaoModel>("\"SiglaServ\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
                     .Where(x => siglas.Contains(x.SiglaServ) && x.ExportadoFolhamatic == null)
                     .GroupBy(x => new
                     {
@@ -481,7 +412,7 @@ namespace Expedicao
                         CODENQUADRAMENTOIPI = "999",
                         OPERACAOFATORCONVERSAO = ""
                     })
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -495,10 +426,10 @@ namespace Expedicao
             List<ItemNotaModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.CarregamentoItemCaminhaos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<CarregamentoItemCaminhaoModel>("\"SiglaServ\" = ANY(@siglas) AND \"Caminhao\" = @caminhao", new { siglas = siglas.ToArray(), caminhao }))
                     .Where(x => siglas.Contains(x.SiglaServ))
-                    .Where(c => c.Caminhao.Contains(caminhao))
+                    .Where(c => c.Caminhao == caminhao)
                     .GroupBy(x => new
                     {
                         x.CodComplAdicional,
@@ -517,7 +448,7 @@ namespace Expedicao
                         Unidade = y.Key.Unidade,
                         volumes = y.Count()
                     })
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -530,12 +461,12 @@ namespace Expedicao
         {
             try
             {
-                using AppDatabase db = new();
-                var listAsync = await db.VolumesSolicitacaoNotaFiscal
+                using DapperDatabase db = new();
+                var listAsync = (await db.ReadAsync<VolumeSolicitacaoNotaFiscalModel>("\"sigla\" = ANY(@siglas) AND \"caminhao\" = @caminhao", new { siglas = siglas.ToArray(), caminhao }))
                     .Where(x => siglas.Contains(x.sigla))
-                    .Where(c => c.caminhao.Contains(caminhao))
+                    .Where(c => c.caminhao == caminhao)
                     .OrderBy(x => x.codexped)
-                    .ToListAsync();
+                    .ToList();
 
                 return listAsync;
             }
@@ -545,27 +476,17 @@ namespace Expedicao
             }
         }
 
-        public async Task GetVolumeCarregado(long? codexped)
+        public Task GetVolumeCarregado(long? codexped)
         {
-            try
-            {
-                using AppDatabase db = new();
-                var volume = await db.Expeds.FirstOrDefaultAsync(v => v.CodExped == codexped);
-                if (volume != null)
-                {
-                    volume.nf_emitida = true;
-                    db.Entry(volume).Property(v => v.nf_emitida).IsModified = true;
-                    await db.SaveChangesAsync();
-                }
-                
-                //EntityEntry entityEntry = await db.Expeds.AddAsync(model);
-                
-                //int num = await db.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return MarcarVolumesNotaEmitidaAsync(new[] { codexped });
+        }
+
+        public async Task MarcarVolumesNotaEmitidaAsync(IEnumerable<long?> codigos)
+        {
+            var ids = codigos.Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
+            if (ids.Length == 0) return;
+            using var db = new DapperDatabase();
+            await db.Connection.ExecuteAsync("UPDATE expedicao.t_exped SET nf_emitida = TRUE WHERE codexped = ANY(@ids)", new { ids });
         }
 
 
@@ -574,8 +495,8 @@ namespace Expedicao
             List<ResumoNotaModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.RelatorioNfTotalCompletos
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<RelatorioNfTotalCompletoModel>("\"Shopp\" = ANY(@siglas) AND \"Caminhao\" = @caminhao", new { siglas = siglas.ToArray(), caminhao }))
                     .Where(x => siglas.Contains(x.Shopp))
                     .Where(x => x.Caminhao.Equals(caminhao))
                     .GroupBy(x => new
@@ -612,7 +533,7 @@ namespace Expedicao
                         Liquido               = x.Sum(t => t.Liquido),
                         Preco                 = x.Sum(t => t.Preco)
                     })
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {
@@ -626,8 +547,8 @@ namespace Expedicao
             IList listAsync;
             try
             {
-                using AppDatabase db = new AppDatabase();
-                listAsync = await db.PacklistCarregCaminhaos
+                using DapperDatabase db = new DapperDatabase();
+                listAsync = (await db.ReadAsync<PacklistCarregCaminhaoModel>("\"sigla\" = @sigla AND \"caminhao\" = @caminhao", new { sigla, caminhao }))
                     .Where<PacklistCarregCaminhaoModel>(x => x.sigla == sigla && x.caminhao == caminhao)
                     .Select(x => new
                     {
@@ -641,7 +562,7 @@ namespace Expedicao
                         x.bruto,
                         controlado = x.prodcontrolado == "0" ? "NÃO" : "SIM"
                     })
-                    .ToListAsync();
+                    .ToList();
             }
             catch (Exception)
             {

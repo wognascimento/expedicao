@@ -54,76 +54,49 @@ namespace Expedicao
             // Verificação de atualização em segundo plano
             await CheckForUpdatesAsync();
         }
+        private bool checkingForUpdates;
         public async Task CheckForUpdatesAsync(bool showUpToDate = false)
         {
+            if (checkingForUpdates) return;
+            checkingForUpdates = true;
+            var showErrors = showUpToDate;
             try
             {
                 if (string.IsNullOrWhiteSpace(BaseSettings.UpdateInfoUrl))
-                    return;
-
-                var updateChecker = new UpdateChecker(BaseSettings.UpdateInfoUrl, CURRENT_VERSION);
-                var updateInfo = await updateChecker.CheckForUpdatesAsync();
-
-                var updateInfoJson = JsonSerializer.Serialize<UpdateInfo>(updateInfo);
-
-                if (updateInfo == null)
+                    throw new InvalidOperationException("Endereco de atualizacao nao configurado.");
+                var update = await new UpdateChecker(BaseSettings.UpdateInfoUrl, CURRENT_VERSION).CheckForUpdatesAsync();
+                if (update == null)
                 {
                     if (showUpToDate)
-                        MessageBox.Show($"O sistema já está atualizado.\n\nVersão atual: {CURRENT_VERSION}", "Atualização do sistema", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show($"O sistema ja esta atualizado.\nVersao: {CURRENT_VERSION}", "Atualizacao");
                     return;
                 }
-
-                if (updateInfo != null)
+                if (MessageBox.Show($"Nova versao: {update.updateVersion}\n\n{string.Join("\n", update.changelog)}\n\nDeseja atualizar agora?",
+                    "Atualizacao disponivel", MessageBoxButton.YesNo, MessageBoxImage.Information) != MessageBoxResult.Yes)
+                    return;
+                showErrors = true;
+                var executable = System.IO.Path.Combine(AppContext.BaseDirectory, "Update.exe");
+                if (!System.IO.File.Exists(executable))
+                    throw new System.IO.FileNotFoundException("O atualizador Update.exe nao foi encontrado.");
+                var start = new ProcessStartInfo(executable)
                 {
-                    // Pergunta ao usuário se deseja atualizar
-                    var result = MessageBox.Show(
-                        $"Nova versão disponível!\n\n" +
-                        $"Versão atual: {CURRENT_VERSION}\n" +
-                        $"Nova versão: {updateInfo.updateVersion}\n\n" +
-                        "Changelog:\n" +
-                        string.Join("\n", updateInfo.changelog) +
-                        "\n\nDeseja baixar a atualização?",
-                        "Atualização Disponível",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Information
-                    );
-
-                    if (result == MessageBoxResult.Yes)
-                    {
-
-                        var options = new JsonSerializerOptions { WriteIndented = true };
-                        string jsonString = JsonSerializer.Serialize(updateInfo, options);
-
-                        //Process.Start("Update.exe", @$"{updateInfoJson}, Expedicao.exe");
-
-                        string jsonData = JsonSerializer.Serialize(updateInfo); // Garante que o JSON está bem formatado
-                        string appName = "Expedicao.exe";
-
-                        string arguments = $"\"{jsonData.Replace("\"", "\\\"")}\" \"{appName}\"";
-                        Process.Start("Update.exe", arguments);
-                        this.Shutdown();
-
-                    }
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                // Log do erro ou tratamento de exceção
-                MessageBox.Show(
-                    $"Erro ao verificar atualizações: {ex.Message}",
-                    "Erro",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
+                    UseShellExecute = true,
+                    WorkingDirectory = AppContext.BaseDirectory
+                };
+                start.ArgumentList.Add(JsonSerializer.Serialize(update));
+                start.ArgumentList.Add("Expedicao.exe");
+                if (Process.Start(start) == null)
+                    throw new InvalidOperationException("Nao foi possivel iniciar o atualizador.");
+                Shutdown();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erro ao verificar atualizações: {ex.Message}",
-                    "Erro",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
+                if (showErrors) MessageBox.Show(ex.Message, "Erro ao atualizar", MessageBoxButton.OK, MessageBoxImage.Error);
+                else Trace.TraceWarning("Falha na verificacao automatica: {0}", ex.Message);
+            }
+            finally
+            {
+                checkingForUpdates = false;
             }
         }
     }

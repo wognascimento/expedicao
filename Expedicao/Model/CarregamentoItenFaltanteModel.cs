@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-    [Keyless]
     [Table("qry_carregamento_itens_faltantes", Schema = "expedicao")]
     public class CarregamentoItenFaltanteModel
     {

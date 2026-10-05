@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-    [Keyless]
     [Table("view_etiqueta_volumes_itens", Schema = "expedicao")]
       public class EtiquetaVolumeItemModel
       {

@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-    [Keyless]
     [Table("qry_saldo_geral_shopping", Schema = "expedicao")]
     public class SaldoGeralShoppingModel
     {

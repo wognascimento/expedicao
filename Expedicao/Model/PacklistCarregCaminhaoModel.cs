@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-  [Keyless]
   [Table("qry_rpt_packlist_carreg_caminhao", Schema = "expedicao")]
   public class PacklistCarregCaminhaoModel
   {

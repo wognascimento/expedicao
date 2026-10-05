@@ -33,7 +33,7 @@ namespace Expedicao
             Username = ReadSetting("Username", EnvUsername, Environment.UserName);
             Password = ReadSetting("Password", EnvPassword, null);
             CaminhoSistema = ReadSetting("SystemPath", null, CaminhoSistema);
-            UpdateInfoUrl = ReadSetting("UpdateInfoUrl", null, "http://192.168.0.49/downloads/expedicao/version.json");
+            UpdateInfoUrl = ReadSetting("UpdateInfoUrl", "EXPEDICAO_UPDATE_URL", "https://atualizasig.cipolatti.com.br/downloads/expedicao/version.json");
             RefreshConnectionString();
         }
 

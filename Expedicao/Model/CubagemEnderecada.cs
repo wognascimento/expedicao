@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-    [Keyless]
     [Table("c_cubagem_enderecada_be", Schema = "expedicao")]
     public class CubagemEnderecada
     {

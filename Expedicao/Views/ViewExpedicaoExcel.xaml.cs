@@ -1,7 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Expedicao.Model;
 using Expedicao.Utils;
-using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using System;
 using System.Collections;
@@ -158,45 +157,44 @@ public partial class ViewExpedicaoExcelViewModel : ObservableObject
 
     public async Task GetAprovados()
     {
-        using AppDatabase db = new();
-        Aprovados = new ObservableCollection<AprovadoModel>(await db.Aprovados.OrderBy(c => c.SiglaServ).ToListAsync());
+        using DapperDatabase db = new();
+        Aprovados = new ObservableCollection<AprovadoModel>((await db.ReadAsync<AprovadoModel>()).OrderBy(c => c.SiglaServ).ToList());
     }
 
     public async Task<ObservableCollection<CarregamentoItenFaltanteModel>> GetItensFaltanteAsync()
     {
-        using AppDatabase db = new();
+        using DapperDatabase db = new();
         var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList(); 
         return new ObservableCollection<CarregamentoItenFaltanteModel>(
-            await (from f in db.CarregamentoItenFaltantes
+            (from f in (await db.ReadAsync<CarregamentoItenFaltanteModel>("\"Sigla\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
                    where siglas.Contains(f.Sigla)
-                   select f).ToListAsync());
+                   select f).ToList());
     }
 
     public async Task<ObservableCollection<CarregamentoItenShoppModel>> GetCarregamentoItensAsync()
     {
-        using AppDatabase db = new();
+        using DapperDatabase db = new();
         var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
-        return new ObservableCollection<CarregamentoItenShoppModel>(await db.CarregamentoItenShopps
+        return new ObservableCollection<CarregamentoItenShoppModel>((await db.ReadAsync<CarregamentoItenShoppModel>("\"Sigla\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
             .Where(s => siglas.Contains(s.Sigla))
-            .ToListAsync());
+            .ToList());
     }
 
     public async Task<ObservableCollection<PreConferenciaItemFaltanteModel>> GetPreItensFaltanteAsync()
     {
-        using AppDatabase db = new();
+        using DapperDatabase db = new();
         var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
-        return new ObservableCollection<PreConferenciaItemFaltanteModel>(await db.PreConferenciaItemFaltantes
+        return new ObservableCollection<PreConferenciaItemFaltanteModel>((await db.ReadAsync<PreConferenciaItemFaltanteModel>("\"sigla\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
             .Where(s => siglas.Contains(s.sigla))
-            .ToListAsync());
+            .ToList());
     }
 
     public async Task<IList<PreConferenciaItemShoppModel>> GetPreItensShoppAsync()
     {
-        using AppDatabase db = new();
+        using DapperDatabase db = new();
         var siglas = SelectedItems.Cast<AprovadoModel>().Select(x => x.SiglaServ).ToList();
-        return new ObservableCollection<PreConferenciaItemShoppModel>(await db.PreConferenciaItemShopps
+        return new ObservableCollection<PreConferenciaItemShoppModel>((await db.ReadAsync<PreConferenciaItemShoppModel>("\"sigla\" = ANY(@siglas)", new { siglas = siglas.ToArray() }))
             .Where(s => siglas.Contains(s.sigla))
-            .ToListAsync());
+            .ToList());
     }
 }
-

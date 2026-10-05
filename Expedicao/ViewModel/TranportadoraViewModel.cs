@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +13,8 @@ namespace Expedicao
             IList<TranportadoraModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = (IList<TranportadoraModel>)await db.Tranportadoras.OrderBy<TranportadoraModel, string>(c => c.NomeTransportadora).ToListAsync<TranportadoraModel>();
+                using DapperDatabase db = new();
+                listAsync = (IList<TranportadoraModel>)(await db.ReadAsync<TranportadoraModel>()).OrderBy<TranportadoraModel, string>(c => c.NomeTransportadora).ToList<TranportadoraModel>();
             }
             catch (Exception)
             {

@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao
 {
-    [Keyless]
     [Table("totvs_rpt_nf_total_completo", Schema = "expedicao")]
     public class RelatorioNfTotalCompletoModel
     {

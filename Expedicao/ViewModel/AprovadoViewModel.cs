@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +13,8 @@ namespace Expedicao
             IList<AprovadoModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.Aprovados.OrderBy(c => c.SiglaServ).ToListAsync();
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<AprovadoModel>()).OrderBy(c => c.SiglaServ).ToList();
             }
             catch (Exception)
             {
@@ -29,8 +28,8 @@ namespace Expedicao
             AprovadoModel aprovadoAsync;
             try
             {
-                using AppDatabase db = new();
-                aprovadoAsync = await db.Aprovados.FirstOrDefaultAsync(ap => ap.SiglaServ == SiglaServ);
+                using DapperDatabase db = new();
+                aprovadoAsync = (await db.ReadAsync<AprovadoModel>("\"SiglaServ\" = @SiglaServ", new { SiglaServ })).FirstOrDefault();
             }
             catch (Exception)
             {

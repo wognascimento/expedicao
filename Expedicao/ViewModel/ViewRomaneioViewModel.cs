@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Linq;
@@ -13,12 +12,12 @@ namespace Expedicao
             IList listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = (IList)await db.ViewRomaneios.OrderBy<ViewRomaneioModel, string>(x => x.NomeMotorista).GroupBy<ViewRomaneioModel, string>(x => x.NomeMotorista).Select(x => new
+                using DapperDatabase db = new();
+                listAsync = (IList)(await db.ReadAsync<ViewRomaneioModel>()).OrderBy<ViewRomaneioModel, string>(x => x.NomeMotorista).GroupBy<ViewRomaneioModel, string>(x => x.NomeMotorista).Select(x => new
                 {
                     Motorista = x.Key,
                     Quantidade = x.Count<ViewRomaneioModel>()
-                }).ToListAsync();
+                }).ToList();
             }
             catch (Exception)
             {

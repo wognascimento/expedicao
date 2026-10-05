@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Expedicao.Model
 {
-    [Keyless]
     [Table("qry_cubagem_sigla_caminao", Schema = "expedicao")]
     public class CubagemSiglaCaminaoModel
     {

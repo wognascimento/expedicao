@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,19 +11,9 @@ namespace Expedicao
 
         public async Task<RomaneioModel> SaveAsync(RomaneioModel romaneio)
         {
-            try
-            {
-                using AppDatabase db = new AppDatabase();
-                //db.Entry<RomaneioModel>(romaneio).State = !romaneio.CodRomaneiro.HasValue ? EntityState.Added : EntityState.Modified;
-                await db.Romaneios.SingleMergeAsync(romaneio);
-                int num = await db.SaveChangesAsync();
-                long? codRomaneiro = romaneio.cod_romaneiro;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return romaneio;
+            var vm = new Views.RomaneioViewModel();
+            vm.Tranportadoras = await vm.GetTransportadoras();
+            return await vm.SaveAsync(romaneio);
         }
 
         public async Task<List<RomaneioModel>> GetRomaneiosAsync()
@@ -32,8 +21,8 @@ namespace Expedicao
             List<RomaneioModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = await db.Romaneios.OrderBy<RomaneioModel, string>((Expression<Func<RomaneioModel, string>>)(n => n.shopping_destino)).ThenBy<RomaneioModel, long>(n => (long)n.numero_caminhao).ToListAsync<RomaneioModel>();
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<RomaneioModel>()).OrderBy(n => n.shopping_destino).ThenBy(n => n.numero_caminhao).ToList();
             }
             catch (Exception)
             {

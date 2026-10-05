@@ -26,7 +26,7 @@
             IsReadOnly="False"
             ItemsSource="{Binding Cubagens}"
             SelectedItem="{Binding Cubagem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-            RowValidated="dataGrid_RowValidated">
+            RowValidating="dataGrid_RowValidating">
             <telerik:RadGridView.Columns>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla}" Header="sigla" IsReadOnly="True"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding sigla_serv}" Header="sigla_serv" IsReadOnly="True"/>

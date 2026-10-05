@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +13,8 @@ namespace Expedicao
             IList<MedidaModel> listAsync;
             try
             {
-                using AppDatabase db = new();
-                listAsync = (IList<MedidaModel>)await db.Medidas.OrderBy<MedidaModel, string>((Expression<Func<MedidaModel, string>>)(n => n.NomeCaixa)).ToListAsync<MedidaModel>();
+                using DapperDatabase db = new();
+                listAsync = (await db.ReadAsync<MedidaModel>()).OrderBy(n => n.NomeCaixa).ToList();
             }
             catch (Exception)
             {

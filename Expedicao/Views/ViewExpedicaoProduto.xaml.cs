@@ -167,69 +167,56 @@ namespace Expedicao.Views
             }
         }
 
+        private bool _excluindo;
         private async void Exped_Deleting(object sender, GridViewDeletingEventArgs e)
         {
-
-            if (MessageBox.Show("Confirma a exclusão do item?", "Excluir", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                    ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                    var items = e.Items.OfType<ExpedModel>().ToList();
-                    await vm.DeleteExpedsAsync(items);
-                    e.Cancel = false;
-                    Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                }
-                catch (Exception ex)
-                {
-                    e.Cancel = true;
-                    int num2 = (int)MessageBox.Show(ex.Message);
-                    Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-                }
-            }
-            else
-                e.Cancel = true;
-        }
-
-        private async void Exped_RowValidated(object sender, GridViewRowValidatedEventArgs e)
-        {
+            e.Cancel = true;
+            if (_excluindo) return;
+            var items = e.Items.OfType<ExpedModel>().ToList();
+            if (items.Count == 0 || MessageBox.Show("Confirma a exclusao do item?", "Excluir",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            var vm = (ExpedicaoProdutoViewModel)DataContext;
+            var collection = vm.Expeds;
+            var hitTest = Exped.IsHitTestVisible;
             try
             {
-                if (e.Row.Item is not ExpedModel data)
-                    return;
-
-                if (LinhaNovaVazia(data))
-                {
-                    RemoverLinhaNovaVazia(data);
-                    return;
-                }
-
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = Cursors.Wait; });
-                AprovadoModel? aprovado = this.aprovados.SelectedItem as AprovadoModel;
-                ExpedicaoProdutoViewModel vm = (ExpedicaoProdutoViewModel)DataContext;
-                var novaLinha = !data.CodExped.HasValue || data.CodExped.Value <= 0;
-                PrepararLinhaParaSalvar(data);
-                ExpedModel expedModel = await vm.AddExpedAsync(data);
-                AtualizarLinhaExped(data, expedModel);
-
-                if (vm.Expeds is not null)
-                {
-                    var index = vm.Expeds.IndexOf(data);
-                    if (index >= 0)
-                        vm.Expeds[index] = data;
-                }
-
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
-
-                if (novaLinha && !_salvandoColagem)
-                    PosicionarParaNovaLinhaExped();
+                _excluindo = true;
+                Exped.IsHitTestVisible = false;
+                await vm.DeleteExpedsAsync(items);
+                foreach (var item in items) collection?.Remove(item);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
-                Application.Current.Dispatcher.Invoke(() => { Mouse.OverrideCursor = null; });
+                MessageBox.Show(ex.Message, "Dados nao excluidos", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                Exped.IsHitTestVisible = hitTest;
+                _excluindo = false;
+            }
+        }
+
+        private void Exped_RowValidating(object sender, GridViewRowValidatingEventArgs e)
+        {
+            if (e.Row.Item is not ExpedModel data) return;
+            if (LinhaNovaVazia(data))
+            {
+                RemoverLinhaNovaVazia(data);
+                return;
+            }
+            ValidarLinhaExped(sender, e);
+            if (!e.IsValid) return;
+            var vm = (ExpedicaoProdutoViewModel)DataContext;
+            var novaLinha = data.CodExped.GetValueOrDefault() <= 0;
+            PrepararLinhaParaSalvar(data);
+            ValidatedGridSave.Save(sender, e, async () =>
+            {
+                var saved = await vm.AddExpedAsync(data);
+                AtualizarLinhaExped(data, saved);
+            }, () =>
+            {
+                if (novaLinha && !_salvandoColagem) PosicionarParaNovaLinhaExped();
+            });
         }
 
         private void Exped_CellEditEnded(object sender, GridViewCellEditEndedEventArgs e)
@@ -387,8 +374,10 @@ namespace Expedicao.Views
             if (!rowData.QtdExpedida.HasValue)
                 return Falha("qtd_expedida não pode ser nulo.", out mensagem);
 
-            if (vm.ChkDetail?.Qtd.HasValue == true &&
-                Math.Round((double)rowData.QtdExpedida, 2) > Math.Round((double)vm.ChkDetail.Qtd, 2))
+            if (vm.ChkDetail?.Qtd is not double quantidadeChecklist)
+                return Falha("Quantidade do checklist indisponivel. Selecione novamente o produto.", out mensagem);
+
+            if (Math.Round(rowData.QtdExpedida.Value, 2) > Math.Round(quantidadeChecklist, 2))
                 return Falha("qtd_expedida não pode ser maior que qtd do cheklist.", out mensagem);
 
             if (!rowData.VolExp.HasValue)
@@ -549,7 +538,7 @@ namespace Expedicao.Views
             }
         }
 
-        private void Exped_RowValidating(object sender, GridViewRowValidatingEventArgs e)
+        private void ValidarLinhaExped(object sender, GridViewRowValidatingEventArgs e)
         {
             if (e.Row.Item is not ExpedModel rowData)
                 return;
@@ -574,7 +563,12 @@ namespace Expedicao.Views
                     //Math.Round( 2.123455909, 2);
                     //qtdExpedida = (decimal?)rowData.QtdExpedida;
                     //decimal? nullable1 = (decimal?)this.ProdutoExpedido.Qtd;
-                    if (Math.Round((double)rowData.QtdExpedida, 2) > Math.Round((double)vm.ChkDetail.Qtd, 2) & rowData.QtdExpedida.HasValue & vm.ChkDetail.Qtd.HasValue)
+                    if (vm.ChkDetail?.Qtd is not double quantidadeChecklist)
+                    {
+                        AplicarErroLinha(e, "Quantidade do checklist indisponivel. Selecione novamente o produto.", "QtdExpedida");
+                        return;
+                    }
+                    if (Math.Round(rowData.QtdExpedida.Value, 2) > Math.Round(quantidadeChecklist, 2))
                     {
                         AplicarErroLinha(e, "qtd_expedida não pode ser maior que qtd do cheklist.", "QtdExpedida");
                     }

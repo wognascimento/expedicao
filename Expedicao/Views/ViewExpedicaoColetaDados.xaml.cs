@@ -561,10 +561,9 @@ namespace Expedicao.Views
                 workbook.SaveAs("ITENS.xlsx");
 
                 var volumes = await new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, txtPlaca.Content.ToString());
-                foreach (var volume in volumes)
-                {
-                    await new ExpedicaoViewModel().GetVolumeCarregado(volume.codexped);
-                }
+                await sw.FlushAsync();
+                sw.Close();
+                await new ExpedicaoViewModel().MarcarVolumesNotaEmitidaAsync(volumes.Select(v => v.codexped));
             }
             catch (Exception ex)
             {

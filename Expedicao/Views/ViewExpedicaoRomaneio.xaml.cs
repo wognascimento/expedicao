@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
+using Dapper;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -436,8 +435,8 @@ namespace Expedicao.Views
         {
             try
             {
-                using AppDatabase db = new();
-                var data = await db.Aprovados.OrderBy(c => c.SiglaServ).ToListAsync();
+                using DapperDatabase db = new();
+                var data = (await db.ReadAsync<AprovadoModel>()).OrderBy(c => c.SiglaServ).ToList();
                 return new ObservableCollection<AprovadoModel>(data);
             }
             catch (Exception)
@@ -450,8 +449,8 @@ namespace Expedicao.Views
         {
             try
             {
-                using AppDatabase db = new();
-                var data = await db.Tranportadoras.OrderBy(c => c.NomeTransportadora).ToListAsync();
+                using DapperDatabase db = new();
+                var data = (await db.ReadAsync<TranportadoraModel>()).OrderBy(c => c.NomeTransportadora).ToList();
                 return new ObservableCollection<TranportadoraModel>(data);
             }
             catch (Exception)
@@ -463,27 +462,17 @@ namespace Expedicao.Views
 
         public async Task<RomaneioModel> SaveAsync(RomaneioModel model)
         {
-            /*
-            try
-            {
-                using AppDatabase db = new AppDatabase();
-                await db.Romaneios.SingleMergeAsync(romaneio);
-                int num = await db.SaveChangesAsync();
-                long? codRomaneiro = romaneio.CodRomaneiro;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            return romaneio;
-            */
-
             using var conn = new NpgsqlConnection(BaseSettings.ConnectionString);
+            await conn.OpenAsync();
+            await using var transaction = await conn.BeginTransactionAsync();
+            long? insertedId = null;
             var sqlSelect = $@"
                 SELECT {RomaneioSelectColumns}
                 FROM expedicao.t_romaneio
-                WHERE cod_romaneiro = @cod_romaneiro";
-            var existente = await conn.QueryFirstOrDefaultAsync<RomaneioModel?>(sqlSelect, new { model.cod_romaneiro });
+                WHERE cod_romaneiro = @cod_romaneiro FOR UPDATE";
+            var existente = await conn.QueryFirstOrDefaultAsync<RomaneioModel?>(sqlSelect, new { model.cod_romaneiro }, transaction);
+            if (existente == null && model.cod_romaneiro.GetValueOrDefault() > 0)
+                throw new InvalidOperationException("Romaneio nao encontrado. Recarregue a tela antes de salvar.");
             if (existente == null)
             {
                 // INSERT
@@ -550,7 +539,7 @@ namespace Expedicao.Views
                     )
                     RETURNING cod_romaneiro;
                 ";
-                model.cod_romaneiro = await conn.ExecuteScalarAsync<int>(sqlInsert, model);
+                insertedId = await conn.ExecuteScalarAsync<long>(sqlInsert, model, transaction);
             }
             else
             {
@@ -566,12 +555,7 @@ namespace Expedicao.Views
                     var valorNovo = prop.GetValue(model);
                     var valorAntigo = prop.GetValue(existente);
 
-                    // Ignora valores nulos do modelo novo
-                    // (você pode mudar esse comportamento)
-                    if (valorNovo == null)
-                        continue;
-
-                    // Só adiciona se mudou
+                    // Inclui limpeza de campos (novo valor nulo).
                     if (!Equals(valorNovo, valorAntigo))
                     {
                         setList.Add($"{prop.Name} = @{prop.Name}");
@@ -589,7 +573,7 @@ namespace Expedicao.Views
                     SET {string.Join(", ", setList)}
                     WHERE cod_romaneiro = @cod_romaneiro;
                 ";
-                await conn.ExecuteAsync(sqlUpdate, model);
+                await conn.ExecuteAsync(sqlUpdate, model, transaction);
 
                 string[] campos = [
                     "placa_carroceria",
@@ -597,29 +581,31 @@ namespace Expedicao.Views
                     "codtransportadora"
                 ];
                 // verifica se algum dos campos monitorados realmente foi alterado
-                bool camposAlterados = setList.Any(s => campos.Any(c => s.Contains(c)));
-                if (camposAlterados)
+                bool camposAlterados = setList.Any(s => campos.Any(c => s.StartsWith(c + " =", StringComparison.Ordinal)));
+                if (camposAlterados && model.operacao == "DESCARREGAMENTO SHOPPING")
                 {
                     var updateServicosList = new List<string>();
                     parametros = new DynamicParameters();
                     // SE placa mudou → incluir no UPDATE
-                    if (setList.Any(s => s.Contains("placa_carroceria")))
+                    if (setList.Any(s => s.StartsWith("placa_carroceria =", StringComparison.Ordinal)))
                     {
                         updateServicosList.Add("placa_caminhao = @placa_carroceria");
                         parametros.Add("placa_carroceria", model.placa_carroceria);
                     }
                     // SE data mudou → incluir no UPDATE
-                    if (setList.Any(s => s.Contains("data_carregamento")))
+                    if (setList.Any(s => s.StartsWith("data_carregamento =", StringComparison.Ordinal)))
                     {
                         updateServicosList.Add("data_chegada_cipolatti = @data_carregamento");
                         parametros.Add("data_carregamento", model.data_carregamento);
                     }
                     // SE transportadora mudou → incluir no UPDATE
-                    if (setList.Any(s => s.Contains("codtransportadora")))
+                    if (setList.Any(s => s.StartsWith("codtransportadora =", StringComparison.Ordinal)))
                     {
                         var transp = Tranportadoras.SingleOrDefault(t => t.CodTransportadora == model.codtransportadora);
                         updateServicosList.Add("transportadora = @transportadora");
-                        parametros.Add("transportadora", transp.NomeTransportadora);
+                        if (model.codtransportadora.HasValue && transp == null)
+                            throw new InvalidOperationException("Transportadora nao encontrada. Recarregue a lista.");
+                        parametros.Add("transportadora", transp?.NomeTransportadora, System.Data.DbType.String);
                     }
                     // se nenhum campo do romaneio mudou → não faz nada
                     if (updateServicosList.Count == 0)
@@ -629,28 +615,19 @@ namespace Expedicao.Views
                     parametros.Add("siglaserv", model.shopping_destino);
                     parametros.Add("caminhao", string.Format("{0:00}", model.numero_caminhao));
 
-                    string sqlUpdateServicos = "";
+                    var sqlUpdateServicos = $@"
+                        UPDATE operacional.t_cargas_desmontagem
+                        SET {string.Join(", ", updateServicosList)}
+                        WHERE siglaserv = @siglaserv
+                          AND caminhao = @caminhao;
+                    ";
 
-                    if (model.operacao == "DESCARREGAMENTO SHOPPING")
-                        sqlUpdateServicos = $@"
-                            UPDATE operacional.t_cargas_desmontagem
-                            SET {string.Join(", ", updateServicosList)}
-                            WHERE siglaserv = @siglaserv
-                              AND caminhao = @caminhao;
-                        ";
-                    /*else
-                        sqlUpdateServicos = $@"
-                            UPDATE operacional.t_cargas_carregamento
-                            SET {string.Join(", ", updateServicosList)}
-                            WHERE siglaserv = @siglaserv
-                              AND caminhao = @caminhao
-                              AND operacao = 'CARREGAMENTO SHOPPING';
-                        ";*/
-
-                    await conn.ExecuteAsync(sqlUpdateServicos, parametros);
+                    await conn.ExecuteAsync(sqlUpdateServicos, parametros, transaction);
                 }
             }
 
+            await transaction.CommitAsync();
+            if (insertedId.HasValue) model.cod_romaneiro = insertedId;
             return model;
         }
 
@@ -659,8 +636,8 @@ namespace Expedicao.Views
 
             try
             {
-                using AppDatabase db = new();
-                var data = await db.Romaneios.OrderBy(n => n.shopping_destino).ThenBy(n => n.numero_caminhao).ToListAsync();
+                using DapperDatabase db = new();
+                var data = (await db.ReadAsync<RomaneioModel>()).OrderBy(n => n.shopping_destino).ThenBy(n => n.numero_caminhao).ToList();
                 return new ObservableCollection<RomaneioModel>(data);
             }
             catch (Exception)
