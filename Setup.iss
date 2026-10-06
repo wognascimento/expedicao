@@ -66,6 +66,55 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure MigrateUpdateAddress(const FileName: String);
+var
+  Document, Nodes, Node: Variant;
+  I: Integer;
+  Address: String;
+  Changed: Boolean;
+begin
+  if not FileExists(FileName) then
+    Exit;
+
+  Document := CreateOleObject('Msxml2.DOMDocument.6.0');
+  Document.async := False;
+  Document.resolveExternals := False;
+  Document.preserveWhiteSpace := True;
+  Document.setProperty('ProhibitDTD', True);
+  if not Document.load(FileName) then
+    RaiseException('Nao foi possivel ler a configuracao: ' + FileName);
+
+  Nodes := Document.selectNodes('/configuration/appSettings/add[@key="UpdateInfoUrl"] | /appSettings/add[@key="UpdateInfoUrl"]');
+  Changed := False;
+  for I := 0 to Nodes.length - 1 do
+  begin
+    Node := Nodes.item(I);
+    Address := Node.getAttribute('value');
+    Address := Lowercase(Trim(Address));
+    if (Address = 'http://192.168.0.49/downloads/expedicao/version.json') or
+       (Address = 'https://192.168.0.49/downloads/expedicao/version.json') then
+    begin
+      Node.setAttribute('value', 'https://atualizasig.cipolatti.com.br/downloads/expedicao/version.json');
+      Changed := True;
+    end;
+  end;
+  if Changed then
+  begin
+    Document.save(FileName);
+    Log('Endereco legado de atualizacao migrado em: ' + FileName);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    MigrateUpdateAddress(ExpandConstant('{app}\Expedicao.dll.config'));
+    MigrateUpdateAddress(ExpandConstant('{app}\Expedicao.exe.config'));
+    MigrateUpdateAddress(ExpandConstant('{app}\app.config'));
+  end;
+end;
+
 function HasDotNetDesktopRuntime10InRegistry(RootKey: Integer): Boolean;
 var
   Versions: TArrayOfString;

@@ -48,7 +48,6 @@ namespace Expedicao.Views
                 {
                     BSelecionadosRomaneio.Visibility = Visibility.Visible;
                     itens.SelectionMode = SelectionMode.Multiple;
-                    acao.Width = 0;
                 }
             }
             catch (Exception ex)
@@ -106,9 +105,12 @@ namespace Expedicao.Views
         {
             try
             {
-                RomaneioModel? dataContext = (e.Source as Button)?.DataContext as RomaneioModel;
+                RomaneioModel? dataContext = (sender as FrameworkElement)?.DataContext as RomaneioModel;
                 if (dataContext is null)
                     return;
+
+                itens.SelectedItem = dataContext;
+                Romaneio = dataContext;
 
                 if (LocalAberto == "PRINCIPAL")
                 {
@@ -123,10 +125,8 @@ namespace Expedicao.Views
                 }
                 else if (LocalAberto == "CARREGAMENTO")
                 {
-                    foreach (var selectedItem in itens.SelectedItems.Cast<RomaneioModel>())
-                    {
-                        Romaneios.Add(selectedItem);
-                    }
+                    Romaneios.Clear();
+                    Romaneios.Add(dataContext);
 
                     Window.GetWindow(sender as DependencyObject).DialogResult = true;
                 }

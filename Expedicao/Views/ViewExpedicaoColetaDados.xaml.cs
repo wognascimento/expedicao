@@ -146,13 +146,15 @@ namespace Expedicao.Views
             if (_barcodesCarregados.Count == 0)
             {
                 LimparCarregamento();
-                Window window = new();
-                window.Title = "EXPEDIÇÃO ROMANEIOS ";
-                window.Content = new ViewExpedicaoRomaneios("CARREGAMENTO");
-                window.Height = 600.0;
-                window.Width = 680.0;
-                window.ResizeMode = ResizeMode.NoResize;
-                window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                Window window = new()
+                {
+                    Title = "EXPEDIÇÃO ROMANEIOS ",
+                    Content = new ViewExpedicaoRomaneios("CARREGAMENTO"),
+                    Height = 600.0,
+                    Width = 680.0,
+                    ResizeMode = ResizeMode.NoResize,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
                 window.ShowDialog();
                 _romaneios.AddRange(((ViewExpedicaoRomaneios)window.Content).Romaneios);
                 this.DataCarregamento = _romaneios
@@ -686,6 +688,8 @@ namespace Expedicao.Views
                 worksheet.Cell(1, 1).Value = aprovado.SiglaServ + " - " + aprovado.Nome;
                 worksheet.Cell(1, 6).Value = "CAMINHÃO";
                 worksheet.Cell(1, 7).Value = Convert.ToString(txtPlaca.Content);
+                worksheet.Range(1, 1, 1, 7).Style.Font.Bold = true;
+                worksheet.Range(1, 1, 1, 7).Style.Font.FontSize = 15;
 
                 var headers = new[] { "COD", "local Shoppings", "Nome Caixa", "QTD", "Planilha", "Descrição", "Liquido", "Bruto", "Controlado" };
                 for (var i = 0; i < headers.Length; i++)
@@ -693,7 +697,30 @@ namespace Expedicao.Views
                     worksheet.Cell(2, i + 1).Value = headers[i];
                 }
 
-                ExcelExportHelper.WritePlainData(worksheet, list, 3, false);
+                var quantidadeLinhas = ExcelExportHelper.WritePlainData(worksheet, list, 3, false);
+                var cabecalho = worksheet.Range(2, 1, 2, headers.Length);
+                cabecalho.Style.Font.Bold = true;
+                cabecalho.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+                var tabela = worksheet.Range(2, 1, 2 + quantidadeLinhas, headers.Length);
+                tabela.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                tabela.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                if (quantidadeLinhas > 0)
+                    worksheet.Range(3, 7, 2 + quantidadeLinhas, 8).Style.NumberFormat.Format = "0.00";
+
+                worksheet.Columns(2, 9).AdjustToContents(2, 2 + quantidadeLinhas);
+
+                // ClosedXML stores print margins in inches.
+                const double margem = 0.5 / 2.54;
+                worksheet.PageSetup.Margins.Top = margem;
+                worksheet.PageSetup.Margins.Bottom = margem;
+                worksheet.PageSetup.Margins.Left = margem;
+                worksheet.PageSetup.Margins.Right = margem;
+                worksheet.PageSetup.Margins.Header = 0;
+                worksheet.PageSetup.Margins.Footer = 0;
+                worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+                worksheet.PageSetup.FitToPages(1, 0);
+                worksheet.PageSetup.PrintAreas.Add(1, 1, 2 + quantidadeLinhas, headers.Length);
                 workbook.SaveAs(caminho);
 
                 Process.Start(new ProcessStartInfo(caminho)

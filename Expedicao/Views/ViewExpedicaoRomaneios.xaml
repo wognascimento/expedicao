@@ -20,6 +20,9 @@
             x:Name="itens" 
             ItemsSource = "{Binding Romaneios}"
             IsFilteringAllowed="True" 
+            IsReadOnly="True"
+            CanUserInsertRows="False"
+            CanUserDeleteRows="False"
             AutoGenerateColumns="False"
             CanUserResizeColumns="True"
             ShowGroupPanel="False">
@@ -29,10 +32,10 @@
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding numero_caminhao}" Header="Caminhao" DataFormatString="{}{0:N0}"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding placa_carroceria}" Header="Placa"/>
                 <telerik:GridViewDataColumn DataMemberBinding="{Binding operacao}" Header="Operação"/>
-                <telerik:GridViewColumn x:Name="acao" Header="" IsFilterable="False">
+                <telerik:GridViewColumn x:Name="acao" Header="" IsFilterable="False" Width="140" MinWidth="140">
                     <telerik:GridViewColumn.CellTemplate>
                         <DataTemplate>
-                            <telerik:RadButton x:Name="btnAcao" Content="Selecionar" Click="btnAcao_Click"/>
+                            <telerik:RadButton x:Name="btnAcao" Content="Selecionar" Width="110" MinWidth="110" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Padding="8,3" Click="btnAcao_Click"/>
                         </DataTemplate>
                     </telerik:GridViewColumn.CellTemplate>
                 </telerik:GridViewColumn>
