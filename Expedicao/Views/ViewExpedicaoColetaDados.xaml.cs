@@ -800,12 +800,18 @@ namespace Expedicao.Views
         {
             using var workbook = new XLWorkbook(filename);
             var worksheet = workbook.Worksheets.First();
-            return worksheet.Column(1)
+            var volumes = worksheet.Column(1)
                 .CellsUsed()
-                .Select(c => c.GetString())
+                .Select(c => c.GetString().Trim())
                 .Where(v => !string.IsNullOrWhiteSpace(v))
+                .SkipWhile(v => string.Equals(v, "Barcode", StringComparison.OrdinalIgnoreCase))
                 .Select(v => new BarcodeModel { barcode = v })
                 .ToList();
+
+            if (volumes.Count == 0)
+                throw new InvalidOperationException("A planilha não contém códigos de barras na primeira coluna.");
+
+            return volumes;
         }
     }
 }
