@@ -35,6 +35,7 @@ namespace Expedicao.Views
         private readonly List<RomaneioModel> _romaneios = [];
         private readonly List<CarregamentoItenFaltanteModel> _itensFaltantes = [];
         private readonly HashSet<string> _barcodesCarregados = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly System.Threading.SemaphoreSlim SolicitacaoNotaGate = new(1, 1);
 
         public ViewExpedicaoColetaDados()
         {
@@ -232,11 +233,15 @@ namespace Expedicao.Views
 
         private async void RibbonButton_Click_3(object sender, RoutedEventArgs e)
         {
+            if (!SolicitacaoNotaGate.Wait(0)) return;
+            bool emailEnviado = false;
+            IsEnabled = false;
             try
             {
                 loading.Visibility = Visibility.Visible;
 
                 List<string> siglas = ObterSiglasSelecionadas();
+                if (siglas.Count == 0) throw new InvalidOperationException("Selecione um romaneio para solicitar a nota fiscal.");
                 foreach (var sigla in siglas)
                 {
                     List<string> arr = new List<string>() { sigla };
@@ -263,14 +268,16 @@ namespace Expedicao.Views
                 }
                 else
                 {
-
+                    var volumes = await new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, ObterPlacaSelecionada());
+                    if (volumes.Count == 0) throw new InvalidOperationException("Não há volumes pendentes para esta solicitação.");
                     await GetInformacoesNF();
                     var NExportado =  await GetProdutosNaoExportadosMaticAsync();
                     long codigo = await new ExpedicaoViewModel().OrcamentoSequenceAsync(new OrcamentoSequenceModel { Cliente = "CARREGAMNETO" });
                     await CriarOrcamento1TaskAsync(codigo);
                     await CriarOrcamento2TaskAsync(codigo);
                     await SendMailAsync(NExportado);
-
+                    emailEnviado = true;
+                    await new ExpedicaoViewModel().MarcarVolumesNotaEmitidaAsync(volumes.Select(v => v.codexped));
 
                     LimparCarregamento();
    
@@ -282,7 +289,15 @@ namespace Expedicao.Views
             catch (Exception ex)
             {
                 loading.Visibility = Visibility.Hidden;
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(emailEnviado
+                    ? "O e-mail foi enviado, mas ocorreu uma falha ao finalizar a solicitação. Não envie novamente antes de conferir os volumes com o suporte.\n" + ex.Message
+                    : ex.Message);
+            }
+            finally
+            {
+                loading.Visibility = Visibility.Hidden;
+                IsEnabled = true;
+                SolicitacaoNotaGate.Release();
             }
         }
 
@@ -440,7 +455,7 @@ namespace Expedicao.Views
         {
             try
             {
-                StreamWriter sw = new StreamWriter("ORCAMEN1.FSI");
+                using StreamWriter sw = new StreamWriter("ORCAMEN1.FSI");
                 await sw.WriteLineAsync(
                     /*01*/"F210" +
                     /*02*/Convert.ToString(codigo).ToString().PadLeft(6, '0') +
@@ -483,9 +498,9 @@ namespace Expedicao.Views
                 sw.Close();
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+                throw;
             }
             finally
             {
@@ -499,6 +514,9 @@ namespace Expedicao.Views
             {
                 var siglas = ObterSiglasSelecionadas();
                 var itens = await new ExpedicaoViewModel().GetCarregamentoItemCaminhaosAsync(siglas, txtPlaca.Content.ToString());
+
+                if (itens.Count == 0)
+                    throw new InvalidOperationException("Não há itens pendentes para gerar a nota fiscal. Nenhum e-mail foi enviado.");
 
                 using StreamWriter sw = new("ORCAMEN2.FSI");
                 using var workbook = new XLWorkbook();
@@ -562,14 +580,12 @@ namespace Expedicao.Views
 
                 workbook.SaveAs("ITENS.xlsx");
 
-                var volumes = await new ExpedicaoViewModel().GetCarregamentoVolumesAsync(siglas, txtPlaca.Content.ToString());
                 await sw.FlushAsync();
                 sw.Close();
-                await new ExpedicaoViewModel().MarcarVolumesNotaEmitidaAsync(volumes.Select(v => v.codexped));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+                throw;
             }
             finally
             {
