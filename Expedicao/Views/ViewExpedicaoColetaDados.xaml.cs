@@ -1,7 +1,7 @@
+using ClosedXML.Excel;
 using CsvHelper;
 using Expedicao.Model;
 using Expedicao.Utils;
-using ClosedXML.Excel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace Expedicao.Views
@@ -677,10 +678,21 @@ namespace Expedicao.Views
             emailMessage.Attachments.Add(attachment3);
             if (prodNExport > 0)
                 emailMessage.Attachments.Add(new Attachment("Produtos.csv"));
-            using SmtpClient MailClient = new("192.168.0.209", 25);
-            MailClient.EnableSsl = false;
-            MailClient.Credentials = new NetworkCredential("envio_relatorio@cipolatti.com.br", "@n0dh@n0dh1966");
-            await MailClient.SendMailAsync(emailMessage);
+
+            //using SmtpClient MailClient = new("webmail.cipolatti.com.br", 25);
+            //MailClient.EnableSsl = false;
+            //MailClient.Credentials = new NetworkCredential("envio_relatorio@cipolatti.com.br", "@n0dh@n0dh1966");
+            //await MailClient.SendMailAsync(emailMessage);
+
+            using SmtpClient mailClient = new("webmail.cipolatti.com.br", 587)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(
+                    "envio_relatorio@cipolatti.com.br",
+                    "@n0dh@n0dh1966")
+            };
+            await mailClient.SendMailAsync(emailMessage);
         }
 
         private async void ButtonAdv_Click(object sender, RoutedEventArgs e)
